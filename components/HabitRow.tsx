@@ -24,6 +24,14 @@ export default function HabitRow({
   const [isNumpadOpen, setIsNumpadOpen] = useState(false);
   const isChecked = typeof value === "boolean" ? value : (value as number) > 0;
 
+  const handleLabelClick = () => {
+    if (type === "boolean") {
+      onToggle();
+    } else {
+      setIsNumpadOpen(true);
+    }
+  };
+
   return (
     <>
       <motion.div
@@ -35,7 +43,8 @@ export default function HabitRow({
       >
         {/* Habit label */}
         <span
-          className={`flex-1 text-sm leading-relaxed transition-all ${
+          onClick={handleLabelClick}
+          className={`flex-1 cursor-pointer text-sm leading-relaxed transition-all ${
             isChecked
               ? "text-emerald-500 line-through opacity-70"
               : "text-theme-primary"
