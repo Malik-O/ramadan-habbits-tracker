@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { HABIT_CATEGORIES, XP_PER_HABIT, TOTAL_DAYS } from "@/constants/habits";
+import { XP_PER_HABIT, TOTAL_DAYS, type HabitCategory } from "@/constants/habits";
 import { useLocalStorage } from "./useLocalStorage";
 
 /** State shape for a single habit: `true` for completed booleans, or a number for counters */
@@ -29,7 +29,7 @@ export interface UseHabitTrackerReturn {
   completedHabits: number;
 }
 
-function isHabitCompleted(value: HabitValue | undefined): boolean {
+export function isHabitCompleted(value: HabitValue | undefined): boolean {
   if (value === undefined) return false;
   if (typeof value === "boolean") return value;
   return value > 0;
@@ -52,7 +52,7 @@ function computeStreak(state: TrackerState, currentDay: number): number {
   return streak;
 }
 
-export function useHabitTracker(): UseHabitTrackerReturn {
+export function useHabitTracker(categories: HabitCategory[]): UseHabitTrackerReturn {
   const [currentDay, setCurrentDay] = useLocalStorage<number>("ramadan-current-day", 0);
   const [trackerState, setTrackerState] = useLocalStorage<TrackerState>("ramadan-tracker", {});
 
@@ -97,8 +97,8 @@ export function useHabitTracker(): UseHabitTrackerReturn {
 
   // Total habits count
   const totalHabits = useMemo(
-    () => HABIT_CATEGORIES.reduce((sum, cat) => sum + cat.items.length, 0),
-    []
+    () => categories.reduce((sum, cat) => sum + cat.items.length, 0),
+    [categories]
   );
 
   // Completed habits for current day
@@ -131,14 +131,14 @@ export function useHabitTracker(): UseHabitTrackerReturn {
   // Block completion status (for confetti triggers)
   const blockCompletion = useMemo(() => {
     const result: Record<string, boolean> = {};
-    for (const category of HABIT_CATEGORIES) {
+    for (const category of categories) {
       const allCompleted = category.items.every((item) =>
         isHabitCompleted(dayRecord[item.id])
       );
       result[category.id] = allCompleted;
     }
     return result;
-  }, [dayRecord]);
+  }, [dayRecord, categories]);
 
   return {
     currentDay,

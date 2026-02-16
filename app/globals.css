@@ -14,6 +14,8 @@
   --color-slate-400: #94a3b8;
   --color-slate-500: #64748b;
   --color-slate-950: #020617;
+  --color-sky-400: #38bdf8;
+  --color-sky-500: #0ea5e9;
   --font-sans:
     var(--font-noto-arabic), var(--font-inter), "Noto Sans Arabic", Inter,
     system-ui, sans-serif;

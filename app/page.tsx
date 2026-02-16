@@ -1,15 +1,18 @@
 "use client";
 
 import { useMemo } from "react";
-import { HABIT_CATEGORIES, INSPIRATIONAL_QUOTES } from "@/constants/habits";
+import { INSPIRATIONAL_QUOTES } from "@/constants/habits";
 import { getActiveBlockId } from "@/utils/timeBlocks";
 import { useHabitTracker } from "@/hooks/useHabitTracker";
+import { useCustomHabits } from "@/hooks/useCustomHabits";
 import Header from "@/components/Header";
 import DaySelector from "@/components/DaySelector";
 import HabitBlock from "@/components/HabitBlock";
 import ConfettiTrigger from "@/components/ConfettiTrigger";
+import BottomNav from "@/components/BottomNav";
 
 export default function HomePage() {
+  const { categories } = useCustomHabits();
   const {
     currentDay,
     setCurrentDay,
@@ -24,7 +27,7 @@ export default function HomePage() {
     blockCompletion,
     totalHabits,
     completedHabits,
-  } = useHabitTracker();
+  } = useHabitTracker(categories);
 
   const activeBlockId = useMemo(() => {
     const hour = new Date().getHours();
@@ -40,7 +43,7 @@ export default function HomePage() {
   );
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-md flex-col bg-theme-bg">
+    <div className="mx-auto flex min-h-dvh max-w-md flex-col bg-theme-bg pb-20">
       {/* Sticky header */}
       <Header
         todayXp={todayXp}
@@ -66,7 +69,7 @@ export default function HomePage() {
 
       {/* Habit blocks */}
       <div className="flex flex-col gap-3 pb-8">
-        {HABIT_CATEGORIES.map((category) => (
+        {categories.map((category) => (
           <HabitBlock
             key={category.id}
             category={category}
@@ -81,6 +84,9 @@ export default function HomePage() {
 
       {/* Confetti trigger */}
       <ConfettiTrigger blockCompletion={blockCompletion} />
+
+      {/* Bottom Navigation */}
+      <BottomNav activeTab="home" />
     </div>
   );
 }
