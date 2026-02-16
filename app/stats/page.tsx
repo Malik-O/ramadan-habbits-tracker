@@ -11,6 +11,7 @@ import BottomNav from "@/components/BottomNav";
 import OverviewCards from "@/components/stats/OverviewCards";
 import CategoryBreakdown from "@/components/stats/CategoryBreakdown";
 import DailyHeatmap from "@/components/stats/DailyHeatmap";
+import HabitLineChart from "@/components/stats/HabitLineChart";
 
 export default function StatsPage() {
   const { categories } = useCustomHabits();
@@ -86,7 +87,7 @@ export default function StatsPage() {
   return (
     <div className="mx-auto flex min-h-dvh max-w-md flex-col bg-theme-bg pb-20">
       {/* Header */}
-      <header className="border-b border-theme-border bg-theme-header px-4 py-4">
+      <header className="sticky top-0 z-50 border-b border-theme-border bg-theme-header backdrop-blur-xl px-4 py-4">
         <div className="flex items-center gap-3">
           <Link
             href="/"
@@ -116,11 +117,23 @@ export default function StatsPage() {
           <DailyHeatmap dailyCompletions={dailyCompletions} />
         </motion.div>
 
+        {/* Habit Line Chart */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <HabitLineChart
+            categories={categories}
+            trackerState={trackerState}
+          />
+        </motion.div>
+
         {/* Category Breakdown */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25 }}
+          transition={{ delay: 0.3 }}
         >
           <CategoryBreakdown
             categoryStats={categoryStats}

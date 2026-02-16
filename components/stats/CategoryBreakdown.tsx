@@ -7,6 +7,7 @@ import type { HabitCategory } from "@/constants/habits";
 import type { TrackerState } from "@/hooks/useHabitTracker";
 import { isHabitCompleted } from "@/hooks/useHabitTracker";
 import { TOTAL_DAYS } from "@/constants/habits";
+import HabitDetailModal from "./HabitDetailModal";
 
 interface CategoryStat {
   category: HabitCategory;
@@ -24,30 +25,48 @@ export default function CategoryBreakdown({
   categoryStats,
   trackerState,
 }: CategoryBreakdownProps) {
+  const [selectedHabit, setSelectedHabit] = useState<{
+    id: string;
+    label: string;
+  } | null>(null);
+
   return (
-    <div className="rounded-2xl border border-theme-border bg-theme-card">
-      <h3 className="border-b border-theme-border px-4 py-3 text-sm font-semibold text-theme-primary">
-        أداء الأقسام
-      </h3>
-      <div className="divide-y divide-theme-border">
-        {categoryStats.map((stat) => (
-          <CategoryStatRow
-            key={stat.category.id}
-            stat={stat}
-            trackerState={trackerState}
-          />
-        ))}
+    <>
+      <div className="rounded-2xl border border-theme-border bg-theme-card">
+        <h3 className="border-b border-theme-border px-4 py-3 text-sm font-semibold text-theme-primary">
+          أداء الأقسام
+        </h3>
+        <div className="divide-y divide-theme-border">
+          {categoryStats.map((stat) => (
+            <CategoryStatRow
+              key={stat.category.id}
+              stat={stat}
+              trackerState={trackerState}
+              onSelectHabit={setSelectedHabit}
+            />
+          ))}
+        </div>
       </div>
-    </div>
+
+      {/* Habit detail modal */}
+      <HabitDetailModal
+        isOpen={!!selectedHabit}
+        label={selectedHabit?.label ?? ""}
+        habitId={selectedHabit?.id ?? ""}
+        trackerState={trackerState}
+        onClose={() => setSelectedHabit(null)}
+      />
+    </>
   );
 }
 
 interface CategoryStatRowProps {
   stat: CategoryStat;
   trackerState: TrackerState;
+  onSelectHabit: (habit: { id: string; label: string }) => void;
 }
 
-function CategoryStatRow({ stat, trackerState }: CategoryStatRowProps) {
+function CategoryStatRow({ stat, trackerState, onSelectHabit }: CategoryStatRowProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
@@ -110,6 +129,9 @@ function CategoryStatRow({ stat, trackerState }: CategoryStatRowProps) {
                   label={item.label}
                   habitId={item.id}
                   trackerState={trackerState}
+                  onSelect={() =>
+                    onSelectHabit({ id: item.id, label: item.label })
+                  }
                 />
               ))}
             </div>
@@ -124,9 +146,10 @@ interface HabitStatRowProps {
   label: string;
   habitId: string;
   trackerState: TrackerState;
+  onSelect: () => void;
 }
 
-function HabitStatRow({ label, habitId, trackerState }: HabitStatRowProps) {
+function HabitStatRow({ label, habitId, trackerState, onSelect }: HabitStatRowProps) {
   // Count days this habit was completed
   let completed = 0;
   let totalActive = 0;
@@ -142,8 +165,13 @@ function HabitStatRow({ label, habitId, trackerState }: HabitStatRowProps) {
   const rate = totalActive > 0 ? completed / totalActive : 0;
 
   return (
-    <div className="flex items-center gap-3 py-2">
-      <span className="flex-1 text-xs text-theme-secondary">{label}</span>
+    <button
+      onClick={onSelect}
+      className="flex w-full items-center gap-3 rounded-lg py-2 transition-colors hover:bg-theme-subtle"
+    >
+      <span className="flex-1 text-right text-xs text-theme-secondary">
+        {label}
+      </span>
       <div className="h-1 w-16 overflow-hidden rounded-full bg-theme-subtle">
         <motion.div
           className={`h-full rounded-full ${
@@ -163,6 +191,6 @@ function HabitStatRow({ label, habitId, trackerState }: HabitStatRowProps) {
       <span className="w-8 text-left text-[11px] font-medium text-theme-secondary">
         {Math.round(rate * 100)}%
       </span>
-    </div>
+    </button>
   );
 }

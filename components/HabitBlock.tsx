@@ -2,28 +2,11 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  ChevronDown,
-  Sunrise,
-  Sun,
-  CloudSun,
-  Sunset,
-  Moon,
-  Heart,
-  Check,
-} from "lucide-react";
+import { ChevronDown, Check } from "lucide-react";
 import type { HabitCategory } from "@/constants/habits";
 import type { HabitValue } from "@/hooks/useHabitTracker";
+import { getIconComponent } from "@/utils/iconMap";
 import HabitRow from "./HabitRow";
-
-const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
-  Sunrise,
-  Sun,
-  CloudSun,
-  Sunset,
-  Moon,
-  Heart,
-};
 
 interface HabitBlockProps {
   category: HabitCategory;
@@ -48,7 +31,7 @@ export default function HabitBlock({
   setHabitValue,
 }: HabitBlockProps) {
   const [isOpen, setIsOpen] = useState(isDefaultOpen);
-  const IconComponent = ICON_MAP[category.icon] || Heart;
+  const IconComponent = getIconComponent(category.icon);
 
   const completedCount = category.items.filter((item) =>
     isItemCompleted(getHabitValue(item.id))

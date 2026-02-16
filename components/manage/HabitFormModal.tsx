@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
+import { X, CheckCircle2, Hash } from "lucide-react";
 import type { HabitItem } from "@/constants/habits";
 
 interface HabitFormModalProps {
@@ -100,14 +100,14 @@ export default function HabitFormModal({
                   <TypeOption
                     selected={type === "boolean"}
                     onSelect={() => setType("boolean")}
-                    emoji="✅"
+                    icon={<CheckCircle2 className={`h-5 w-5 ${type === "boolean" ? "text-emerald-400" : "text-theme-secondary"}`} />}
                     title="تحقق"
                     description="تم أو لم يتم"
                   />
                   <TypeOption
                     selected={type === "number"}
                     onSelect={() => setType("number")}
-                    emoji="🔢"
+                    icon={<Hash className={`h-5 w-5 ${type === "number" ? "text-sky-400" : "text-theme-secondary"}`} />}
                     title="رقم"
                     description="عدد مرات"
                   />
@@ -134,23 +134,23 @@ export default function HabitFormModal({
 interface TypeOptionProps {
   selected: boolean;
   onSelect: () => void;
-  emoji: string;
+  icon: React.ReactNode;
   title: string;
   description: string;
 }
 
-function TypeOption({ selected, onSelect, emoji, title, description }: TypeOptionProps) {
+function TypeOption({ selected, onSelect, icon, title, description }: TypeOptionProps) {
   return (
     <button
       type="button"
       onClick={onSelect}
-      className={`flex flex-col items-center gap-1 rounded-xl border-2 px-3 py-3 transition-all ${
+      className={`flex flex-col items-center gap-1.5 rounded-xl border-2 px-3 py-3 transition-all ${
         selected
           ? "border-amber-500/50 bg-amber-500/10"
           : "border-theme-border bg-theme-subtle hover:border-theme-border"
       }`}
     >
-      <span className="text-lg">{emoji}</span>
+      {icon}
       <span className={`text-xs font-semibold ${selected ? "text-amber-400" : "text-theme-primary"}`}>
         {title}
       </span>

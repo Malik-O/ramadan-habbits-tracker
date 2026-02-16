@@ -1,8 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { MinusCircle, Plus, Pencil } from "lucide-react";
 import type { HabitCategory, HabitItem } from "@/constants/habits";
+import { getIconComponent } from "@/utils/iconMap";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 interface CategoryCardProps {
   category: HabitCategory;
@@ -14,18 +17,15 @@ interface CategoryCardProps {
   onRemoveHabit: (habitId: string) => void;
 }
 
-/** iOS-style wiggle — inline animate to avoid Variants type conflicts */
-const WIGGLE_ANIMATE = {
-  rotate: [-0.8, 0.8, -0.8] as number[],
-  transition: {
-    repeat: Infinity,
-    repeatType: "mirror" as const,
-    duration: 0.25,
-    ease: "easeInOut" as const,
-  },
-};
-
-const IDLE_ANIMATE = { rotate: 0 };
+/** Renders a Lucide icon from an icon key string */
+function CategoryIcon({ iconKey }: { iconKey: string }) {
+  const Icon = getIconComponent(iconKey);
+  return (
+    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500/10">
+      <Icon className="h-4 w-4 text-amber-400" />
+    </div>
+  );
+}
 
 export default function CategoryCard({
   category,
@@ -36,75 +36,113 @@ export default function CategoryCard({
   onEditHabit,
   onRemoveHabit,
 }: CategoryCardProps) {
-  return (
-    <motion.div
-      layout
-      animate={isEditMode ? WIGGLE_ANIMATE : IDLE_ANIMATE}
-      className="overflow-hidden rounded-2xl border border-theme-border bg-theme-card"
-      exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
-    >
-      {/* Category header */}
-      <div className="flex items-center gap-3 border-b border-theme-border px-4 py-3">
-        {/* Delete button (edit mode) */}
-        {isEditMode && (
-          <motion.button
-            onClick={onRemoveCategory}
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 400, damping: 20 }}
-            className="flex-shrink-0"
-          >
-            <MinusCircle className="h-5 w-5 text-red-400 transition-colors hover:text-red-300" />
-          </motion.button>
-        )}
+  const [confirmRemoveCat, setConfirmRemoveCat] = useState(false);
+  const [confirmRemoveHabitId, setConfirmRemoveHabitId] = useState<string | null>(null);
 
-        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500/10">
-          <span className="text-base">{category.icon === "Sunrise" ? "🌅" : category.icon === "Sun" ? "☀️" : category.icon === "CloudSun" ? "⛅" : category.icon === "Sunset" ? "🌇" : category.icon === "Moon" ? "🌙" : category.icon === "Heart" ? "❤️" : "📋"}</span>
+  const habitToRemove = confirmRemoveHabitId
+    ? category.items.find((i) => i.id === confirmRemoveHabitId)
+    : null;
+
+  return (
+    <>
+      <motion.div
+        layout
+        className="overflow-hidden rounded-2xl border border-theme-border bg-theme-card"
+        exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
+      >
+        {/* Category header */}
+        <div className="flex items-center gap-3 border-b border-theme-border px-4 py-3">
+          {/* Delete button (edit mode) */}
+          {isEditMode && (
+            <motion.button
+              onClick={() => setConfirmRemoveCat(true)}
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 400, damping: 20 }}
+              className="flex-shrink-0"
+            >
+              <MinusCircle className="h-5 w-5 text-red-400 transition-colors hover:text-red-300" />
+            </motion.button>
+          )}
+
+          <CategoryIcon iconKey={category.icon} />
+
+          <span className="flex-1 text-sm font-semibold text-theme-primary">
+            {category.name}
+          </span>
+
+          <span className="text-xs text-theme-secondary">
+            {category.items.length} عادة
+          </span>
+
+          {isEditMode && (
+            <motion.button
+              onClick={onEditCategory}
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="flex h-7 w-7 items-center justify-center rounded-full bg-theme-subtle transition-colors hover:bg-theme-border"
+            >
+              <Pencil className="h-3.5 w-3.5 text-theme-secondary" />
+            </motion.button>
+          )}
         </div>
 
-        <span className="flex-1 text-sm font-semibold text-theme-primary">
-          {category.name}
-        </span>
+        {/* Habit items */}
+        <div className="divide-y divide-theme-border">
+          {category.items.map((item) => (
+            <HabitItemRow
+              key={item.id}
+              item={item}
+              isEditMode={isEditMode}
+              onEdit={() => onEditHabit(item)}
+              onRemove={() => setConfirmRemoveHabitId(item.id)}
+            />
+          ))}
+        </div>
 
-        <span className="text-xs text-theme-secondary">
-          {category.items.length} عادة
-        </span>
+        {/* Add habit button */}
+        <button
+          onClick={onAddHabit}
+          className="flex w-full items-center justify-center gap-2 py-3 text-theme-secondary transition-colors hover:bg-theme-subtle hover:text-amber-400"
+        >
+          <Plus className="h-4 w-4" />
+          <span className="text-xs font-medium">إضافة عادة</span>
+        </button>
+      </motion.div>
 
-        {isEditMode && (
-          <motion.button
-            onClick={onEditCategory}
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="flex h-7 w-7 items-center justify-center rounded-full bg-theme-subtle transition-colors hover:bg-theme-border"
-          >
-            <Pencil className="h-3.5 w-3.5 text-theme-secondary" />
-          </motion.button>
-        )}
-      </div>
+      {/* Confirm remove category */}
+      <ConfirmDialog
+        isOpen={confirmRemoveCat}
+        title="حذف القسم"
+        message={`هل أنت متأكد من حذف "${category.name}" وجميع عاداته؟`}
+        confirmLabel="حذف"
+        cancelLabel="إلغاء"
+        variant="danger"
+        onConfirm={() => {
+          setConfirmRemoveCat(false);
+          onRemoveCategory();
+        }}
+        onCancel={() => setConfirmRemoveCat(false)}
+      />
 
-      {/* Habit items */}
-      <div className="divide-y divide-theme-border">
-        {category.items.map((item) => (
-          <HabitItemRow
-            key={item.id}
-            item={item}
-            isEditMode={isEditMode}
-            onEdit={() => onEditHabit(item)}
-            onRemove={() => onRemoveHabit(item.id)}
-          />
-        ))}
-      </div>
-
-      {/* Add habit button */}
-      <button
-        onClick={onAddHabit}
-        className="flex w-full items-center justify-center gap-2 py-3 text-theme-secondary transition-colors hover:bg-theme-subtle hover:text-amber-400"
-      >
-        <Plus className="h-4 w-4" />
-        <span className="text-xs font-medium">إضافة عادة</span>
-      </button>
-    </motion.div>
+      {/* Confirm remove habit */}
+      <ConfirmDialog
+        isOpen={!!confirmRemoveHabitId}
+        title="حذف العادة"
+        message={`هل أنت متأكد من حذف "${habitToRemove?.label ?? ""}"؟`}
+        confirmLabel="حذف"
+        cancelLabel="إلغاء"
+        variant="danger"
+        onConfirm={() => {
+          if (confirmRemoveHabitId) {
+            onRemoveHabit(confirmRemoveHabitId);
+          }
+          setConfirmRemoveHabitId(null);
+        }}
+        onCancel={() => setConfirmRemoveHabitId(null)}
+      />
+    </>
   );
 }
 

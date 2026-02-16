@@ -1,9 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
-  Moon,
+  Moon as MoonIcon,
   Sun,
   RotateCcw,
   Heart,
@@ -14,6 +15,7 @@ import Link from "next/link";
 import { useTheme } from "@/hooks/useTheme";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { RAMADAN_YEAR } from "@/constants/habits";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 export default function ProfilePage() {
   const { theme, toggleTheme } = useTheme();
@@ -66,7 +68,7 @@ function AppInfoCard() {
     >
       <div className="mb-3 flex items-center gap-3">
         <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500/10">
-          <span className="text-2xl">🌙</span>
+          <MoonIcon className="h-6 w-6 text-amber-400" />
         </div>
         <div>
           <h2 className="text-base font-bold text-theme-primary">
@@ -107,7 +109,7 @@ function SettingsSection({ theme, onToggleTheme }: SettingsSectionProps) {
       >
         <div className="flex items-center gap-3">
           {theme === "dark" ? (
-            <Moon className="h-5 w-5 text-amber-400" />
+            <MoonIcon className="h-5 w-5 text-amber-400" />
           ) : (
             <Sun className="h-5 w-5 text-amber-500" />
           )}
@@ -124,33 +126,46 @@ function SettingsSection({ theme, onToggleTheme }: SettingsSectionProps) {
 function DangerSection() {
   const [, setTracker] = useLocalStorage("ramadan-tracker", {});
   const [, setDay] = useLocalStorage("ramadan-current-day", 0);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   const handleReset = () => {
-    if (window.confirm("هل أنت متأكد؟ سيتم حذف جميع بياناتك.")) {
-      setTracker({});
-      setDay(0);
-      window.location.reload();
-    }
+    setTracker({});
+    setDay(0);
+    setIsConfirmOpen(false);
+    window.location.reload();
   };
 
   return (
-    <motion.div
-      className="overflow-hidden rounded-2xl border border-red-500/20 bg-theme-card"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: 0.2 }}
-    >
-      <h3 className="border-b border-red-500/20 px-4 py-3 text-sm font-semibold text-red-400">
-        منطقة الخطر
-      </h3>
-      <button
-        onClick={handleReset}
-        className="flex w-full items-center gap-3 px-4 py-3.5 text-red-400 transition-colors hover:bg-red-500/5"
+    <>
+      <motion.div
+        className="overflow-hidden rounded-2xl border border-red-500/20 bg-theme-card"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.2 }}
       >
-        <RotateCcw className="h-5 w-5" />
-        <span className="text-sm">إعادة تعيين جميع البيانات</span>
-      </button>
-    </motion.div>
+        <h3 className="border-b border-red-500/20 px-4 py-3 text-sm font-semibold text-red-400">
+          منطقة الخطر
+        </h3>
+        <button
+          onClick={() => setIsConfirmOpen(true)}
+          className="flex w-full items-center gap-3 px-4 py-3.5 text-red-400 transition-colors hover:bg-red-500/5"
+        >
+          <RotateCcw className="h-5 w-5" />
+          <span className="text-sm">إعادة تعيين جميع البيانات</span>
+        </button>
+      </motion.div>
+
+      <ConfirmDialog
+        isOpen={isConfirmOpen}
+        title="حذف جميع البيانات"
+        message="هل أنت متأكد؟ سيتم حذف جميع بياناتك بشكل نهائي."
+        confirmLabel="حذف"
+        cancelLabel="إلغاء"
+        variant="danger"
+        onConfirm={handleReset}
+        onCancel={() => setIsConfirmOpen(false)}
+      />
+    </>
   );
 }
 

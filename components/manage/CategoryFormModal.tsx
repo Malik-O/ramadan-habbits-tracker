@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import type { HabitCategory } from "@/constants/habits";
+import { AVAILABLE_ICONS, getIconComponent } from "@/utils/iconMap";
 
 interface CategoryFormModalProps {
   isOpen: boolean;
@@ -11,21 +12,6 @@ interface CategoryFormModalProps {
   onSubmit: (name: string, icon: string) => void;
   initialValues: HabitCategory | null;
 }
-
-const AVAILABLE_ICONS = [
-  { value: "Sunrise", emoji: "🌅", label: "شروق" },
-  { value: "Sun", emoji: "☀️", label: "شمس" },
-  { value: "CloudSun", emoji: "⛅", label: "غيوم" },
-  { value: "Sunset", emoji: "🌇", label: "غروب" },
-  { value: "Moon", emoji: "🌙", label: "قمر" },
-  { value: "Heart", emoji: "❤️", label: "قلب" },
-  { value: "Star", emoji: "⭐", label: "نجمة" },
-  { value: "Book", emoji: "📖", label: "كتاب" },
-  { value: "Pray", emoji: "🤲", label: "دعاء" },
-  { value: "Mosque", emoji: "🕌", label: "مسجد" },
-  { value: "Water", emoji: "💧", label: "ماء" },
-  { value: "Food", emoji: "🍽️", label: "طعام" },
-];
 
 export default function CategoryFormModal({
   isOpen,
@@ -112,18 +98,24 @@ export default function CategoryFormModal({
                   الأيقونة
                 </label>
                 <div className="grid grid-cols-6 gap-2">
-                  {AVAILABLE_ICONS.map(({ value, emoji }) => (
+                  {AVAILABLE_ICONS.map(({ value, component: IconComp }) => (
                     <button
                       key={value}
                       type="button"
                       onClick={() => setIcon(value)}
-                      className={`flex h-10 items-center justify-center rounded-xl text-lg transition-all ${
+                      className={`flex h-10 items-center justify-center rounded-xl transition-all ${
                         icon === value
                           ? "bg-amber-500/20 ring-2 ring-amber-500/50 scale-110"
                           : "bg-theme-subtle hover:bg-theme-border"
                       }`}
                     >
-                      {emoji}
+                      <IconComp
+                        className={`h-4.5 w-4.5 ${
+                          icon === value
+                            ? "text-amber-400"
+                            : "text-theme-secondary"
+                        }`}
+                      />
                     </button>
                   ))}
                 </div>

@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-background: #020617;
+  --color-background: #0a0f1e;
   --color-foreground: #f8fafc;
   --color-amber-400: #fbbf24;
   --color-amber-500: #f59e0b;
@@ -27,22 +27,24 @@
 
 /* Dark theme (default) */
 :root, .dark {
-  --theme-bg: #020617;
-  --theme-card: rgba(255, 255, 255, 0.02);
-  --theme-header: rgba(2, 6, 23, 0.8);
-  --theme-border: rgba(255, 255, 255, 0.05);
-  --theme-subtle: rgba(255, 255, 255, 0.05);
-  --theme-primary: #f8fafc;
-  --theme-secondary: #94a3b8;
+  --theme-bg: #0a0f1e;
+  --theme-card: #131a2e;
+  --theme-card-hover: #1a2340;
+  --theme-header: rgba(10, 15, 30, 0.85);
+  --theme-border: rgba(255, 255, 255, 0.08);
+  --theme-subtle: rgba(255, 255, 255, 0.06);
+  --theme-primary: #eef2ff;
+  --theme-secondary: #8b9cc0;
   --theme-ring-bg: rgba(255, 255, 255, 0.1);
-  --theme-checkbox-border: rgba(255, 255, 255, 0.2);
+  --theme-checkbox-border: rgba(255, 255, 255, 0.18);
 }
 
 /* Light theme */
 .light {
-  --theme-bg: #f8fafc;
+  --theme-bg: #f4f6fb;
   --theme-card: #ffffff;
-  --theme-header: rgba(248, 250, 252, 0.85);
+  --theme-card-hover: #f0f2f8;
+  --theme-header: rgba(244, 246, 251, 0.9);
   --theme-border: rgba(0, 0, 0, 0.08);
   --theme-subtle: rgba(0, 0, 0, 0.04);
   --theme-primary: #0f172a;
@@ -57,13 +59,17 @@
 @layer utilities {
   .bg-theme-bg { background-color: var(--theme-bg); }
   .bg-theme-card { background-color: var(--theme-card); }
+  .bg-theme-card-hover { background-color: var(--theme-card-hover); }
   .bg-theme-header { background-color: var(--theme-header); }
   .bg-theme-subtle { background-color: var(--theme-subtle); }
   .border-theme-border { border-color: var(--theme-border); }
+  .divide-theme-border > * + * { border-color: var(--theme-border); }
   .text-theme-primary { color: var(--theme-primary); }
   .text-theme-secondary { color: var(--theme-secondary); }
   .border-theme-checkbox-border { border-color: var(--theme-checkbox-border); }
   .stroke-theme-ring-bg { stroke: var(--theme-ring-bg); }
+  .fill-theme-secondary { fill: var(--theme-secondary); }
+  .stroke-theme-secondary { stroke: var(--theme-secondary); }
 }
 
 /* Base styles */

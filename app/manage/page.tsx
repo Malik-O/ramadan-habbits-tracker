@@ -6,6 +6,7 @@ import { ArrowRight, Plus, Pencil } from "lucide-react";
 import Link from "next/link";
 import { useCustomHabits } from "@/hooks/useCustomHabits";
 import BottomNav from "@/components/BottomNav";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import CategoryCard from "@/components/manage/CategoryCard";
 import CategoryFormModal from "@/components/manage/CategoryFormModal";
 import HabitFormModal from "@/components/manage/HabitFormModal";
@@ -33,6 +34,9 @@ export default function ManagePage() {
   const [habitModalOpen, setHabitModalOpen] = useState(false);
   const [habitTargetCategoryId, setHabitTargetCategoryId] = useState<string>("");
   const [editingHabit, setEditingHabit] = useState<HabitItem | null>(null);
+
+  // Reset confirm state
+  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
 
   const handleAddCategory = () => {
     setEditingCategory(null);
@@ -85,10 +89,9 @@ export default function ManagePage() {
   };
 
   const handleReset = () => {
-    if (window.confirm("هل أنت متأكد؟ سيتم إعادة جميع الأقسام والعادات إلى الإعدادات الافتراضية.")) {
-      resetToDefaults();
-      setIsEditMode(false);
-    }
+    resetToDefaults();
+    setIsEditMode(false);
+    setResetConfirmOpen(false);
   };
 
   return (
@@ -148,7 +151,7 @@ export default function ManagePage() {
         {/* Reset defaults */}
         {isEditMode && (
           <motion.button
-            onClick={handleReset}
+            onClick={() => setResetConfirmOpen(true)}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
@@ -182,6 +185,18 @@ export default function ManagePage() {
       />
 
       <BottomNav activeTab="manage" />
+
+      {/* Reset Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={resetConfirmOpen}
+        title="إعادة تعيين"
+        message="سيتم إعادة جميع الأقسام والعادات إلى الإعدادات الافتراضية. هل أنت متأكد؟"
+        confirmLabel="إعادة تعيين"
+        cancelLabel="إلغاء"
+        variant="danger"
+        onConfirm={handleReset}
+        onCancel={() => setResetConfirmOpen(false)}
+      />
     </div>
   );
 }
