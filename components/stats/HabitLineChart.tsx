@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getIconComponent } from "@/utils/iconMap";
 import type { HabitCategory } from "@/constants/habits";
@@ -14,6 +14,11 @@ const LINE_COLORS = [
   "#a78bfa", "#fb923c", "#22d3ee", "#f87171",
   "#4ade80", "#e879f9", "#facc15", "#818cf8",
 ];
+
+/** Page header height: py-4 (32px) + h-9 (36px) + border (1px) */
+const HEADER_H = 69;
+
+/* ─── Types ─── */
 
 interface HabitOption {
   id: string;
@@ -34,11 +39,12 @@ interface HabitLineChartProps {
   trackerState: TrackerState;
 }
 
+/* ─── Main Component ─── */
+
 export default function HabitLineChart({
   categories,
   trackerState,
 }: HabitLineChartProps) {
-  /** Build grouped list of habits by category */
   const categoryGroups: CategoryGroup[] = useMemo(() => {
     let colorIdx = 0;
     return categories.map((cat) => ({
@@ -58,7 +64,6 @@ export default function HabitLineChart({
     }));
   }, [categories]);
 
-  /** Flat list for easy lookup */
   const allHabits = useMemo(
     () => categoryGroups.flatMap((g) => g.habits),
     [categoryGroups]
@@ -81,28 +86,64 @@ export default function HabitLineChart({
   const toggleCategory = (group: CategoryGroup) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      const allSelected = group.habits.every((h) => next.has(h.id));
+      const allOn = group.habits.every((h) => next.has(h.id));
       for (const h of group.habits) {
-        if (allSelected) next.delete(h.id);
+        if (allOn) next.delete(h.id);
         else next.add(h.id);
       }
       return next;
     });
   };
 
-  /** Compute cumulative data for selected habits */
+  /* ── Scroll-driven expansion ── */
+  const cardRef = useRef<HTMLDivElement>(null);
+  const chartRef = useRef<HTMLDivElement>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  useEffect(() => {
+    const card = cardRef.current;
+    if (!card) return;
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const rect = card.getBoundingClientRect();
+        const chartH = chartRef.current?.offsetHeight ?? 200;
+        const topPast = rect.top <= HEADER_H;
+        const enoughRoom = rect.bottom - HEADER_H > chartH + 60;
+        setIsExpanded(topPast && enoughRoom);
+        ticking = false;
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  /* ── Trim chart to last tracked day ── */
+  const lastTrackedDay = useMemo(() => {
+    for (let d = TOTAL_DAYS - 1; d >= 0; d--) {
+      const rec = trackerState[d];
+      if (rec && Object.values(rec).some(isHabitCompleted)) return d;
+    }
+    return 0;
+  }, [trackerState]);
+
+  const visibleDays = Math.max(7, Math.min(lastTrackedDay + 3, TOTAL_DAYS));
+
+  /* ── Cumulative chart data (trimmed) ── */
   const chartData = useMemo(() => {
     const selected = allHabits.filter((h) => selectedIds.has(h.id));
     return selected.map((habit) => {
-      let cumulative = 0;
-      const points = Array.from({ length: TOTAL_DAYS }, (_, d) => {
-        const record = trackerState[d];
-        if (record && isHabitCompleted(record[habit.id])) cumulative++;
-        return cumulative;
+      let cum = 0;
+      const points = Array.from({ length: visibleDays }, (_, d) => {
+        const rec = trackerState[d];
+        if (rec && isHabitCompleted(rec[habit.id])) cum++;
+        return cum;
       });
       return { ...habit, points };
     });
-  }, [allHabits, selectedIds, trackerState]);
+  }, [allHabits, selectedIds, trackerState, visibleDays]);
 
   const maxValue = useMemo(
     () => Math.max(1, ...chartData.flatMap((d) => d.points)),
@@ -110,33 +151,74 @@ export default function HabitLineChart({
   );
 
   return (
-    <div className="rounded-2xl border border-theme-border bg-theme-card">
-      <h3 className="border-b border-theme-border px-4 py-3 text-sm font-semibold text-theme-primary">
-        مخطط التقدم
-      </h3>
-
-      {/* SVG chart */}
-      <div className="px-4 pt-4">
-        <ChartArea chartData={chartData} maxValue={maxValue} />
+    <div
+      ref={cardRef}
+      className="border border-theme-border bg-theme-card"
+      style={{
+        marginLeft: isExpanded ? "-1rem" : 0,
+        marginRight: isExpanded ? "-1rem" : 0,
+        borderRadius: isExpanded ? 0 : "1rem",
+        transition:
+          "margin 350ms cubic-bezier(.4,0,.2,1), border-radius 350ms cubic-bezier(.4,0,.2,1)",
+      }}
+    >
+      {/* ── Sticky chart header ── */}
+      <div
+        ref={chartRef}
+        className="sticky z-30 border-b border-theme-border bg-theme-card"
+        style={{ top: HEADER_H }}
+      >
+        <ChartHeader selectedCount={selectedIds.size} />
+        <div className="px-4 pb-3">
+          <ChartArea
+            chartData={chartData}
+            maxValue={maxValue}
+            visibleDays={visibleDays}
+          />
+        </div>
       </div>
 
-      {/* Habit toggles grouped by category */}
-      <div className="p-4">
-        <p className="mb-3 text-[11px] font-medium text-theme-secondary">
+      {/* ── Habit toggles ── */}
+      <div className="p-5">
+        <p className="mb-4 text-xs font-semibold text-theme-secondary tracking-wide">
           اختر العادات لعرضها
         </p>
-        <div className="flex flex-col gap-3">
-          {categoryGroups.map((group) => (
-            <CategoryChipGroup
+        <div className="flex flex-col gap-4">
+          {categoryGroups.map((group, i) => (
+            <motion.div
               key={group.id}
-              group={group}
-              selectedIds={selectedIds}
-              onToggleHabit={toggleHabit}
-              onToggleCategory={() => toggleCategory(group)}
-            />
+              initial={{ opacity: 0, x: -12 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.05 * i, duration: 0.3 }}
+            >
+              <CategoryChipGroup
+                group={group}
+                selectedIds={selectedIds}
+                onToggleHabit={toggleHabit}
+                onToggleCategory={() => toggleCategory(group)}
+              />
+            </motion.div>
           ))}
         </div>
       </div>
+    </div>
+  );
+}
+
+/* ─── Chart Header ─── */
+
+function ChartHeader({ selectedCount }: { selectedCount: number }) {
+  return (
+    <div className="flex items-center justify-between px-5 pt-4 pb-2">
+      <h3 className="text-base font-bold text-theme-primary">مخطط التقدم</h3>
+      <motion.span
+        key={selectedCount}
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="rounded-full bg-theme-subtle px-2.5 py-0.5 text-xs font-medium text-theme-secondary"
+      >
+        {selectedCount} محدد
+      </motion.span>
     </div>
   );
 }
@@ -161,40 +243,39 @@ function CategoryChipGroup({
 
   return (
     <div>
-      {/* Category header chip */}
       <button
         onClick={onToggleCategory}
-        className={`mb-1.5 flex items-center gap-1.5 rounded-lg px-2 py-1 text-[11px] font-semibold transition-all ${
+        className={`mb-2 flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm font-bold transition-all duration-200 ${
           allSelected
             ? "text-amber-400"
             : "text-theme-secondary hover:text-theme-primary"
         }`}
       >
-        <Icon className="h-3 w-3" />
+        <Icon className="h-4 w-4" />
         {group.name}
       </button>
 
-      {/* Habit chips */}
-      <div className="flex flex-wrap gap-1.5 pr-3">
+      <div className="flex flex-wrap gap-2 pr-3">
         {group.habits.map((habit) => {
-          const isActive = selectedIds.has(habit.id);
+          const active = selectedIds.has(habit.id);
           return (
             <motion.button
               key={habit.id}
               onClick={() => onToggleHabit(habit.id)}
-              whileTap={{ scale: 0.95 }}
-              className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium transition-all ${
-                isActive
-                  ? "bg-theme-card-hover text-theme-primary"
+              whileTap={{ scale: 0.93 }}
+              whileHover={{ scale: 1.03 }}
+              layout
+              className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium transition-all duration-200 ${
+                active
+                  ? "bg-theme-card-hover text-theme-primary shadow-sm"
                   : "bg-theme-subtle text-theme-secondary hover:bg-theme-card-hover"
               }`}
             >
-              <span
-                className="inline-block h-2 w-2 rounded-full transition-opacity"
-                style={{
-                  backgroundColor: habit.color,
-                  opacity: isActive ? 1 : 0.25,
-                }}
+              <motion.span
+                className="inline-block h-2.5 w-2.5 rounded-full"
+                style={{ backgroundColor: habit.color }}
+                animate={{ opacity: active ? 1 : 0.25, scale: active ? 1 : 0.8 }}
+                transition={{ duration: 0.2 }}
               />
               {habit.label}
             </motion.button>
@@ -208,27 +289,24 @@ function CategoryChipGroup({
 /* ─── Chart Area (SVG) ─── */
 
 const CHART_W = 300;
-const CHART_H = 140;
-const PAD_L = 24;
-const PAD_R = 8;
-const PAD_T = 10;
-const PAD_B = 20;
-const INNER_W = CHART_W - PAD_L - PAD_R;
-const INNER_H = CHART_H - PAD_T - PAD_B;
-
-/** Day labels to show on x-axis */
-const X_LABELS = [1, 5, 10, 15, 20, 25, 30];
+const CHART_H = 150;
+const PAD = { l: 24, r: 8, t: 12, b: 22 };
+const INNER_W = CHART_W - PAD.l - PAD.r;
+const INNER_H = CHART_H - PAD.t - PAD.b;
+const X_TICKS = [1, 5, 10, 15, 20, 25, 30];
 
 interface ChartAreaProps {
   chartData: { id: string; color: string; label: string; points: number[] }[];
   maxValue: number;
+  visibleDays: number;
 }
 
-function ChartArea({ chartData, maxValue }: ChartAreaProps) {
-  const xScale = (d: number) => PAD_L + (d / (TOTAL_DAYS - 1)) * INNER_W;
-  const yScale = (v: number) => PAD_T + INNER_H - (v / maxValue) * INNER_H;
+function ChartArea({ chartData, maxValue, visibleDays }: ChartAreaProps) {
+  const xScale = (d: number) => PAD.l + (d / (visibleDays - 1)) * INNER_W;
+  const yScale = (v: number) => PAD.t + INNER_H - (v / maxValue) * INNER_H;
 
   const gridSteps = [0, 0.25, 0.5, 0.75, 1];
+  const xLabels = X_TICKS.filter((d) => d <= visibleDays);
 
   return (
     <svg
@@ -236,46 +314,62 @@ function ChartArea({ chartData, maxValue }: ChartAreaProps) {
       className="w-full"
       preserveAspectRatio="xMidYMid meet"
     >
-      {/* Horizontal grid lines */}
+      {/* Gradient defs */}
+      <defs>
+        {chartData.map((s) => (
+          <linearGradient
+            key={`g-${s.id}`}
+            id={`grad-${s.id}`}
+            x1="0"
+            x2="0"
+            y1="0"
+            y2="1"
+          >
+            <stop offset="0%" stopColor={s.color} stopOpacity={0.25} />
+            <stop offset="100%" stopColor={s.color} stopOpacity={0} />
+          </linearGradient>
+        ))}
+      </defs>
+
+      {/* Horizontal grid */}
       {gridSteps.map((pct, i) => {
         const y = yScale(pct * maxValue);
-        const label = Math.round(pct * maxValue);
         return (
           <g key={i}>
             <line
-              x1={PAD_L}
+              x1={PAD.l}
               y1={y}
-              x2={CHART_W - PAD_R}
+              x2={CHART_W - PAD.r}
               y2={y}
               className="stroke-theme-secondary"
-              strokeOpacity={0.12}
+              strokeOpacity={0.1}
               strokeWidth={0.5}
               strokeDasharray="3 3"
             />
             <text
-              x={PAD_L - 4}
+              x={PAD.l - 4}
               y={y + 3}
               textAnchor="end"
               className="fill-theme-secondary"
               fontSize={7}
-              opacity={0.5}
+              opacity={0.45}
             >
-              {label}
+              {Math.round(pct * maxValue)}
             </text>
           </g>
         );
       })}
 
-      {/* Vertical grid lines + X-axis day labels */}
-      {X_LABELS.map((day) => {
+      {/* X-axis labels */}
+      {xLabels.map((day) => {
         const x = xScale(day - 1);
         return (
           <g key={day}>
             <line
               x1={x}
-              y1={PAD_T}
+              y1={PAD.t}
               x2={x}
-              y2={PAD_T + INNER_H}
+              y2={PAD.t + INNER_H}
               className="stroke-theme-secondary"
               strokeOpacity={0.06}
               strokeWidth={0.5}
@@ -286,7 +380,7 @@ function ChartArea({ chartData, maxValue }: ChartAreaProps) {
               textAnchor="middle"
               className="fill-theme-secondary"
               fontSize={7}
-              opacity={0.5}
+              opacity={0.45}
             >
               {day}
             </text>
@@ -294,48 +388,55 @@ function ChartArea({ chartData, maxValue }: ChartAreaProps) {
         );
       })}
 
-      {/* Lines */}
+      {/* Area fills + Lines */}
       <AnimatePresence>
         {chartData.map((series) => {
-          const pathD = series.points
-            .map((val, i) => {
-              const x = xScale(i);
-              const y = yScale(val);
-              return `${i === 0 ? "M" : "L"} ${x} ${y}`;
-            })
-            .join(" ");
+          const linePath = buildLinePath(series.points, xScale, yScale);
+          const areaPath = buildAreaPath(series.points, xScale, yScale);
 
           return (
-            <motion.path
-              key={series.id}
-              d={pathD}
-              fill="none"
-              stroke={series.color}
-              strokeWidth={2}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              initial={{ pathLength: 0, opacity: 0 }}
-              animate={{ pathLength: 1, opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-            />
+            <g key={series.id}>
+              {/* Gradient fill */}
+              <motion.path
+                d={areaPath}
+                fill={`url(#grad-${series.id})`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.5 }}
+              />
+              {/* Line */}
+              <motion.path
+                d={linePath}
+                fill="none"
+                stroke={series.color}
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{
+                  filter: `drop-shadow(0 0 3px ${series.color}50)`,
+                }}
+                initial={{ pathLength: 0, opacity: 0 }}
+                animate={{ pathLength: 1, opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+              />
+            </g>
           );
         })}
       </AnimatePresence>
 
-      {/* Dots at latest active day */}
+      {/* End dots */}
       {chartData.map((series) => {
         const lastIdx = series.points.reduce(
           (acc, val, i) => (val > 0 ? i : acc),
           0
         );
-        const cx = xScale(lastIdx);
-        const cy = yScale(series.points[lastIdx]);
         return (
           <motion.circle
             key={`dot-${series.id}`}
-            cx={cx}
-            cy={cy}
+            cx={xScale(lastIdx)}
+            cy={yScale(series.points[lastIdx])}
             r={3}
             fill={series.color}
             initial={{ scale: 0, opacity: 0 }}
@@ -346,4 +447,26 @@ function ChartArea({ chartData, maxValue }: ChartAreaProps) {
       })}
     </svg>
   );
+}
+
+/* ─── SVG path helpers ─── */
+
+function buildLinePath(
+  points: number[],
+  xScale: (d: number) => number,
+  yScale: (v: number) => number
+): string {
+  return points
+    .map((v, i) => `${i === 0 ? "M" : "L"} ${xScale(i)} ${yScale(v)}`)
+    .join(" ");
+}
+
+function buildAreaPath(
+  points: number[],
+  xScale: (d: number) => number,
+  yScale: (v: number) => number
+): string {
+  const line = buildLinePath(points, xScale, yScale);
+  const last = points.length - 1;
+  return `${line} L ${xScale(last)} ${yScale(0)} L ${xScale(0)} ${yScale(0)} Z`;
 }
