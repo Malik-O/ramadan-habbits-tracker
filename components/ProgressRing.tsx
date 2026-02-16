@@ -27,7 +27,7 @@ export default function ProgressRing({
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke="rgba(255,255,255,0.1)"
+          className="stroke-theme-ring-bg"
           strokeWidth={strokeWidth}
         />
         {/* Progress ring */}
@@ -45,7 +45,7 @@ export default function ProgressRing({
           transition={{ duration: 0.6, ease: "easeOut" }}
         />
       </svg>
-      <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white">
+      <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-theme-primary">
         {percentage}%
       </span>
     </div>

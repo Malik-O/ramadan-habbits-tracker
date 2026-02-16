@@ -2,7 +2,16 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Sunrise, Sun, CloudSun, Sunset, Moon, Heart, Check } from "lucide-react";
+import {
+  ChevronDown,
+  Sunrise,
+  Sun,
+  CloudSun,
+  Sunset,
+  Moon,
+  Heart,
+  Check,
+} from "lucide-react";
 import type { HabitCategory } from "@/constants/habits";
 import type { HabitValue } from "@/hooks/useHabitTracker";
 import HabitRow from "./HabitRow";
@@ -22,8 +31,7 @@ interface HabitBlockProps {
   isCompleted: boolean;
   getHabitValue: (id: string) => HabitValue;
   toggleHabit: (id: string) => void;
-  incrementHabit: (id: string) => void;
-  decrementHabit: (id: string) => void;
+  setHabitValue: (id: string, value: number) => void;
 }
 
 function isItemCompleted(value: HabitValue): boolean {
@@ -37,8 +45,7 @@ export default function HabitBlock({
   isCompleted,
   getHabitValue,
   toggleHabit,
-  incrementHabit,
-  decrementHabit,
+  setHabitValue,
 }: HabitBlockProps) {
   const [isOpen, setIsOpen] = useState(isDefaultOpen);
   const IconComponent = ICON_MAP[category.icon] || Heart;
@@ -53,7 +60,7 @@ export default function HabitBlock({
       className={`mx-4 overflow-hidden rounded-2xl border transition-colors ${
         isCompleted
           ? "border-emerald-500/30 bg-emerald-500/5"
-          : "border-white/5 bg-white/[0.02]"
+          : "border-theme-border bg-theme-card"
       }`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -72,20 +79,16 @@ export default function HabitBlock({
           {isCompleted ? (
             <Check className="h-4 w-4 text-emerald-400" />
           ) : (
-            <IconComponent
-              className={`h-4 w-4 ${
-                isCompleted ? "text-emerald-400" : "text-amber-400"
-              }`}
-            />
+            <IconComponent className="h-4 w-4 text-amber-400" />
           )}
         </div>
 
         <div className="flex flex-1 flex-col items-start gap-0.5">
-          <span className="text-sm font-semibold text-white">
+          <span className="text-sm font-semibold text-theme-primary">
             {category.name}
           </span>
           {/* Micro progress bar */}
-          <div className="h-1 w-full max-w-[120px] overflow-hidden rounded-full bg-white/10">
+          <div className="h-1 w-full max-w-[120px] overflow-hidden rounded-full bg-theme-subtle">
             <motion.div
               className={`h-full rounded-full ${
                 isCompleted ? "bg-emerald-500" : "bg-amber-500"
@@ -99,7 +102,7 @@ export default function HabitBlock({
           </div>
         </div>
 
-        <span className="text-xs font-medium text-slate-400">
+        <span className="text-xs font-medium text-theme-secondary">
           {completedCount}/{totalCount}
         </span>
 
@@ -107,7 +110,7 @@ export default function HabitBlock({
           animate={{ rotate: isOpen ? 180 : 0 }}
           transition={{ duration: 0.2 }}
         >
-          <ChevronDown className="h-4 w-4 text-slate-500" />
+          <ChevronDown className="h-4 w-4 text-theme-secondary" />
         </motion.div>
       </button>
 
@@ -121,7 +124,7 @@ export default function HabitBlock({
             transition={{ duration: 0.25, ease: "easeInOut" }}
             className="overflow-hidden"
           >
-            <div className="border-t border-white/5 pb-2">
+            <div className="border-t border-theme-border pb-2">
               {category.items.map((item) => (
                 <HabitRow
                   key={item.id}
@@ -129,8 +132,7 @@ export default function HabitBlock({
                   type={item.type}
                   value={getHabitValue(item.id)}
                   onToggle={() => toggleHabit(item.id)}
-                  onIncrement={() => incrementHabit(item.id)}
-                  onDecrement={() => decrementHabit(item.id)}
+                  onSetValue={(val) => setHabitValue(item.id, val)}
                 />
               ))}
             </div>

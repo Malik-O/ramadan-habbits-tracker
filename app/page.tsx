@@ -15,8 +15,7 @@ export default function HomePage() {
     setCurrentDay,
     trackerState,
     toggleHabit,
-    incrementHabit,
-    decrementHabit,
+    setHabitValue,
     getHabitValue,
     totalXp,
     todayXp,
@@ -41,7 +40,7 @@ export default function HomePage() {
   );
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-md flex-col bg-slate-950">
+    <div className="mx-auto flex min-h-dvh max-w-md flex-col bg-theme-bg">
       {/* Sticky header */}
       <Header
         todayXp={todayXp}
@@ -75,8 +74,7 @@ export default function HomePage() {
             isCompleted={blockCompletion[category.id] ?? false}
             getHabitValue={getHabitValue}
             toggleHabit={toggleHabit}
-            incrementHabit={incrementHabit}
-            decrementHabit={decrementHabit}
+            setHabitValue={setHabitValue}
           />
         ))}
       </div>
@@ -90,7 +88,7 @@ export default function HomePage() {
 /** Small inspirational quote banner */
 function QuoteBanner({ quote }: { quote: string }) {
   return (
-    <div className="border-b border-white/5 px-4 py-2.5 text-center">
+    <div className="border-b border-theme-border px-4 py-2.5 text-center">
       <p className="text-xs leading-relaxed text-amber-400/70 italic">
         ❝ {quote} ❞
       </p>
@@ -98,14 +96,15 @@ function QuoteBanner({ quote }: { quote: string }) {
   );
 }
 
-/** Day label showing "Day X" */
+/** Day label */
 function DayLabel({ day }: { day: number }) {
   return (
     <div className="px-4 pt-2 pb-1">
-      <h2 className="text-base font-bold text-white">
+      <h2 className="text-base font-bold text-theme-primary">
         اليوم {day + 1}
-        <span className="mr-2 text-sm font-normal text-slate-500">
-           من رمضان
+        <span className="mr-2 text-sm font-normal text-theme-secondary">
+          {" "}
+          من رمضان
         </span>
       </h2>
     </div>

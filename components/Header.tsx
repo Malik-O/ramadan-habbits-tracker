@@ -1,6 +1,7 @@
 "use client";
 
-import { Sparkles } from "lucide-react";
+import { Sparkles, User } from "lucide-react";
+import Link from "next/link";
 import ProgressRing from "./ProgressRing";
 import StreakBadge from "./StreakBadge";
 
@@ -21,7 +22,7 @@ export default function Header({
   totalHabits,
 }: HeaderProps) {
   return (
-    <header className="sticky top-0 z-50 border-b border-white/5 bg-slate-950/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 border-b border-theme-border bg-theme-header backdrop-blur-xl">
       <div className="flex items-center justify-between px-4 py-3">
         {/* Progress ring */}
         <ProgressRing progress={progress} />
@@ -34,13 +35,21 @@ export default function Header({
               {todayXp} XP
             </span>
           </div>
-          <span className="text-xs text-slate-400">
+          <span className="text-xs text-theme-secondary">
             {completedHabits}/{totalHabits}
           </span>
         </div>
 
-        {/* Streak */}
-        <StreakBadge streak={streak} />
+        {/* Streak + Profile */}
+        <div className="flex items-center gap-2">
+          <StreakBadge streak={streak} />
+          <Link
+            href="/profile"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-theme-subtle transition-colors hover:bg-theme-border"
+          >
+            <User className="h-4 w-4 text-theme-secondary" />
+          </Link>
+        </div>
       </div>
     </header>
   );

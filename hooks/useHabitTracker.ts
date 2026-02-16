@@ -18,8 +18,7 @@ export interface UseHabitTrackerReturn {
   setCurrentDay: (day: number) => void;
   trackerState: TrackerState;
   toggleHabit: (habitId: string) => void;
-  incrementHabit: (habitId: string) => void;
-  decrementHabit: (habitId: string) => void;
+  setHabitValue: (habitId: string, value: number) => void;
   getHabitValue: (habitId: string) => HabitValue;
   totalXp: number;
   todayXp: number;
@@ -86,25 +85,12 @@ export function useHabitTracker(): UseHabitTrackerReturn {
     [updateDayRecord]
   );
 
-  const incrementHabit = useCallback(
-    (habitId: string) => {
+  const setHabitValue = useCallback(
+    (habitId: string, value: number) => {
       updateDayRecord((prev) => ({
         ...prev,
-        [habitId]: ((prev[habitId] as number) || 0) + 1,
+        [habitId]: Math.max(0, value),
       }));
-    },
-    [updateDayRecord]
-  );
-
-  const decrementHabit = useCallback(
-    (habitId: string) => {
-      updateDayRecord((prev) => {
-        const current = (prev[habitId] as number) || 0;
-        return {
-          ...prev,
-          [habitId]: Math.max(0, current - 1),
-        };
-      });
     },
     [updateDayRecord]
   );
@@ -159,8 +145,7 @@ export function useHabitTracker(): UseHabitTrackerReturn {
     setCurrentDay,
     trackerState,
     toggleHabit,
-    incrementHabit,
-    decrementHabit,
+    setHabitValue,
     getHabitValue,
     totalXp,
     todayXp,

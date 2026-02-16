@@ -58,7 +58,7 @@ export default function DaySelector({
                 ? "bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/25"
                 : hasActivity
                   ? "bg-emerald-500/20 text-emerald-400 ring-1 ring-emerald-500/30"
-                  : "bg-white/5 text-slate-400 hover:bg-white/10"
+                  : "bg-theme-subtle text-theme-secondary hover:bg-theme-border"
             }`}
           >
             {i + 1}
