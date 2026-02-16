@@ -1,0 +1,83 @@
+{
+  "title": "جدول متابعة رمضان 1447 هـ",
+  "metadata": {
+    "year": "1447 AH",
+    "inspirational_quotes": [
+      "وفي ذلك فليتنافس المتنافسون",
+      "وسارعوا إلى مغفرة من ربكم"
+    ]
+  },
+  "categories": [
+    {
+      "name": "الفجر والصباح",
+      "items": [
+        { "label": "أذكار الأذان", "type": "boolean" },
+        { "label": "الدعاء بين الأذان والإقامة", "type": "boolean" },
+        { "label": "السنة القبلية", "type": "boolean" },
+        { "label": "الصلاة جماعة / أول الوقت", "type": "boolean" },
+        { "label": "أذكار بعد الصلاة", "type": "boolean" },
+        { "label": "أذكار الصباح", "type": "boolean" },
+        { "label": "تلاوة القرآن", "type": "number" },
+        { "label": "صلاة الضحى", "type": "boolean" }
+      ]
+    },
+    {
+      "name": "الظهر",
+      "items": [
+        { "label": "أذكار الأذان", "type": "boolean" },
+        { "label": "الدعاء بين الأذان والإقامة", "type": "boolean" },
+        { "label": "السنة القبلية", "type": "boolean" },
+        { "label": "الصلاة جماعة / أول الوقت", "type": "boolean" },
+        { "label": "أذكار بعد الصلاة", "type": "boolean" },
+        { "label": "السنة البعدية", "type": "boolean" },
+        { "label": "تلاوة القرآن", "type": "number" }
+      ]
+    },
+    {
+      "name": "العصر",
+      "items": [
+        { "label": "أذكار الأذان", "type": "boolean" },
+        { "label": "الدعاء بين الأذان والإقامة", "type": "boolean" },
+        { "label": "السنة القبلية", "type": "boolean" },
+        { "label": "الصلاة جماعة / أول الوقت", "type": "boolean" },
+        { "label": "أذكار بعد الصلاة", "type": "boolean" },
+        { "label": "أذكار المساء", "type": "boolean" },
+        { "label": "تلاوة القرآن", "type": "number" },
+        { "label": "الدعاء قبيل الإفطار", "type": "boolean" }
+      ]
+    },
+    {
+      "name": "المغرب والعشاء",
+      "items": [
+        { "label": "المغرب: أذكار الأذان والدعاء", "type": "boolean" },
+        { "label": "المغرب: السنة (قبلية وبعدية)", "type": "boolean" },
+        { "label": "المغرب: الصلاة في وقتها", "type": "boolean" },
+        { "label": "العشاء: أذكار الأذان والدعاء", "type": "boolean" },
+        { "label": "العشاء: السنة (قبلية وبعدية)", "type": "boolean" },
+        { "label": "العشاء: الصلاة في وقتها", "type": "boolean" },
+        { "label": "التراويح", "type": "boolean" },
+        { "label": "تلاوة القرآن المسائية", "type": "number" }
+      ]
+    },
+    {
+      "name": "السحر والليل",
+      "items": [
+        { "label": "التهجد", "type": "boolean" },
+        { "label": "الوتر", "type": "boolean" },
+        { "label": "الإستغفار بالأسحار", "type": "number" },
+        { "label": "ورد تدبر / تفسير", "type": "number" }
+      ]
+    },
+    {
+      "name": "أذكار وأعمال عامة",
+      "items": [
+        { "label": "الصلاة على النبي ﷺ", "type": "number" },
+        { "label": "التسبيح والتحميد والتهليل", "type": "number" },
+        { "label": "بر الوالدين", "type": "boolean" },
+        { "label": "صلة الرحم", "type": "boolean" },
+        { "label": "إطعام الطعام / إفطار صائم", "type": "boolean" },
+        { "label": "الصدقة", "type": "number" }
+      ]
+    }
+  ]
+}
