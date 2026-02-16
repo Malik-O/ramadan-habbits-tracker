@@ -63,7 +63,7 @@
   .bg-theme-header { background-color: var(--theme-header); }
   .bg-theme-subtle { background-color: var(--theme-subtle); }
   .border-theme-border { border-color: var(--theme-border); }
-  .divide-theme-border > * + * { border-color: var(--theme-border); }
+  .divide-theme-border > * { border-color: var(--theme-border); }
   .text-theme-primary { color: var(--theme-primary); }
   .text-theme-secondary { color: var(--theme-secondary); }
   .border-theme-checkbox-border { border-color: var(--theme-checkbox-border); }

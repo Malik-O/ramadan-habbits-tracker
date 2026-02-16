@@ -183,13 +183,16 @@ export default function HabitLineChart({
         <p className="mb-4 text-xs font-semibold text-theme-secondary tracking-wide">
           اختر العادات لعرضها
         </p>
-        <div className="flex flex-col gap-4">
+        
+        {/* Added divide-y to create dividers between groups, correcting visual consistency */}
+        <div className="flex flex-col divide-y divide-theme-border">
           {categoryGroups.map((group, i) => (
             <motion.div
               key={group.id}
               initial={{ opacity: 0, x: -12 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.05 * i, duration: 0.3 }}
+              className="py-4 first:pt-0 last:pb-0"
             >
               <CategoryChipGroup
                 group={group}
@@ -245,7 +248,7 @@ function CategoryChipGroup({
     <div>
       <button
         onClick={onToggleCategory}
-        className={`mb-2 flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm font-bold transition-all duration-200 ${
+        className={`mb-3 flex items-center gap-2 rounded-lg py-1 text-sm font-bold transition-all duration-200 ${
           allSelected
             ? "text-amber-400"
             : "text-theme-secondary hover:text-theme-primary"
@@ -314,7 +317,6 @@ function ChartArea({ chartData, maxValue, visibleDays }: ChartAreaProps) {
       className="w-full"
       preserveAspectRatio="xMidYMid meet"
     >
-      {/* Gradient defs */}
       <defs>
         {chartData.map((s) => (
           <linearGradient
@@ -334,6 +336,7 @@ function ChartArea({ chartData, maxValue, visibleDays }: ChartAreaProps) {
       {/* Horizontal grid */}
       {gridSteps.map((pct, i) => {
         const y = yScale(pct * maxValue);
+        const isZero = pct === 0;
         return (
           <g key={i}>
             <line
@@ -341,21 +344,23 @@ function ChartArea({ chartData, maxValue, visibleDays }: ChartAreaProps) {
               y1={y}
               x2={CHART_W - PAD.r}
               y2={y}
-              className="stroke-theme-secondary"
-              strokeOpacity={0.1}
-              strokeWidth={0.5}
-              strokeDasharray="3 3"
+              className={isZero ? "stroke-theme-border" : "stroke-theme-secondary"}
+              strokeOpacity={isZero ? 1 : 0.1}
+              strokeWidth={isZero ? 1 : 0.5}
+              strokeDasharray={isZero ? undefined : "3 3"}
             />
-            <text
-              x={PAD.l - 4}
-              y={y + 3}
-              textAnchor="end"
-              className="fill-theme-secondary"
-              fontSize={7}
-              opacity={0.45}
-            >
-              {Math.round(pct * maxValue)}
-            </text>
+            {!isZero && (
+              <text
+                x={PAD.l - 4}
+                y={y + 3}
+                textAnchor="end"
+                className="fill-theme-secondary"
+                fontSize={7}
+                opacity={0.45}
+              >
+                {Math.round(pct * maxValue)}
+              </text>
+            )}
           </g>
         );
       })}
@@ -391,8 +396,12 @@ function ChartArea({ chartData, maxValue, visibleDays }: ChartAreaProps) {
       {/* Area fills + Lines */}
       <AnimatePresence>
         {chartData.map((series) => {
-          const linePath = buildLinePath(series.points, xScale, yScale);
-          const areaPath = buildAreaPath(series.points, xScale, yScale);
+          const pointsStr = series.points
+            .map((v, i) => [xScale(i), yScale(v)] as [number, number]);
+          
+          // Use Spline for smooth rounded edges
+          const linePath = getSplinePath(pointsStr, false);
+          const areaPath = getSplinePath(pointsStr, true, xScale(series.points.length - 1), xScale(0), yScale(0));
 
           return (
             <g key={series.id}>
@@ -449,24 +458,49 @@ function ChartArea({ chartData, maxValue, visibleDays }: ChartAreaProps) {
   );
 }
 
-/* ─── SVG path helpers ─── */
+/* ─── Spline Helper (Catmull-Rom) ─── */
 
-function buildLinePath(
-  points: number[],
-  xScale: (d: number) => number,
-  yScale: (v: number) => number
+function getSplinePath(
+  points: [number, number][],
+  closed: boolean,
+  lastX?: number,
+  firstX?: number,
+  baseY?: number
 ): string {
-  return points
-    .map((v, i) => `${i === 0 ? "M" : "L"} ${xScale(i)} ${yScale(v)}`)
-    .join(" ");
-}
+  if (points.length === 0) return "";
+  if (points.length === 1) return `M ${points[0][0]} ${points[0][1]}`;
 
-function buildAreaPath(
-  points: number[],
-  xScale: (d: number) => number,
-  yScale: (v: number) => number
-): string {
-  const line = buildLinePath(points, xScale, yScale);
-  const last = points.length - 1;
-  return `${line} L ${xScale(last)} ${yScale(0)} L ${xScale(0)} ${yScale(0)} Z`;
+  // If only 2 points, straight line
+  if (points.length === 2) {
+    const line = `M ${points[0][0]} ${points[0][1]} L ${points[1][0]} ${points[1][1]}`;
+    if (closed && lastX !== undefined && firstX !== undefined && baseY !== undefined) {
+      return `${line} L ${lastX} ${baseY} L ${firstX} ${baseY} Z`;
+    }
+    return line;
+  }
+
+  // Catmull-Rom to Bezier conversion
+  const k = 1; // tension
+  let d = `M ${points[0][0]} ${points[0][1]}`;
+
+  for (let i = 0; i < points.length - 1; i++) {
+    const p0 = points[i - 1] || points[i];
+    const p1 = points[i];
+    const p2 = points[i + 1];
+    const p3 = points[i + 2] || p2;
+
+    const cp1x = p1[0] + (p2[0] - p0[0]) / 6 * k;
+    const cp1y = p1[1] + (p2[1] - p0[1]) / 6 * k;
+
+    const cp2x = p2[0] - (p3[0] - p1[0]) / 6 * k;
+    const cp2y = p2[1] - (p3[1] - p1[1]) / 6 * k;
+
+    d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${points[i+1][0]} ${points[i+1][1]}`;
+  }
+
+  if (closed && lastX !== undefined && firstX !== undefined && baseY !== undefined) {
+    d += ` L ${lastX} ${baseY} L ${firstX} ${baseY} Z`;
+  }
+
+  return d;
 }
