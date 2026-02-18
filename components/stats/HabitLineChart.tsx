@@ -185,7 +185,14 @@ export default function HabitLineChart({
         </p>
         
         {/* Added divide-y to create dividers between groups, correcting visual consistency */}
-        <div className="flex flex-col divide-y divide-theme-border">
+        <div
+          className="flex flex-col divide-y divide-theme-border"
+          style={{
+            marginLeft: isExpanded ? "1rem" : 0,
+            marginRight: isExpanded ? "1rem" : 0,
+            transition: "margin 350ms cubic-bezier(.4,0,.2,1)",
+          }}
+        >
           {categoryGroups.map((group, i) => (
             <motion.div
               key={group.id}

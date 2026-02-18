@@ -73,7 +73,7 @@ export default function CategoryCard({
           </span>
 
           <span className="text-xs text-theme-secondary">
-            {category.items.length} عادة
+            {category.items.length} عبادة
           </span>
 
           {isEditMode && (
@@ -107,7 +107,7 @@ export default function CategoryCard({
           className="flex w-full items-center justify-center gap-2 py-3 text-theme-secondary transition-colors hover:bg-theme-subtle hover:text-amber-400"
         >
           <Plus className="h-4 w-4" />
-          <span className="text-xs font-medium">إضافة عادة</span>
+          <span className="text-xs font-medium">إضافة عبادة</span>
         </button>
       </motion.div>
 
@@ -129,7 +129,7 @@ export default function CategoryCard({
       {/* Confirm remove habit */}
       <ConfirmDialog
         isOpen={!!confirmRemoveHabitId}
-        title="حذف العادة"
+        title="حذف العبادة"
         message={`هل أنت متأكد من حذف "${habitToRemove?.label ?? ""}"؟`}
         confirmLabel="حذف"
         cancelLabel="إلغاء"

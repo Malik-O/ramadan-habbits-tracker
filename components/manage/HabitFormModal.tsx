@@ -65,7 +65,7 @@ export default function HabitFormModal({
             {/* Header */}
             <div className="mb-5 flex items-center justify-between">
               <h3 className="text-base font-semibold text-theme-primary">
-                {isEditing ? "تعديل العادة" : "إضافة عادة جديدة"}
+                {isEditing ? "تعديل العبادة" : "إضافة عبادة جديدة"}
               </h3>
               <button
                 onClick={onClose}
@@ -79,7 +79,7 @@ export default function HabitFormModal({
               {/* Label input */}
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-theme-secondary">
-                  اسم العادة
+                  اسم العبادة
                 </label>
                 <input
                   type="text"
@@ -94,7 +94,7 @@ export default function HabitFormModal({
               {/* Type toggle */}
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-theme-secondary">
-                  نوع العادة
+                  نوع العبادة
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <TypeOption

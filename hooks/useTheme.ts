@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from "react";
 export type Theme = "dark" | "light";
 
 export function useTheme() {
-  const [theme, setTheme] = useState<Theme>("dark");
+  const [theme, setTheme] = useState<Theme>("light");
 
   useEffect(() => {
     // 1. Try to read from localStorage
@@ -19,9 +19,7 @@ export function useTheme() {
       }
     }
 
-    // 2. If no storage, check system preference
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    setTheme(mediaQuery.matches ? "dark" : "light");
+    // 2. Default is handled by initial state (light)
 
     // Optional: Listen for system changes if no override specifically set?
     // For simplicity, we just set the initial value.

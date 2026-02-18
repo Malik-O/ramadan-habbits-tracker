@@ -31,7 +31,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               try {
-                if (localStorage.getItem('ramadan-theme') === '"dark"' || (!localStorage.getItem('ramadan-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                if (localStorage.getItem('ramadan-theme') === '"dark"') {
                   document.documentElement.classList.add('dark');
                 } else {
                   document.documentElement.classList.add('light');
