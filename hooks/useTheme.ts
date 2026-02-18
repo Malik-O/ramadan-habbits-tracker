@@ -7,25 +7,26 @@ export type Theme = "dark" | "light";
 export function useTheme() {
   const [theme, setTheme] = useState<Theme>("light");
 
+  const [mounted, setMounted] = useState(false);
+
   useEffect(() => {
-    // 1. Try to read from localStorage
+    // 1. Read from localStorage on mount to sync state
     const stored = window.localStorage.getItem("ramadan-theme");
     if (stored) {
       try {
         setTheme(JSON.parse(stored));
-        return;
       } catch (e) {
         console.warn("Failed to parse theme from localStorage", e);
       }
     }
-
-    // 2. Default is handled by initial state (light)
-
-    // Optional: Listen for system changes if no override specifically set?
-    // For simplicity, we just set the initial value.
+    setMounted(true);
   }, []);
 
   useEffect(() => {
+    // Don't modify DOM until we've mounted and checked storage
+    // This prevents overwriting the class set by layout.tsx script
+    if (!mounted) return;
+
     const root = document.documentElement;
     if (theme === "dark") {
       root.classList.add("dark");
@@ -34,7 +35,7 @@ export function useTheme() {
       root.classList.add("light");
       root.classList.remove("dark");
     }
-  }, [theme]);
+  }, [theme, mounted]);
 
   const toggleTheme = useCallback(() => {
     setTheme((prev) => {
