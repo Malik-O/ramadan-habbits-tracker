@@ -15,8 +15,12 @@ export default function SplashScreen({
   useEffect(() => {
     // Check theme from local storage
     const theme = window.localStorage.getItem("ramadan-theme");
-    if (theme && theme.includes("dark")) {
-      setIsDark(true);
+    if (theme) {
+      if (theme.includes("dark")) {
+        setIsDark(true);
+      }
+    } else {
+      window.localStorage.setItem("ramadan-theme", JSON.stringify("light"));
     }
 
     // Hide splash screen after 1 second (plus a small buffer for animation)

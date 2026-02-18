@@ -18,6 +18,9 @@ export function useTheme() {
       } catch (e) {
         console.warn("Failed to parse theme from localStorage", e);
       }
+    } else {
+      // Default to light if no theme is set
+      window.localStorage.setItem("ramadan-theme", JSON.stringify("light"));
     }
     setMounted(true);
   }, []);
