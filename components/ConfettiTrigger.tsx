@@ -6,21 +6,23 @@ import { trackBlockCompleted } from "@/utils/analytics";
 
 interface ConfettiTriggerProps {
   blockCompletion: Record<string, boolean>;
+  currentDay: number;
 }
 
 /**
  * Watches block completion and fires confetti when any block transitions
- * from incomplete → complete.
+ * from incomplete → complete via user action (not on page load or day change).
  */
-export default function ConfettiTrigger({ blockCompletion }: ConfettiTriggerProps) {
+export default function ConfettiTrigger({ blockCompletion, currentDay }: ConfettiTriggerProps) {
   const prevRef = useRef<Record<string, boolean>>({});
-  const isInitialMount = useRef(true);
+  const prevDayRef = useRef<number | null>(null);
 
   useEffect(() => {
-    // On initial mount, just capture the current state as baseline
-    // so we don't fire confetti for already-completed blocks
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
+    const isDayChange = prevDayRef.current === null || prevDayRef.current !== currentDay;
+    prevDayRef.current = currentDay;
+
+    // On initial mount or day change, just capture the baseline — no confetti
+    if (isDayChange) {
       prevRef.current = { ...blockCompletion };
       return;
     }
@@ -37,7 +39,7 @@ export default function ConfettiTrigger({ blockCompletion }: ConfettiTriggerProp
     }
 
     prevRef.current = { ...blockCompletion };
-  }, [blockCompletion]);
+  }, [blockCompletion, currentDay]);
 
   return null;
 }

@@ -83,7 +83,7 @@ export default function HomePage() {
       </div>
 
       {/* Confetti trigger */}
-      <ConfettiTrigger blockCompletion={blockCompletion} />
+      <ConfettiTrigger blockCompletion={blockCompletion} currentDay={currentDay} />
 
       {/* Bottom Navigation */}
       <BottomNav activeTab="home" />
