@@ -88,7 +88,7 @@ export default function ConfirmDialog({
                 className={`flex-1 py-3 text-sm font-semibold transition-colors ${
                   isDanger
                     ? "text-red-400 hover:bg-red-500/5"
-                    : "text-amber-400 hover:bg-amber-500/5"
+                    : "text-amber-500 hover:bg-amber-500/5"
                 }`}
               >
                 {confirmLabel}

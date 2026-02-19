@@ -153,7 +153,7 @@ export default function ManagePage() {
         {/* Add Category button */}
         <motion.button
           onClick={handleAddCategory}
-          className="flex items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-theme-border py-4 text-theme-secondary transition-colors hover:border-amber-500/50 hover:text-amber-400"
+          className="flex items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-theme-border py-4 text-theme-secondary transition-colors hover:border-amber-500/50 hover:text-amber-500"
           whileTap={{ scale: 0.98 }}
         >
           <Plus className="h-5 w-5" />
