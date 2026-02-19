@@ -95,7 +95,7 @@ export default function HomePage() {
 function QuoteBanner({ quote }: { quote: string }) {
   return (
     <div className="border-b border-theme-border px-4 py-2.5 text-center">
-      <p className="text-xs leading-relaxed text-amber-400/70 italic">
+      <p className="text-xs leading-relaxed text-amber-500 italic">
         ❝ {quote} ❞
       </p>
     </div>

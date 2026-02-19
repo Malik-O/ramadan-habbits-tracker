@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 import withPWAInit from "@ducanh2912/next-pwa";
 
+// Build-time revision so precached pages refresh on each deploy
+const BUILD_ID = Date.now().toString();
+
 const withPWA = withPWAInit({
   dest: "public",
   disable: process.env.NODE_ENV === "development",
@@ -12,8 +15,15 @@ const withPWA = withPWAInit({
     document: "/~offline",
   },
   workboxOptions: {
-    // Skip waiting for the new service worker to activate
     skipWaiting: true,
+    // Pre-cache all static page routes for full offline support
+    additionalManifestEntries: [
+      { url: "/", revision: BUILD_ID },
+      { url: "/manage", revision: BUILD_ID },
+      { url: "/profile", revision: BUILD_ID },
+      { url: "/stats", revision: BUILD_ID },
+      { url: "/leaderboard", revision: BUILD_ID },
+    ],
     // Runtime caching strategies for dynamic requests
     runtimeCaching: [
       // Cache Google Fonts stylesheets (stale-while-revalidate)

@@ -96,7 +96,7 @@ export default function HabitBlock({
           {isCompleted ? (
             <Check className="h-4 w-4 text-emerald-400" />
           ) : (
-            <IconComponent className="h-4 w-4 text-amber-400" />
+            <IconComponent className="h-4 w-4 text-amber-500" />
           )}
         </div>
 

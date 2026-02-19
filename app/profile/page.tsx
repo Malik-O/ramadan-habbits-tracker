@@ -141,7 +141,7 @@ function SettingsSection({ theme, onToggleTheme }: SettingsSectionProps) {
             <Download className="h-5 w-5 text-amber-400" />
             <span className="text-sm text-theme-primary">تثبيت التطبيق</span>
           </div>
-          <span className="rounded-full bg-amber-400/15 px-3 py-1 text-xs font-medium text-amber-400">
+          <span className="rounded-full bg-amber-400/15 px-3 py-1 text-xs font-medium text-amber-500">
             تثبيت
           </span>
         </button>

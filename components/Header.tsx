@@ -30,8 +30,8 @@ export default function Header({
         {/* XP & habit count */}
         <div className="flex flex-col items-center gap-0.5">
           <div className="flex items-center gap-1.5">
-            <Sparkles className="h-4 w-4 text-amber-400" />
-            <span className="text-lg font-bold text-amber-400">
+            <Sparkles className="h-4 w-4 text-amber-500" />
+            <span className="text-lg font-bold text-amber-500">
               {todayXp} XP
             </span>
           </div>

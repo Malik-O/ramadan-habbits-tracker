@@ -260,7 +260,7 @@ function CategoryChipGroup({
         onClick={onToggleCategory}
         className={`mb-3 flex items-center gap-2 rounded-lg py-1 text-sm font-bold transition-all duration-200 ${
           allSelected
-            ? "text-amber-400"
+            ? "text-amber-500"
             : "text-theme-secondary hover:text-theme-primary"
         }`}
       >

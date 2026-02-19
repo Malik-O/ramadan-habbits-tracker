@@ -92,7 +92,7 @@ function CounterDisplay({
       whileTap={{ scale: 0.9 }}
       className={`flex h-8 min-w-[44px] items-center justify-center rounded-xl border px-3 transition-all ${
         value > 0
-          ? "border-amber-500/30 bg-amber-500/10 text-amber-400"
+          ? "border-amber-500/30 bg-amber-500/10 text-amber-500"
           : "border-theme-border bg-theme-subtle text-theme-secondary"
       }`}
     >
