@@ -1,0 +1,28 @@
+{
+  "name": "همة | Hemma",
+  "short_name": "همة",
+  "description": "تطبيق همة لمتابعة العبادات والأذكار",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "dir": "rtl",
+  "lang": "ar",
+  "background_color": "#0a0f1e",
+  "theme_color": "#0a0f1e",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["lifestyle", "productivity"],
+  "prefer_related_applications": false
+}

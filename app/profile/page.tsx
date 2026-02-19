@@ -72,7 +72,7 @@ function AppInfoCard() {
         </div>
         <div>
           <h2 className="text-base font-bold text-theme-primary">
-            متابع رمضان
+            همة
           </h2>
           <p className="text-xs text-theme-secondary">{RAMADAN_YEAR}</p>
         </div>
@@ -124,8 +124,8 @@ function SettingsSection({ theme, onToggleTheme }: SettingsSectionProps) {
 }
 
 function DangerSection() {
-  const [, setTracker] = useLocalStorage("ramadan-tracker", {});
-  const [, setDay] = useLocalStorage("ramadan-current-day", 0);
+  const [, setTracker] = useLocalStorage("hemma-tracker", {});
+  const [, setDay] = useLocalStorage("hemma-current-day", 0);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   const handleReset = () => {

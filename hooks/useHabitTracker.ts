@@ -53,8 +53,8 @@ function computeStreak(state: TrackerState, currentDay: number): number {
 }
 
 export function useHabitTracker(categories: HabitCategory[]): UseHabitTrackerReturn {
-  const [currentDay, setCurrentDay] = useLocalStorage<number>("ramadan-current-day", 0);
-  const [trackerState, setTrackerState] = useLocalStorage<TrackerState>("ramadan-tracker", {});
+  const [currentDay, setCurrentDay] = useLocalStorage<number>("hemma-current-day", 0);
+  const [trackerState, setTrackerState] = useLocalStorage<TrackerState>("hemma-tracker", {});
 
   const dayRecord = trackerState[currentDay] || {};
 

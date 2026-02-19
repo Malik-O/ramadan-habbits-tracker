@@ -23,7 +23,7 @@ export interface UseCustomHabitsReturn {
 
 export function useCustomHabits(): UseCustomHabitsReturn {
   const [categories, setCategories] = useLocalStorage<HabitCategory[]>(
-    "ramadan-custom-habits",
+    "hemma-custom-habits",
     HABIT_CATEGORIES
   );
 

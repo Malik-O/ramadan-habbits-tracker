@@ -11,16 +11,24 @@ export function useTheme() {
 
   useEffect(() => {
     // 1. Read from localStorage on mount to sync state
-    const stored = window.localStorage.getItem("ramadan-theme");
+    const stored = window.localStorage.getItem("hemma-theme");
     if (stored) {
       try {
-        setTheme(JSON.parse(stored));
+        const parsed = JSON.parse(stored);
+        if (parsed === "dark" || parsed === "light") {
+          setTheme(parsed);
+        }
       } catch (e) {
-        console.warn("Failed to parse theme from localStorage", e);
+        // If parsing fails, it might be a raw string "dark" or "light"
+        if (stored === "dark" || stored === "light") {
+          setTheme(stored as Theme);
+        } else {
+          console.warn("Failed to parse theme from localStorage", e);
+        }
       }
     } else {
       // Default to light if no theme is set
-      window.localStorage.setItem("ramadan-theme", JSON.stringify("light"));
+      window.localStorage.setItem("hemma-theme", JSON.stringify("light"));
     }
     setMounted(true);
   }, []);
@@ -43,7 +51,7 @@ export function useTheme() {
   const toggleTheme = useCallback(() => {
     setTheme((prev) => {
       const next = prev === "dark" ? "light" : "dark";
-      window.localStorage.setItem("ramadan-theme", JSON.stringify(next));
+      window.localStorage.setItem("hemma-theme", JSON.stringify(next));
       return next;
     });
   }, []);

@@ -25,22 +25,8 @@
    Theme System — CSS Variables
    ============================== */
 
-/* Dark theme (default) */
-:root, .dark {
-  --theme-bg: #0a0f1e;
-  --theme-card: #131a2e;
-  --theme-card-hover: #1a2340;
-  --theme-header: rgba(10, 15, 30, 0.85);
-  --theme-border: rgba(255, 255, 255, 0.08);
-  --theme-subtle: rgba(255, 255, 255, 0.06);
-  --theme-primary: #eef2ff;
-  --theme-secondary: #8b9cc0;
-  --theme-ring-bg: rgba(255, 255, 255, 0.1);
-  --theme-checkbox-border: rgba(255, 255, 255, 0.18);
-}
-
-/* Light theme */
-.light {
+/* Light theme (default) */
+:root, .light {
   --theme-bg: #f4f6fb;
   --theme-card: #ffffff;
   --theme-card-hover: #f0f2f8;
@@ -51,6 +37,20 @@
   --theme-secondary: #64748b;
   --theme-ring-bg: rgba(0, 0, 0, 0.08);
   --theme-checkbox-border: rgba(0, 0, 0, 0.2);
+}
+
+/* Dark theme */
+.dark {
+  --theme-bg: #0a0f1e;
+  --theme-card: #131a2e;
+  --theme-card-hover: #1a2340;
+  --theme-header: rgba(10, 15, 30, 0.85);
+  --theme-border: rgba(255, 255, 255, 0.08);
+  --theme-subtle: rgba(255, 255, 255, 0.06);
+  --theme-primary: #eef2ff;
+  --theme-secondary: #8b9cc0;
+  --theme-ring-bg: rgba(255, 255, 255, 0.1);
+  --theme-checkbox-border: rgba(255, 255, 255, 0.18);
 }
 
 /* ==============================

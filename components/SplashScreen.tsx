@@ -14,13 +14,14 @@ export default function SplashScreen({
 
   useEffect(() => {
     // Check theme from local storage
-    const theme = window.localStorage.getItem("ramadan-theme");
+    const theme = window.localStorage.getItem("hemma-theme");
     if (theme) {
+      // Check for both raw "dark" and JSON-encoded "\"dark\""
       if (theme.includes("dark")) {
         setIsDark(true);
       }
     } else {
-      window.localStorage.setItem("ramadan-theme", JSON.stringify("light"));
+      window.localStorage.setItem("hemma-theme", JSON.stringify("light"));
     }
 
     // Hide splash screen after 1 second (plus a small buffer for animation)
