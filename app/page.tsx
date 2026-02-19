@@ -10,6 +10,8 @@ import DaySelector from "@/components/DaySelector";
 import HabitBlock from "@/components/HabitBlock";
 import ConfettiTrigger from "@/components/ConfettiTrigger";
 import BottomNav from "@/components/BottomNav";
+import QuoteBanner from "@/components/QuoteBanner";
+import DayLabel from "@/components/DayLabel";
 
 export default function HomePage() {
   const { categories } = useCustomHabits();
@@ -87,32 +89,6 @@ export default function HomePage() {
 
       {/* Bottom Navigation */}
       <BottomNav activeTab="home" />
-    </div>
-  );
-}
-
-/** Small inspirational quote banner */
-function QuoteBanner({ quote }: { quote: string }) {
-  return (
-    <div className="border-b border-theme-border px-4 py-2.5 text-center">
-      <p className="text-xs leading-relaxed text-amber-500 italic">
-        ❝ {quote} ❞
-      </p>
-    </div>
-  );
-}
-
-/** Day label */
-function DayLabel({ day }: { day: number }) {
-  return (
-    <div className="px-4 pt-2 pb-1">
-      <h2 className="text-base font-bold text-theme-primary">
-        اليوم {day + 1}
-        <span className="mr-2 text-sm font-normal text-theme-secondary">
-          {" "}
-          من رمضان
-        </span>
-      </h2>
     </div>
   );
 }

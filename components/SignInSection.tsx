@@ -201,7 +201,7 @@ function EmailForm({
           <button
             type="submit"
             disabled={isSubmitting}
-            className="rounded-xl bg-amber-500 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+            className="w-full rounded-xl bg-amber-500 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             {isSubmitting ? (
               <div className="mx-auto h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
@@ -300,7 +300,7 @@ function SignedOutView({
             exit={{ opacity: 0 }}
             type="button"
             onClick={() => setShowEmailForm(true)}
-            className="text-xs text-theme-primary transition-colors hover:text-amber-500"
+            className="text-xs text-amber-500 transition-colors hover:underline"
           >
             أو المتابعة بالبريد الإلكتروني وكلمة المرور
           </motion.button>

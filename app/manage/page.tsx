@@ -1,137 +1,48 @@
 "use client";
 
-import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Plus, Pencil } from "lucide-react";
-import Link from "next/link";
-import { useCustomHabits } from "@/hooks/useCustomHabits";
+import { Plus } from "lucide-react";
+import { useManagePage } from "@/hooks/useManagePage";
 import BottomNav from "@/components/BottomNav";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import CategoryCard from "@/components/manage/CategoryCard";
 import CategoryFormModal from "@/components/manage/CategoryFormModal";
 import HabitFormModal from "@/components/manage/HabitFormModal";
-import type { HabitCategory, HabitItem } from "@/constants/habits";
-import {
-  trackCategoryAction,
-  trackHabitAction,
-  trackDataReset,
-} from "@/utils/analytics";
+import ManageHeader from "@/components/manage/ManageHeader";
 
 export default function ManagePage() {
   const {
     categories,
-    addCategory,
-    updateCategory,
-    removeCategory,
-    addHabit,
-    updateHabit,
-    removeHabit,
-    resetToDefaults,
-  } = useCustomHabits();
-
-  const [isEditMode, setIsEditMode] = useState(false);
-
-  // Category form state
-  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<HabitCategory | null>(null);
-
-  // Habit form state
-  const [habitModalOpen, setHabitModalOpen] = useState(false);
-  const [habitTargetCategoryId, setHabitTargetCategoryId] = useState<string>("");
-  const [editingHabit, setEditingHabit] = useState<HabitItem | null>(null);
-
-  // Reset confirm state
-  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
-
-  const handleAddCategory = () => {
-    setEditingCategory(null);
-    setCategoryModalOpen(true);
-  };
-
-  const handleEditCategory = (category: HabitCategory) => {
-    setEditingCategory(category);
-    setCategoryModalOpen(true);
-  };
-
-  const handleCategorySubmit = (name: string, icon: string) => {
-    if (editingCategory) {
-      updateCategory(editingCategory.id, name, icon);
-      trackCategoryAction("edit", editingCategory.id);
-    } else {
-      addCategory(name, icon);
-      trackCategoryAction("add");
-    }
-    setCategoryModalOpen(false);
-    setEditingCategory(null);
-  };
-
-  const handleRemoveCategory = (categoryId: string) => {
-    removeCategory(categoryId);
-    trackCategoryAction("remove", categoryId);
-  };
-
-  const handleAddHabit = (categoryId: string) => {
-    setHabitTargetCategoryId(categoryId);
-    setEditingHabit(null);
-    setHabitModalOpen(true);
-  };
-
-  const handleEditHabit = (categoryId: string, habit: HabitItem) => {
-    setHabitTargetCategoryId(categoryId);
-    setEditingHabit(habit);
-    setHabitModalOpen(true);
-  };
-
-  const handleHabitSubmit = (label: string, type: "boolean" | "number") => {
-    if (editingHabit) {
-      updateHabit(habitTargetCategoryId, editingHabit.id, label, type);
-      trackHabitAction("edit", editingHabit.id);
-    } else {
-      addHabit(habitTargetCategoryId, label, type);
-      trackHabitAction("add");
-    }
-    setHabitModalOpen(false);
-    setEditingHabit(null);
-  };
-
-  const handleRemoveHabit = (categoryId: string, habitId: string) => {
-    removeHabit(categoryId, habitId);
-    trackHabitAction("remove", habitId);
-  };
-
-  const handleReset = () => {
-    resetToDefaults();
-    trackDataReset();
-    setIsEditMode(false);
-    setResetConfirmOpen(false);
-  };
+    isEditMode,
+    setIsEditMode,
+    categoryModalOpen,
+    setCategoryModalOpen,
+    editingCategory,
+    setEditingCategory,
+    habitModalOpen,
+    setHabitModalOpen,
+    editingHabit,
+    setEditingHabit,
+    resetConfirmOpen,
+    setResetConfirmOpen,
+    handleAddCategory,
+    handleEditCategory,
+    handleCategorySubmit,
+    handleRemoveCategory,
+    handleAddHabit,
+    handleEditHabit,
+    handleHabitSubmit,
+    handleRemoveHabit,
+    handleReset,
+  } = useManagePage();
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-md flex-col bg-theme-bg pb-20">
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-theme-border bg-theme-header backdrop-blur-xl">
-        <div className="flex items-center justify-between px-4 py-4">
-          <div className="flex items-center gap-3">
-            <Link
-              href="/"
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-theme-subtle transition-colors hover:bg-theme-border"
-            >
-              <ArrowRight className="h-4 w-4 text-theme-secondary" />
-            </Link>
-            <h1 className="text-lg font-bold text-theme-primary">إدارة العادات</h1>
-          </div>
-          <button
-            onClick={() => setIsEditMode((p) => !p)}
-            className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-all ${
-              isEditMode
-                ? "bg-amber-500 text-slate-950"
-                : "bg-theme-subtle text-theme-secondary hover:bg-theme-border"
-            }`}
-          >
-            {isEditMode ? "تم" : "تعديل"}
-          </button>
-        </div>
-      </header>
+      <ManageHeader
+        isEditMode={isEditMode}
+        onToggleEditMode={() => setIsEditMode((p) => !p)}
+      />
 
       <div className="flex flex-col gap-3 p-4">
         {/* Categories */}
