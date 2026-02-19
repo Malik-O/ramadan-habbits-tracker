@@ -20,6 +20,7 @@ const notoArabic = Noto_Sans_Arabic({
 
 const APP_NAME = "همة";
 const APP_DEFAULT_TITLE = "همة | Hemma";
+const APP_TITLE_TEMPLATE = `%s | ${APP_NAME}`;
 const APP_DESCRIPTION =
   "تطبيق همة لمتابعة العبادات والأذكار — Hemma Habit Tracker";
 
@@ -27,14 +28,14 @@ export const metadata: Metadata = {
   applicationName: APP_NAME,
   title: {
     default: APP_DEFAULT_TITLE,
-    template: `%s | ${APP_NAME}`,
+    template: APP_TITLE_TEMPLATE,
   },
   description: APP_DESCRIPTION,
   manifest: "/manifest.json",
   icons: {
-    icon: "/fav-icon.png",
-    shortcut: "/fav-icon.png",
-    apple: "/fav-icon.png",
+    icon: "/app-icon.png",
+    shortcut: "/app-icon.png",
+    apple: "/app-icon.png",
   },
   appleWebApp: {
     capable: true,
@@ -49,7 +50,7 @@ export const metadata: Metadata = {
     siteName: APP_NAME,
     title: {
       default: APP_DEFAULT_TITLE,
-      template: `%s | ${APP_NAME}`,
+      template: APP_TITLE_TEMPLATE,
     },
     description: APP_DESCRIPTION,
   },
@@ -57,10 +58,15 @@ export const metadata: Metadata = {
     card: "summary",
     title: {
       default: APP_DEFAULT_TITLE,
-      template: `%s | ${APP_NAME}`,
+      template: APP_TITLE_TEMPLATE,
     },
     description: APP_DESCRIPTION,
   },
+  keywords: ["Hemma", "Ramadan", "Habit Tracker", "Muslim", "Islam", "Worship", "Adkhar", "همة", "رمضان", "عبادات"],
+  authors: [{ name: "Hemma Team" }],
+  creator: "Hemma Team",
+  publisher: "Hemma Team",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
 };
 
 export const viewport: Viewport = {

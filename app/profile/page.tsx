@@ -85,8 +85,8 @@ function AppInfoCard() {
         </div>
       </div>
       <p className="text-sm leading-relaxed text-theme-secondary">
-        تطبيق متابعة العبادات والأذكار في شهر رمضان المبارك. تتبّع عباداتك
-        اليومية واكسب نقاط الخبرة!
+        <span className="font-bold text-theme-primary">رفيقك لطاعةٍ تدوم. </span>
+        تتبع عباداتك اليومية في رمضان، نافس نفسك، وارتقِ بمستواك!
       </p>
     </motion.div>
   );
