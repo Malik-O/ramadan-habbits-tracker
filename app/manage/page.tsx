@@ -11,6 +11,11 @@ import CategoryCard from "@/components/manage/CategoryCard";
 import CategoryFormModal from "@/components/manage/CategoryFormModal";
 import HabitFormModal from "@/components/manage/HabitFormModal";
 import type { HabitCategory, HabitItem } from "@/constants/habits";
+import {
+  trackCategoryAction,
+  trackHabitAction,
+  trackDataReset,
+} from "@/utils/analytics";
 
 export default function ManagePage() {
   const {
@@ -51,8 +56,10 @@ export default function ManagePage() {
   const handleCategorySubmit = (name: string, icon: string) => {
     if (editingCategory) {
       updateCategory(editingCategory.id, name, icon);
+      trackCategoryAction("edit", editingCategory.id);
     } else {
       addCategory(name, icon);
+      trackCategoryAction("add");
     }
     setCategoryModalOpen(false);
     setEditingCategory(null);
@@ -60,6 +67,7 @@ export default function ManagePage() {
 
   const handleRemoveCategory = (categoryId: string) => {
     removeCategory(categoryId);
+    trackCategoryAction("remove", categoryId);
   };
 
   const handleAddHabit = (categoryId: string) => {
@@ -77,8 +85,10 @@ export default function ManagePage() {
   const handleHabitSubmit = (label: string, type: "boolean" | "number") => {
     if (editingHabit) {
       updateHabit(habitTargetCategoryId, editingHabit.id, label, type);
+      trackHabitAction("edit", editingHabit.id);
     } else {
       addHabit(habitTargetCategoryId, label, type);
+      trackHabitAction("add");
     }
     setHabitModalOpen(false);
     setEditingHabit(null);
@@ -86,10 +96,12 @@ export default function ManagePage() {
 
   const handleRemoveHabit = (categoryId: string, habitId: string) => {
     removeHabit(categoryId, habitId);
+    trackHabitAction("remove", habitId);
   };
 
   const handleReset = () => {
     resetToDefaults();
+    trackDataReset();
     setIsEditMode(false);
     setResetConfirmOpen(false);
   };

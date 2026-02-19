@@ -1,11 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Check } from "lucide-react";
 import type { HabitCategory } from "@/constants/habits";
 import type { HabitValue } from "@/hooks/useHabitTracker";
 import { getIconComponent } from "@/utils/iconMap";
+import {
+  trackBlockToggle,
+  trackHabitToggle,
+  trackHabitValueSet,
+} from "@/utils/analytics";
 import HabitRow from "./HabitRow";
 
 interface HabitBlockProps {
@@ -38,6 +43,35 @@ export default function HabitBlock({
   ).length;
   const totalCount = category.items.length;
 
+  const handleToggleBlock = useCallback(() => {
+    setIsOpen((prev) => {
+      const newState = !prev;
+      trackBlockToggle(category.id, newState);
+      return newState;
+    });
+  }, [category.id]);
+
+  const handleToggleHabit = useCallback(
+    (id: string) => {
+      toggleHabit(id);
+      // We don't know the *new* value here easily without async state,
+      // but we know it's a toggle. We can assume we are "doing" it if it wasn't done.
+      // But accurate tracking might require reading the current value first.
+      const currentValue = getHabitValue(id);
+      const isNowCompleted = !isItemCompleted(currentValue);
+      trackHabitToggle(id, isNowCompleted);
+    },
+    [toggleHabit, getHabitValue]
+  );
+
+  const handleSetHabitValue = useCallback(
+    (id: string, value: number) => {
+      setHabitValue(id, value);
+      trackHabitValueSet(id, value);
+    },
+    [setHabitValue]
+  );
+
   return (
     <motion.div
       className={`mx-4 overflow-hidden rounded-2xl border transition-colors ${
@@ -51,7 +85,7 @@ export default function HabitBlock({
     >
       {/* Accordion header */}
       <button
-        onClick={() => setIsOpen((prev) => !prev)}
+        onClick={handleToggleBlock}
         className="flex w-full cursor-pointer items-center gap-3 px-4 py-3.5"
       >
         <div
@@ -114,8 +148,8 @@ export default function HabitBlock({
                   label={item.label}
                   type={item.type}
                   value={getHabitValue(item.id)}
-                  onToggle={() => toggleHabit(item.id)}
-                  onSetValue={(val) => setHabitValue(item.id, val)}
+                  onToggle={() => handleToggleHabit(item.id)}
+                  onSetValue={(val) => handleSetHabitValue(item.id, val)}
                 />
               ))}
             </div>

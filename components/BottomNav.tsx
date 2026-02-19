@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Home, BarChart3, Settings2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { trackNavTap } from "@/utils/analytics";
 
 interface BottomNavProps {
   activeTab: "home" | "stats" | "manage";
@@ -24,6 +25,7 @@ export default function BottomNav({ activeTab }: BottomNavProps) {
             <Link
               key={id}
               href={href}
+              onClick={() => trackNavTap(id)}
               className="relative flex flex-col items-center gap-0.5 px-4 py-1"
             >
               <div className="relative">

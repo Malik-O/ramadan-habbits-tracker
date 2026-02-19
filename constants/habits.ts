@@ -12,6 +12,7 @@ export interface HabitCategory {
 }
 
 export const RAMADAN_YEAR = "1447 AH";
+export const RAMADAN_START_DATE = new Date("2026-02-18T00:00:00");
 export const TOTAL_DAYS = 30;
 export const XP_PER_HABIT = 10;
 

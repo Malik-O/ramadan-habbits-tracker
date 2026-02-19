@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import confetti from "canvas-confetti";
+import { trackBlockCompleted } from "@/utils/analytics";
 
 interface ConfettiTriggerProps {
   blockCompletion: Record<string, boolean>;
@@ -21,6 +22,7 @@ export default function ConfettiTrigger({ blockCompletion }: ConfettiTriggerProp
       // Fire confetti only on the transition: false → true
       if (isComplete && !prev[blockId]) {
         fireConfetti();
+        trackBlockCompleted(blockId);
         break; // one burst per render cycle
       }
     }

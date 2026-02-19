@@ -1,8 +1,19 @@
 'use client';
 
+import { useEffect } from 'react';
 import Script from 'next/script';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { trackPageView } from '@/utils/analytics';
 
 const GoogleAnalytics = ({ gaId }: { gaId: string }) => {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const url = pathname + (searchParams?.toString() ? `?${searchParams.toString()}` : "");
+    trackPageView(url);
+  }, [pathname, searchParams]);
+
   return (
     <>
       <Script
@@ -15,7 +26,9 @@ const GoogleAnalytics = ({ gaId }: { gaId: string }) => {
           function gtag(){dataLayer.push(arguments);}
           gtag('js', new Date());
 
-          gtag('config', '${gaId}');
+          gtag('config', '${gaId}', {
+            page_path: window.location.pathname,
+          });
         `}
       </Script>
     </>

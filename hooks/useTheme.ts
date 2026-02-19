@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useCallback } from "react";
 
+import { trackThemeChange } from "@/utils/analytics";
+
 export type Theme = "dark" | "light";
 
 export function useTheme() {
   const [theme, setTheme] = useState<Theme>("light");
-
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -52,6 +53,7 @@ export function useTheme() {
     setTheme((prev) => {
       const next = prev === "dark" ? "light" : "dark";
       window.localStorage.setItem("hemma-theme", JSON.stringify(next));
+      trackThemeChange(next);
       return next;
     });
   }, []);

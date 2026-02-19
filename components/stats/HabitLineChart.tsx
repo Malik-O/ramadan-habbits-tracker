@@ -7,6 +7,7 @@ import type { HabitCategory } from "@/constants/habits";
 import type { TrackerState } from "@/hooks/useHabitTracker";
 import { isHabitCompleted } from "@/hooks/useHabitTracker";
 import { TOTAL_DAYS } from "@/constants/habits";
+import { trackEvent } from "@/utils/analytics";
 
 /** Color palette — one per habit, rotating */
 const LINE_COLORS = [
@@ -75,6 +76,7 @@ export default function HabitLineChart({
   });
 
   const toggleHabit = (id: string) => {
+    trackEvent("chart_filter_habit", { habit_id: id });
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
@@ -84,6 +86,7 @@ export default function HabitLineChart({
   };
 
   const toggleCategory = (group: CategoryGroup) => {
+    trackEvent("chart_filter_category", { category_id: group.id });
     setSelectedIds((prev) => {
       const next = new Set(prev);
       const allOn = group.habits.every((h) => next.has(h.id));
