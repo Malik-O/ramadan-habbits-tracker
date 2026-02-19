@@ -101,3 +101,13 @@ export function trackHabitAction(
 export function trackBlockCompleted(categoryId: string) {
   trackEvent("block_completed", { category_id: categoryId });
 }
+
+/** PWA install button clicked */
+export function trackPwaInstallClick(source: "banner" | "profile") {
+  trackEvent("pwa_install_click", { source });
+}
+
+/** PWA install banner dismissed */
+export function trackPwaInstallDismiss() {
+  trackEvent("pwa_install_dismiss");
+}

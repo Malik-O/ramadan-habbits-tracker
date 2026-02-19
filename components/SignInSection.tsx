@@ -1,10 +1,12 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { LogIn, LogOut, User } from "lucide-react";
-import { useGoogleAuth } from "@/hooks/useGoogleAuth";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { LogIn, LogOut, User, Eye, EyeOff } from "lucide-react";
+import { useAuth, type AuthMode } from "@/hooks/useAuth";
 
-/** Google "G" logo SVG rendered inline so there are no external asset deps. */
+// ─── Sub-Components ──────────────────────────────────────────────
+
 function GoogleLogo({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none">
@@ -28,45 +30,40 @@ function GoogleLogo({ className }: { className?: string }) {
   );
 }
 
-/** Signed‑in state — shows avatar, name, email and a sign‑out button. */
+/** Signed-in view — minimal avatar, name, email, sign-out. */
 function SignedInView({
   user,
   onSignOut,
 }: {
-  user: { name: string; email: string; picture: string };
+  user: { name: string; email: string; photoURL?: string; provider: string };
   onSignOut: () => void;
 }) {
   return (
-    <div className="flex flex-col items-center gap-4 p-5">
+    <div className="flex flex-col items-center gap-3 p-5">
       {/* Avatar */}
-      <div className="relative">
+      {user.photoURL ? (
         <img
-          src={user.picture}
+          src={user.photoURL}
           alt={user.name}
           referrerPolicy="no-referrer"
-          className="h-16 w-16 rounded-full border-2 border-amber-400/30 object-cover shadow-lg"
+          className="h-14 w-14 rounded-full border-2 border-amber-400/20 object-cover"
         />
-        <div className="absolute -bottom-1 -left-1 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 ring-2 ring-theme-card">
-          <svg className="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
-            <path
-              fillRule="evenodd"
-              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-              clipRule="evenodd"
-            />
-          </svg>
+      ) : (
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-theme-subtle">
+          <User className="h-6 w-6 text-theme-secondary" />
         </div>
-      </div>
+      )}
 
-      {/* User info */}
+      {/* Info */}
       <div className="text-center">
-        <h4 className="text-sm font-bold text-theme-primary">{user.name}</h4>
+        <p className="text-sm font-semibold text-theme-primary">{user.name}</p>
         <p className="mt-0.5 text-xs text-theme-secondary">{user.email}</p>
       </div>
 
-      {/* Sign-out button */}
+      {/* Sign out */}
       <button
         onClick={onSignOut}
-        className="flex items-center gap-2 rounded-xl border border-red-500/20 px-4 py-2 text-xs font-medium text-red-400 transition-colors hover:bg-red-500/5"
+        className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-red-400 transition-colors hover:bg-red-500/5"
       >
         <LogOut className="h-3.5 w-3.5" />
         <span>تسجيل الخروج</span>
@@ -75,49 +72,7 @@ function SignedInView({
   );
 }
 
-/** Signed‑out state — shows a Google sign‑in button. */
-function SignedOutView({
-  isSigningIn,
-  onSignIn,
-}: {
-  isSigningIn: boolean;
-  onSignIn: () => void;
-}) {
-  return (
-    <div className="flex flex-col items-center gap-4 p-5">
-      {/* Icon */}
-      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-amber-500/10">
-        <User className="h-7 w-7 text-amber-400" />
-      </div>
-
-      {/* Message */}
-      <div className="text-center">
-        <h4 className="text-sm font-bold text-theme-primary">
-          سجّل دخولك
-        </h4>
-        <p className="mt-1 text-xs leading-relaxed text-theme-secondary">
-          سجّل دخولك لحفظ تقدمك ومزامنته بين أجهزتك
-        </p>
-      </div>
-
-      {/* Google sign-in button */}
-      <button
-        onClick={onSignIn}
-        disabled={isSigningIn}
-        className="flex w-full max-w-[260px] items-center justify-center gap-3 rounded-xl border border-theme-border bg-theme-card px-4 py-3 text-sm font-medium text-theme-primary shadow-sm transition-all hover:bg-theme-subtle hover:shadow-md disabled:opacity-50"
-      >
-        {isSigningIn ? (
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-theme-border border-t-amber-400" />
-        ) : (
-          <GoogleLogo className="h-5 w-5 shrink-0" />
-        )}
-        <span>الدخول عبر Google</span>
-      </button>
-    </div>
-  );
-}
-
-/** Loading skeleton while auth state resolves. */
+/** Loading skeleton. */
 function AuthSkeleton() {
   return (
     <div className="flex flex-col items-center gap-3 p-5">
@@ -128,8 +83,247 @@ function AuthSkeleton() {
   );
 }
 
+/** Email/password form — shown when user clicks the text link. */
+function EmailForm({
+  isSubmitting,
+  error,
+  onSignIn,
+  onSignUp,
+  onClearError,
+  onBack,
+}: {
+  isSubmitting: boolean;
+  error: string | null;
+  onSignIn: (email: string, password: string) => void;
+  onSignUp: (name: string, email: string, password: string) => void;
+  onClearError: () => void;
+  onBack: () => void;
+}) {
+  const [mode, setMode] = useState<AuthMode>("signin");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (mode === "signin") {
+      onSignIn(email, password);
+    } else {
+      onSignUp(name, email, password);
+    }
+  };
+
+  const switchMode = () => {
+    setMode(mode === "signin" ? "signup" : "signin");
+    onClearError();
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, height: 0 }}
+      animate={{ opacity: 1, height: "auto" }}
+      exit={{ opacity: 0, height: 0 }}
+      transition={{ duration: 0.2 }}
+      className="overflow-hidden"
+    >
+      <div className="flex w-full flex-col gap-3 px-5 pb-5">
+        {/* Error */}
+        <AnimatePresence>
+          {error && (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="rounded-lg bg-red-500/5 px-3 py-2 text-xs text-red-400"
+            >
+              {error}
+            </motion.p>
+          )}
+        </AnimatePresence>
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-2.5">
+          {/* Name — signup only */}
+          <AnimatePresence>
+            {mode === "signup" && (
+              <motion.input
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                id="auth-name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="الاسم"
+                required={mode === "signup"}
+                className="w-full rounded-xl border border-theme-border bg-theme-subtle px-4 py-2.5 text-sm text-theme-primary placeholder:text-theme-secondary/50 outline-none transition-colors focus:border-amber-400/40"
+              />
+            )}
+          </AnimatePresence>
+
+          {/* Email */}
+          <input
+            id="auth-email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="البريد الإلكتروني"
+            required
+            className="w-full rounded-xl border border-theme-border bg-theme-subtle px-4 py-2.5 text-sm text-theme-primary placeholder:text-theme-secondary/50 outline-none transition-colors focus:border-amber-400/40"
+          />
+
+          {/* Password */}
+          <div className="relative">
+            <input
+              id="auth-password"
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="كلمة المرور"
+              required
+              minLength={6}
+              className="w-full rounded-xl border border-theme-border bg-theme-subtle px-4 py-2.5 pl-10 text-sm text-theme-primary placeholder:text-theme-secondary/50 outline-none transition-colors focus:border-amber-400/40"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-theme-secondary/60 transition-colors hover:text-theme-primary"
+            >
+              {showPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+            </button>
+          </div>
+
+          {/* Submit */}
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="rounded-xl bg-amber-500 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+          >
+            {isSubmitting ? (
+              <div className="mx-auto h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+            ) : mode === "signin" ? (
+              "تسجيل الدخول"
+            ) : (
+              "إنشاء حساب"
+            )}
+          </button>
+        </form>
+
+        {/* Toggle signin/signup */}
+        <p className="text-center text-xs text-theme-secondary">
+          {mode === "signin" ? "ليس لديك حساب؟ " : "لديك حساب بالفعل؟ "}
+          <button
+            type="button"
+            onClick={switchMode}
+            className="font-semibold text-amber-500 hover:underline"
+          >
+            {mode === "signin" ? "أنشئ حسابك" : "سجّل دخولك"}
+          </button>
+        </p>
+
+        {/* Back link */}
+        <button
+          type="button"
+          onClick={onBack}
+          className="text-xs text-theme-secondary/60 transition-colors hover:text-theme-secondary"
+        >
+          رجوع
+        </button>
+      </div>
+    </motion.div>
+  );
+}
+
+/** Signed-out view — Google button first, email link below. */
+function SignedOutView({
+  isSubmitting,
+  error,
+  onGoogleSignIn,
+  onSignInEmail,
+  onSignUpEmail,
+  onClearError,
+}: {
+  isSubmitting: boolean;
+  error: string | null;
+  onGoogleSignIn: () => void;
+  onSignInEmail: (email: string, password: string) => void;
+  onSignUpEmail: (name: string, email: string, password: string) => void;
+  onClearError: () => void;
+}) {
+  const [showEmailForm, setShowEmailForm] = useState(false);
+
+  return (
+    <div className="flex flex-col items-center gap-3 p-5">
+      {/* Brief message */}
+      <p className="text-center text-xs leading-relaxed text-theme-secondary">
+        سجّل دخولك لحفظ تقدمك ومزامنته بين أجهزتك
+      </p>
+
+      {/* Google button */}
+      <button
+        onClick={onGoogleSignIn}
+        disabled={isSubmitting}
+        className="flex w-full items-center justify-center gap-3 rounded-xl border border-theme-border bg-theme-card py-2.5 text-sm font-medium text-theme-primary transition-colors hover:bg-theme-subtle disabled:opacity-50"
+      >
+        {isSubmitting && !showEmailForm ? (
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-theme-border border-t-amber-400" />
+        ) : (
+          <GoogleLogo className="h-5 w-5 shrink-0" />
+        )}
+        <span>المتابعة عبر Google</span>
+      </button>
+
+      {/* Email link / form */}
+      <AnimatePresence>
+        {showEmailForm ? (
+          <EmailForm
+            key="email-form"
+            isSubmitting={isSubmitting}
+            error={error}
+            onSignIn={onSignInEmail}
+            onSignUp={onSignUpEmail}
+            onClearError={onClearError}
+            onBack={() => {
+              setShowEmailForm(false);
+              onClearError();
+            }}
+          />
+        ) : (
+          <motion.button
+            key="email-link"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            type="button"
+            onClick={() => setShowEmailForm(true)}
+            className="text-xs text-theme-primary transition-colors hover:text-amber-500"
+          >
+            أو المتابعة بالبريد الإلكتروني وكلمة المرور
+          </motion.button>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ─── Main Component ──────────────────────────────────────────────
+
 export default function SignInSection() {
-  const { user, isLoading, isSigningIn, signIn, signOut } = useGoogleAuth();
+  const {
+    user,
+    isLoading,
+    isSubmitting,
+    error,
+    signInWithEmail,
+    signUpWithEmail,
+    signInWithGoogle,
+    signOut,
+    clearError,
+  } = useAuth();
 
   return (
     <motion.div
@@ -150,7 +344,14 @@ export default function SignInSection() {
       ) : user ? (
         <SignedInView user={user} onSignOut={signOut} />
       ) : (
-        <SignedOutView isSigningIn={isSigningIn} onSignIn={signIn} />
+        <SignedOutView
+          isSubmitting={isSubmitting}
+          error={error}
+          onGoogleSignIn={signInWithGoogle}
+          onSignInEmail={signInWithEmail}
+          onSignUpEmail={signUpWithEmail}
+          onClearError={clearError}
+        />
       )}
     </motion.div>
   );

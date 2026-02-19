@@ -19,7 +19,7 @@ import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { RAMADAN_YEAR } from "@/constants/habits";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import SignInSection from "@/components/SignInSection";
-import { trackDataReset } from "@/utils/analytics";
+import { trackDataReset, trackPwaInstallClick } from "@/utils/analytics";
 
 export default function ProfilePage() {
   const { theme, toggleTheme } = useTheme();
@@ -101,6 +101,7 @@ function SettingsSection({ theme, onToggleTheme }: SettingsSectionProps) {
   const { isInstallable, isInstalled, promptInstall } = usePwaInstall();
 
   const handleInstall = async () => {
+    trackPwaInstallClick("profile");
     if (isInstallable) {
       await promptInstall();
     }

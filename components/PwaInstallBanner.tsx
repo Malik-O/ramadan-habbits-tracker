@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Download, X, Share } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePwaInstall } from "@/hooks/usePwaInstall";
+import { trackPwaInstallClick, trackPwaInstallDismiss } from "@/utils/analytics";
 
 /**
  * Floating PWA install banner that slides up from the bottom.
@@ -33,6 +34,7 @@ export default function PwaInstallBanner() {
   }, [isInstalled]);
 
   const handleInstall = async () => {
+    trackPwaInstallClick("banner");
     if (isInstallable) {
       // Chrome/Edge — native prompt
       await promptInstall();
@@ -47,6 +49,7 @@ export default function PwaInstallBanner() {
   };
 
   const handleDismiss = () => {
+    trackPwaInstallDismiss();
     setVisible(false);
     setShowIosGuide(false);
     localStorage.setItem(DISMISS_KEY, "true");
