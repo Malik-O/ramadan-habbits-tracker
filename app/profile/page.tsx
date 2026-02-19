@@ -18,6 +18,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { RAMADAN_YEAR } from "@/constants/habits";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import SignInSection from "@/components/SignInSection";
 import { trackDataReset } from "@/utils/analytics";
 
 export default function ProfilePage() {
@@ -31,6 +32,9 @@ export default function ProfilePage() {
       <div className="flex flex-col gap-6 p-4">
         {/* App info card */}
         <AppInfoCard />
+
+        {/* Sign in / Sign up */}
+        <SignInSection />
 
         {/* Settings */}
         <SettingsSection theme={theme} onToggleTheme={toggleTheme} />

@@ -14,8 +14,17 @@ interface ConfettiTriggerProps {
  */
 export default function ConfettiTrigger({ blockCompletion }: ConfettiTriggerProps) {
   const prevRef = useRef<Record<string, boolean>>({});
+  const isInitialMount = useRef(true);
 
   useEffect(() => {
+    // On initial mount, just capture the current state as baseline
+    // so we don't fire confetti for already-completed blocks
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      prevRef.current = { ...blockCompletion };
+      return;
+    }
+
     const prev = prevRef.current;
 
     for (const [blockId, isComplete] of Object.entries(blockCompletion)) {

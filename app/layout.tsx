@@ -5,6 +5,7 @@ import "./globals.css";
 import SplashScreen from "@/components/SplashScreen";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import PwaInstallBanner from "@/components/PwaInstallBanner";
+import OfflineDetector from "@/components/OfflineDetector";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -101,6 +102,7 @@ export default function RootLayout({
         />
         <SplashScreen>{children}</SplashScreen>
         <PwaInstallBanner />
+        <OfflineDetector />
       </body>
     </html>
   );
