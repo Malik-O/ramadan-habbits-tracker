@@ -61,6 +61,7 @@ export interface AuthResponse {
   token: string;
   photoURL?: string;
   provider?: "google" | "local";
+  isNewUser?: boolean;
 }
 
 export interface UserProfile {
@@ -70,15 +71,6 @@ export interface UserProfile {
   email: string;
   photoURL?: string;
 }
-
-export interface SyncData {
-  trackerState: Record<number, Record<string, boolean | number>>;
-  customHabits: any[]; // Using any[] for simplicity, or import distinct types if needed
-  currentDay: number;
-  theme: "light" | "dark";
-  lastSynced?: Date;
-}
-
 // ─── Auth API Methods ────────────────────────────────────────────
 
 /** Login with email and password */
@@ -119,17 +111,118 @@ export function getProfile(): Promise<UserProfile> {
   return apiFetch<UserProfile>("/auth/profile");
 }
 
+// ─── Sync API Types ──────────────────────────────────────────────
+
+/** A single habit tracking record for sync */
+export interface SyncEntryPayload {
+  dayIndex: number;
+  habitId: string;
+  value: boolean | number;
+  updatedAt: string; // ISO string
+}
+
+/** A habit category for sync */
+export interface SyncCategoryPayload {
+  categoryId: string;
+  name: string;
+  icon: string;
+  items: { id: string; label: string; type: "boolean" | "number" }[];
+  sortOrder: number;
+  updatedAt: string; // ISO string
+}
+
+/** Server response shape for sync endpoints */
+export interface SyncResponse {
+  entries: SyncEntryPayload[];
+  categories: SyncCategoryPayload[];
+}
+
 // ─── Sync API Methods ────────────────────────────────────────────
 
-/** Upload local state to server */
-export function uploadSyncData(data: Omit<SyncData, "lastSynced">): Promise<SyncData> {
-  return apiFetch<SyncData>("/sync/upload", {
+/** Upload local entries + categories to server (smart merge) */
+export function uploadSyncData(data: {
+  entries: SyncEntryPayload[];
+  categories: SyncCategoryPayload[];
+}): Promise<SyncResponse> {
+  return apiFetch<SyncResponse>("/sync/upload", {
     method: "POST",
     body: JSON.stringify(data),
   });
 }
 
-/** Download state from server */
-export function downloadSyncData(): Promise<SyncData> {
-  return apiFetch<SyncData>("/sync/download");
+/** Download all entries + categories from server */
+export function downloadSyncData(): Promise<SyncResponse> {
+  return apiFetch<SyncResponse>("/sync/download");
 }
+
+/** Reset (delete) all user data on the server */
+export function resetSyncData(): Promise<{ message: string }> {
+  return apiFetch<{ message: string }>("/sync/reset", {
+    method: "DELETE",
+  });
+}
+
+/**
+ * Push existing localStorage data to the server right after sign-up.
+ * Reads directly from localStorage so the caller doesn't need to pass state.
+ */
+export async function initialUploadAfterSignup(): Promise<void> {
+  if (typeof window === "undefined") return;
+
+  try {
+    // Read tracker state from localStorage
+    const rawTracker = localStorage.getItem("hemma-tracker");
+    const trackerState: Record<number, Record<string, boolean | number>> =
+      rawTracker ? JSON.parse(rawTracker) : {};
+
+    // Read custom habits
+    const rawHabits = localStorage.getItem("hemma-custom-habits");
+    const customHabits: { id: string; name: string; icon: string; items: { id: string; label: string; type: "boolean" | "number" }[] }[] =
+      rawHabits ? JSON.parse(rawHabits) : [];
+
+    // Read timestamps
+    const rawDayTimestamps = localStorage.getItem("hemma-day-updated-at");
+    const dayTimestamps: Record<number, string> =
+      rawDayTimestamps ? JSON.parse(rawDayTimestamps) : {};
+
+    const rawHabitsTimestamp = localStorage.getItem("hemma-custom-habits-updated-at");
+    const habitsTimestamp: string = rawHabitsTimestamp
+      ? JSON.parse(rawHabitsTimestamp)
+      : new Date().toISOString();
+
+    // Convert to entry format
+    const entries: SyncEntryPayload[] = [];
+    for (const [dayKey, dayRecord] of Object.entries(trackerState)) {
+      const dayIndex = Number(dayKey);
+      if (isNaN(dayIndex)) continue;
+      const updatedAt = dayTimestamps[dayIndex] || new Date().toISOString();
+
+      for (const [habitId, value] of Object.entries(dayRecord as Record<string, boolean | number>)) {
+        entries.push({ dayIndex, habitId, value, updatedAt });
+      }
+    }
+
+    // Convert to category format
+    const now = habitsTimestamp || new Date().toISOString();
+    const categories: SyncCategoryPayload[] = customHabits.map((cat, index) => ({
+      categoryId: cat.id,
+      name: cat.name,
+      icon: cat.icon,
+      items: cat.items.map((item) => ({
+        id: item.id,
+        label: item.label,
+        type: item.type,
+      })),
+      sortOrder: index,
+      updatedAt: now,
+    }));
+
+    // Only upload if there's data
+    if (entries.length > 0 || categories.length > 0) {
+      await uploadSyncData({ entries, categories });
+    }
+  } catch (error) {
+    console.warn("[api] Failed to upload initial data after signup:", error);
+  }
+}
+

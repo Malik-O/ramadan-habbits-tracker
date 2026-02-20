@@ -5,6 +5,9 @@ import { INSPIRATIONAL_QUOTES } from "@/constants/habits";
 import { getActiveBlockId } from "@/utils/timeBlocks";
 import { useHabitTracker } from "@/hooks/useHabitTracker";
 import { useCustomHabits } from "@/hooks/useCustomHabits";
+import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/hooks/useTheme";
+import { useSync } from "@/hooks/useSync";
 import Header from "@/components/Header";
 import DaySelector from "@/components/DaySelector";
 import HabitBlock from "@/components/HabitBlock";
@@ -14,11 +17,14 @@ import QuoteBanner from "@/components/QuoteBanner";
 import DayLabel from "@/components/DayLabel";
 
 export default function HomePage() {
-  const { categories } = useCustomHabits();
+  const { categories, setCategories, customHabitsUpdatedAt, setCustomHabitsUpdatedAt } = useCustomHabits();
   const {
     currentDay,
     setCurrentDay,
     trackerState,
+    setTrackerState,
+    dayUpdatedAt,
+    setDayUpdatedAt,
     toggleHabit,
     setHabitValue,
     getHabitValue,
@@ -30,6 +36,25 @@ export default function HomePage() {
     totalHabits,
     completedHabits,
   } = useHabitTracker(categories);
+
+  const { user } = useAuth();
+  const { theme } = useTheme();
+
+  // Background sync: uploads on change when logged in, downloads on login
+  useSync({
+    isAuthenticated: !!user,
+    trackerState,
+    dayUpdatedAt,
+    customHabits: categories,
+    customHabitsUpdatedAt,
+    currentDay,
+    theme,
+    setTrackerState,
+    setDayUpdatedAt,
+    setCustomHabits: setCategories,
+    setCustomHabitsUpdatedAt,
+    setCurrentDay,
+  });
 
   const activeBlockId = useMemo(() => {
     const hour = new Date().getHours();

@@ -4,19 +4,41 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { RotateCcw } from "lucide-react";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useAuth } from "@/hooks/useAuth";
+import { resetSyncData, getAuthToken } from "@/services/api";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { trackDataReset } from "@/utils/analytics";
 
 export default function DangerSection() {
   const [, setTracker] = useLocalStorage("hemma-tracker", {});
   const [, setDay] = useLocalStorage("hemma-current-day", 0);
+  const [, setDayUpdatedAt] = useLocalStorage("hemma-day-updated-at", {});
+  const [, setCustomHabitsUpdatedAt] = useLocalStorage("hemma-custom-habits-updated-at", "");
+  const { user } = useAuth();
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
 
-  const handleReset = () => {
+  const handleReset = async () => {
+    setIsResetting(true);
     trackDataReset();
+
+    // Clear local storage
     setTracker({});
     setDay(0);
+    setDayUpdatedAt({});
+    setCustomHabitsUpdatedAt("");
+
+    // If logged in, also clear server data
+    if (user && getAuthToken()) {
+      try {
+        await resetSyncData();
+      } catch (error) {
+        console.warn("[DangerSection] Failed to reset server data:", error);
+      }
+    }
+
     setIsConfirmOpen(false);
+    setIsResetting(false);
     window.location.reload();
   };
 
@@ -33,9 +55,10 @@ export default function DangerSection() {
         </h3>
         <button
           onClick={() => setIsConfirmOpen(true)}
-          className="flex w-full items-center gap-3 px-4 py-3.5 text-red-400 transition-colors hover:bg-red-500/5"
+          disabled={isResetting}
+          className="flex w-full items-center gap-3 px-4 py-3.5 text-red-400 transition-colors hover:bg-red-500/5 disabled:opacity-50"
         >
-          <RotateCcw className="h-5 w-5" />
+          <RotateCcw className={`h-5 w-5 ${isResetting ? "animate-spin" : ""}`} />
           <span className="text-sm">إعادة تعيين جميع البيانات</span>
         </button>
       </motion.div>

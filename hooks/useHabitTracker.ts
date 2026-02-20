@@ -13,10 +13,16 @@ export type DayRecord = Record<string, HabitValue>;
 /** Full tracker state: dayIndex (0-29) → DayRecord */
 export type TrackerState = Record<number, DayRecord>;
 
+/** Per-day last-modified timestamps: dayIndex → ISO string */
+export type DayUpdatedAtMap = Record<number, string>;
+
 export interface UseHabitTrackerReturn {
   currentDay: number;
   setCurrentDay: (day: number) => void;
   trackerState: TrackerState;
+  setTrackerState: (state: TrackerState) => void;
+  dayUpdatedAt: DayUpdatedAtMap;
+  setDayUpdatedAt: (map: DayUpdatedAtMap) => void;
   toggleHabit: (habitId: string) => void;
   setHabitValue: (habitId: string, value: number) => void;
   getHabitValue: (habitId: string) => HabitValue;
@@ -55,6 +61,7 @@ function computeStreak(state: TrackerState, currentDay: number): number {
 export function useHabitTracker(categories: HabitCategory[]): UseHabitTrackerReturn {
   const [currentDay, setCurrentDay] = useLocalStorage<number>("hemma-current-day", 0);
   const [trackerState, setTrackerState] = useLocalStorage<TrackerState>("hemma-tracker", {});
+  const [dayUpdatedAt, setDayUpdatedAt] = useLocalStorage<DayUpdatedAtMap>("hemma-day-updated-at", {});
 
   const dayRecord = trackerState[currentDay] || {};
 
@@ -71,8 +78,13 @@ export function useHabitTracker(categories: HabitCategory[]): UseHabitTrackerRet
         ...prev,
         [currentDay]: updater(prev[currentDay] || {}),
       }));
+      // Mark this day as "just modified" for smart sync
+      setDayUpdatedAt((prev) => ({
+        ...prev,
+        [currentDay]: new Date().toISOString(),
+      }));
     },
-    [currentDay, setTrackerState]
+    [currentDay, setTrackerState, setDayUpdatedAt]
   );
 
   const toggleHabit = useCallback(
@@ -144,6 +156,9 @@ export function useHabitTracker(categories: HabitCategory[]): UseHabitTrackerRet
     currentDay,
     setCurrentDay,
     trackerState,
+    setTrackerState,
+    dayUpdatedAt,
+    setDayUpdatedAt,
     toggleHabit,
     setHabitValue,
     getHabitValue,

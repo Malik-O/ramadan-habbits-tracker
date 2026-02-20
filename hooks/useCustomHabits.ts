@@ -11,6 +11,9 @@ function generateId(): string {
 
 export interface UseCustomHabitsReturn {
   categories: HabitCategory[];
+  setCategories: (habits: HabitCategory[]) => void;
+  customHabitsUpdatedAt: string;
+  setCustomHabitsUpdatedAt: (ts: string) => void;
   addCategory: (name: string, icon: string) => void;
   updateCategory: (categoryId: string, name: string, icon: string) => void;
   removeCategory: (categoryId: string) => void;
@@ -26,51 +29,64 @@ export function useCustomHabits(): UseCustomHabitsReturn {
     "hemma-custom-habits",
     HABIT_CATEGORIES
   );
+  const [customHabitsUpdatedAt, setCustomHabitsUpdatedAt] = useLocalStorage<string>(
+    "hemma-custom-habits-updated-at",
+    ""
+  );
+
+  /** Helper: stamp the current time whenever categories change */
+  const stampAndSet = useCallback(
+    (updater: (prev: HabitCategory[]) => HabitCategory[]) => {
+      setCategories(updater);
+      setCustomHabitsUpdatedAt(new Date().toISOString());
+    },
+    [setCategories, setCustomHabitsUpdatedAt]
+  );
 
   const addCategory = useCallback(
     (name: string, icon: string) => {
-      setCategories((prev) => [
+      stampAndSet((prev) => [
         ...prev,
         { id: generateId(), name, icon, items: [] },
       ]);
     },
-    [setCategories]
+    [stampAndSet]
   );
 
   const updateCategory = useCallback(
     (categoryId: string, name: string, icon: string) => {
-      setCategories((prev) =>
+      stampAndSet((prev) =>
         prev.map((cat) =>
           cat.id === categoryId ? { ...cat, name, icon } : cat
         )
       );
     },
-    [setCategories]
+    [stampAndSet]
   );
 
   const removeCategory = useCallback(
     (categoryId: string) => {
-      setCategories((prev) => prev.filter((cat) => cat.id !== categoryId));
+      stampAndSet((prev) => prev.filter((cat) => cat.id !== categoryId));
     },
-    [setCategories]
+    [stampAndSet]
   );
 
   const reorderCategories = useCallback(
     (fromIndex: number, toIndex: number) => {
-      setCategories((prev) => {
+      stampAndSet((prev) => {
         const result = [...prev];
         const [removed] = result.splice(fromIndex, 1);
         result.splice(toIndex, 0, removed);
         return result;
       });
     },
-    [setCategories]
+    [stampAndSet]
   );
 
   const addHabit = useCallback(
     (categoryId: string, label: string, type: "boolean" | "number") => {
       const newHabit: HabitItem = { id: generateId(), label, type };
-      setCategories((prev) =>
+      stampAndSet((prev) =>
         prev.map((cat) =>
           cat.id === categoryId
             ? { ...cat, items: [...cat.items, newHabit] }
@@ -78,12 +94,12 @@ export function useCustomHabits(): UseCustomHabitsReturn {
         )
       );
     },
-    [setCategories]
+    [stampAndSet]
   );
 
   const updateHabit = useCallback(
     (categoryId: string, habitId: string, label: string, type: "boolean" | "number") => {
-      setCategories((prev) =>
+      stampAndSet((prev) =>
         prev.map((cat) =>
           cat.id === categoryId
             ? {
@@ -96,12 +112,12 @@ export function useCustomHabits(): UseCustomHabitsReturn {
         )
       );
     },
-    [setCategories]
+    [stampAndSet]
   );
 
   const removeHabit = useCallback(
     (categoryId: string, habitId: string) => {
-      setCategories((prev) =>
+      stampAndSet((prev) =>
         prev.map((cat) =>
           cat.id === categoryId
             ? { ...cat, items: cat.items.filter((item) => item.id !== habitId) }
@@ -109,15 +125,18 @@ export function useCustomHabits(): UseCustomHabitsReturn {
         )
       );
     },
-    [setCategories]
+    [stampAndSet]
   );
 
   const resetToDefaults = useCallback(() => {
-    setCategories(HABIT_CATEGORIES);
-  }, [setCategories]);
+    stampAndSet(() => HABIT_CATEGORIES);
+  }, [stampAndSet]);
 
   return {
     categories,
+    setCategories,
+    customHabitsUpdatedAt,
+    setCustomHabitsUpdatedAt,
     addCategory,
     updateCategory,
     removeCategory,

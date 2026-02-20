@@ -8,6 +8,7 @@ import {
   getProfile,
   setAuthToken,
   getAuthToken,
+  initialUploadAfterSignup,
   type AuthResponse,
 } from "@/services/api";
 
@@ -155,6 +156,7 @@ export function useAuth(): AuthState {
         setError(null);
         try {
           const res = await loginWithGoogle(response.credential);
+          const isNewUser = res.isNewUser;
           setAuthToken(res.token);
           const authUser = mapAuthResponseToUser(res, "google");
           // Use Google picture from decoded credential if backend didn't return one
@@ -171,6 +173,11 @@ export function useAuth(): AuthState {
           }
           setUser(authUser);
           storeUser(authUser);
+
+          // If this was a new Google account, push existing local data
+          if (isNewUser) {
+            await initialUploadAfterSignup();
+          }
         } catch (err: unknown) {
           const message =
             err instanceof Error ? err.message : "فشل تسجيل الدخول بـ Google";
@@ -217,6 +224,9 @@ export function useAuth(): AuthState {
         const authUser = mapAuthResponseToUser(res, "local");
         setUser(authUser);
         storeUser(authUser);
+
+        // Push existing local data to the server immediately after sign-up
+        await initialUploadAfterSignup();
       } catch (err: unknown) {
         const message =
           err instanceof Error ? err.message : "فشل إنشاء الحساب";
