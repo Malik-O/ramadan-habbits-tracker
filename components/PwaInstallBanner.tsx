@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { Download, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePwaInstall } from "@/hooks/usePwaInstall";
@@ -22,17 +23,21 @@ export default function PwaInstallBanner() {
   const { isInstallable, isInstalled, isIos, promptInstall } = usePwaInstall();
   const [visible, setVisible] = useState(false);
   const [showIosGuide, setShowIosGuide] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     // Hide if already installed as standalone
     if (isInstalled) return;
+
+    // Do not show on profile page (it has its own install button)
+    if (pathname === "/profile") return;
 
     const wasDismissed = localStorage.getItem(DISMISS_KEY) === "true";
     if (wasDismissed) return;
 
     const timer = setTimeout(() => setVisible(true), SHOW_DELAY_MS);
     return () => clearTimeout(timer);
-  }, [isInstalled]);
+  }, [isInstalled, pathname]);
 
   const handleInstall = async () => {
     trackPwaInstallClick("banner");
@@ -65,7 +70,7 @@ export default function PwaInstallBanner() {
   return (
     <>
       <AnimatePresence>
-        {visible && !showIosGuide && (
+        {visible && !showIosGuide && pathname !== "/profile" && (
           <motion.div
             id="pwa-install-banner"
             initial={{ y: 120, opacity: 0 }}

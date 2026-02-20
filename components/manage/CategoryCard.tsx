@@ -27,6 +27,8 @@ function CategoryIcon({ iconKey }: { iconKey: string }) {
   );
 }
 
+const isCustom = (id: string) => id.startsWith("custom-");
+
 export default function CategoryCard({
   category,
   isEditMode,
@@ -37,11 +39,15 @@ export default function CategoryCard({
   onRemoveHabit,
 }: CategoryCardProps) {
   const [confirmRemoveCat, setConfirmRemoveCat] = useState(false);
-  const [confirmRemoveHabitId, setConfirmRemoveHabitId] = useState<string | null>(null);
+  const [confirmRemoveHabitId, setConfirmRemoveHabitId] = useState<string | null>(
+    null
+  );
 
   const habitToRemove = confirmRemoveHabitId
     ? category.items.find((i) => i.id === confirmRemoveHabitId)
     : null;
+
+  const isCustomCategory = isCustom(category.id);
 
   return (
     <>
@@ -52,8 +58,8 @@ export default function CategoryCard({
       >
         {/* Category header */}
         <div className="flex items-center gap-3 border-b border-theme-border px-4 py-3">
-          {/* Delete button (edit mode) */}
-          {isEditMode && (
+          {/* Delete button (edit mode) - Only for custom categories */}
+          {isEditMode && isCustomCategory && (
             <motion.button
               onClick={() => setConfirmRemoveCat(true)}
               initial={{ scale: 0, opacity: 0 }}
@@ -76,7 +82,8 @@ export default function CategoryCard({
             {category.items.length} عبادة
           </span>
 
-          {isEditMode && (
+          {/* Edit button - Only for custom categories */}
+          {isEditMode && isCustomCategory && (
             <motion.button
               onClick={onEditCategory}
               initial={{ scale: 0, opacity: 0 }}
@@ -153,14 +160,18 @@ interface HabitItemRowProps {
   onRemove: () => void;
 }
 
-function HabitItemRow({ item, isEditMode, onEdit, onRemove }: HabitItemRowProps) {
+function HabitItemRow({
+  item,
+  isEditMode,
+  onEdit,
+  onRemove,
+}: HabitItemRowProps) {
+  const isCustomHabit = isCustom(item.id);
+
   return (
-    <motion.div
-      layout
-      className="flex items-center gap-3 px-4 py-2.5"
-    >
-      {/* Delete button */}
-      {isEditMode && (
+    <motion.div layout className="flex items-center gap-3 px-4 py-2.5">
+      {/* Delete button - Only for custom habits */}
+      {isEditMode && isCustomHabit && (
         <motion.button
           onClick={onRemove}
           initial={{ scale: 0, opacity: 0, width: 0 }}
@@ -186,8 +197,8 @@ function HabitItemRow({ item, isEditMode, onEdit, onRemove }: HabitItemRowProps)
         {item.type === "number" ? "رقم" : "تحقق"}
       </span>
 
-      {/* Edit button */}
-      {isEditMode && (
+      {/* Edit button - Only for custom habits */}
+      {isEditMode && isCustomHabit && (
         <motion.button
           onClick={onEdit}
           initial={{ scale: 0, opacity: 0 }}
@@ -200,3 +211,4 @@ function HabitItemRow({ item, isEditMode, onEdit, onRemove }: HabitItemRowProps)
     </motion.div>
   );
 }
+
