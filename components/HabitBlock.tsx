@@ -20,6 +20,8 @@ interface HabitBlockProps {
   getHabitValue: (id: string) => HabitValue;
   toggleHabit: (id: string) => void;
   setHabitValue: (id: string, value: number) => void;
+  /** Optional: returns group names for a habit (for badge display) */
+  getGroupNames?: (categoryName: string, habitLabel: string) => string[];
 }
 
 function isItemCompleted(value: HabitValue): boolean {
@@ -34,6 +36,7 @@ export default function HabitBlock({
   getHabitValue,
   toggleHabit,
   setHabitValue,
+  getGroupNames,
 }: HabitBlockProps) {
   const [isOpen, setIsOpen] = useState(isDefaultOpen);
   const IconComponent = getIconComponent(category.icon);
@@ -150,6 +153,7 @@ export default function HabitBlock({
                   value={getHabitValue(item.id)}
                   onToggle={() => handleToggleHabit(item.id)}
                   onSetValue={(val) => handleSetHabitValue(item.id, val)}
+                  groupNames={getGroupNames?.(category.name, item.label)}
                 />
               ))}
             </div>

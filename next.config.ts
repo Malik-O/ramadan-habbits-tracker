@@ -94,6 +94,13 @@ const withPWA = withPWAInit({
 const nextConfig: NextConfig = {
   // Allow @ducanh2912/next-pwa webpack plugin alongside Turbopack
   turbopack: {},
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "ui-avatars.com" },
+      { protocol: "https", hostname: "lh3.googleusercontent.com" },
+      { protocol: "https", hostname: "avatars.githubusercontent.com" },
+    ],
+  },
 };
 
 export default withPWA(nextConfig);

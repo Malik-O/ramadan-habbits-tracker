@@ -273,3 +273,158 @@ export function toggleLeaderboardVisibility(
     }
   );
 }
+
+// ─── Group API Types ─────────────────────────────────────────────
+
+export interface GroupHabitItem {
+  id: string;
+  label: string;
+  type: "boolean" | "number";
+}
+
+export interface GroupCategory {
+  categoryId: string;
+  name: string;
+  icon: string;
+  items: GroupHabitItem[];
+  sortOrder: number;
+}
+
+export interface GroupResponse {
+  _id: string;
+  name: string;
+  adminUid: string;
+  isAdmin: boolean;
+  memberCount: number;
+  inviteCode: string;
+  categories: GroupCategory[];
+  createdAt: string;
+}
+
+export interface GroupLeaderboardEntry {
+  rank: number;
+  uid: string;
+  displayName: string;
+  photoURL: string | null;
+  completionRate: number;
+  completedCount: number;
+  totalPossible: number;
+}
+
+export interface GroupLeaderboardResponse {
+  entries: GroupLeaderboardEntry[];
+  groupName: string;
+}
+
+export interface MemberProgressResponse {
+  member: {
+    uid: string;
+    displayName: string;
+    photoURL: string | null;
+  };
+  categories: GroupCategory[];
+  dayMap: Record<number, Record<string, boolean | number>>;
+}
+
+// ─── Group API Methods ───────────────────────────────────────────
+
+/** Public group info (no auth required) */
+export interface GroupPublicInfo {
+  _id: string;
+  name: string;
+  memberCount: number;
+  inviteCode: string;
+}
+
+/** Get basic group info by invite code (public, no auth required) */
+export function getGroupInfoByCode(inviteCode: string): Promise<GroupPublicInfo> {
+  // Plain fetch — no auth token needed
+  return fetch(`${API_BASE}/groups/info/${encodeURIComponent(inviteCode)}`).then(
+    async (res) => {
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || "المجموعة غير موجودة");
+      }
+      return res.json();
+    }
+  );
+}
+
+/** Get all groups the current user belongs to */
+export function getMyGroups(): Promise<GroupResponse[]> {
+  return apiFetch<GroupResponse[]>("/groups");
+}
+
+/** Get single group details */
+export function getGroup(groupId: string): Promise<GroupResponse> {
+  return apiFetch<GroupResponse>(`/groups/${groupId}`);
+}
+
+/** Create a new group */
+export function createGroup(name: string): Promise<GroupResponse> {
+  return apiFetch<GroupResponse>("/groups", {
+    method: "POST",
+    body: JSON.stringify({ name }),
+  });
+}
+
+/** Join a group via invite code */
+export function joinGroupByCode(inviteCode: string): Promise<GroupResponse> {
+  return apiFetch<GroupResponse>("/groups/join", {
+    method: "POST",
+    body: JSON.stringify({ inviteCode }),
+  });
+}
+
+/** Leave a group */
+export function leaveGroup(groupId: string): Promise<{ message: string }> {
+  return apiFetch<{ message: string }>(`/groups/${groupId}/leave`, {
+    method: "POST",
+  });
+}
+
+/** Delete a group (admin only) */
+export function deleteGroup(groupId: string): Promise<{ message: string }> {
+  return apiFetch<{ message: string }>(`/groups/${groupId}`, {
+    method: "DELETE",
+  });
+}
+
+/** Update group info (admin only) */
+export function updateGroupInfo(
+  groupId: string,
+  data: { name?: string }
+): Promise<GroupResponse> {
+  return apiFetch<GroupResponse>(`/groups/${groupId}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
+/** Update group habit categories (admin only) */
+export function updateGroupHabits(
+  groupId: string,
+  categories: GroupCategory[]
+): Promise<GroupResponse> {
+  return apiFetch<GroupResponse>(`/groups/${groupId}/habits`, {
+    method: "PUT",
+    body: JSON.stringify({ categories }),
+  });
+}
+
+/** Get group leaderboard */
+export function getGroupLeaderboard(
+  groupId: string
+): Promise<GroupLeaderboardResponse> {
+  return apiFetch<GroupLeaderboardResponse>(`/groups/${groupId}/leaderboard`);
+}
+
+/** Get member progress detail (admin only) */
+export function getMemberProgress(
+  groupId: string,
+  memberUid: string
+): Promise<MemberProgressResponse> {
+  return apiFetch<MemberProgressResponse>(
+    `/groups/${groupId}/members/${memberUid}/progress`
+  );
+}

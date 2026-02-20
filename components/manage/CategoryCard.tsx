@@ -27,7 +27,7 @@ function CategoryIcon({ iconKey }: { iconKey: string }) {
   );
 }
 
-const isCustom = (id: string) => id.startsWith("custom-");
+const isCustom = (id: string) => id.startsWith("custom-") || id.startsWith("grp-");
 
 export default function CategoryCard({
   category,

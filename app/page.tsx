@@ -8,6 +8,7 @@ import { useCustomHabits } from "@/hooks/useCustomHabits";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 import { useSync } from "@/hooks/useSync";
+import { useMergedHabits } from "@/hooks/useMergedHabits";
 import Header from "@/components/Header";
 import DaySelector from "@/components/DaySelector";
 import HabitBlock from "@/components/HabitBlock";
@@ -18,6 +19,12 @@ import DayLabel from "@/components/DayLabel";
 
 export default function HomePage() {
   const { categories, setCategories, customHabitsUpdatedAt, setCustomHabitsUpdatedAt } = useCustomHabits();
+  const { user } = useAuth();
+  const { theme } = useTheme();
+
+  // Merge personal habits with group habits (adds group-exclusive items & tags)
+  const { mergedCategories, getGroupNames } = useMergedHabits(categories, !!user);
+
   const {
     currentDay,
     setCurrentDay,
@@ -35,10 +42,7 @@ export default function HomePage() {
     blockCompletion,
     totalHabits,
     completedHabits,
-  } = useHabitTracker(categories);
-
-  const { user } = useAuth();
-  const { theme } = useTheme();
+  } = useHabitTracker(mergedCategories);
 
   // Background sync: uploads on change when logged in, downloads on login
   useSync({
@@ -94,9 +98,9 @@ export default function HomePage() {
       {/* Day label */}
       <DayLabel day={currentDay} />
 
-      {/* Habit blocks */}
+      {/* Habit blocks — merged personal + group habits */}
       <div className="flex flex-col gap-3 pb-8">
-        {categories.map((category) => (
+        {mergedCategories.map((category) => (
           <HabitBlock
             key={category.id}
             category={category}
@@ -105,6 +109,7 @@ export default function HomePage() {
             getHabitValue={getHabitValue}
             toggleHabit={toggleHabit}
             setHabitValue={setHabitValue}
+            getGroupNames={getGroupNames}
           />
         ))}
       </div>
