@@ -61,6 +61,7 @@ export interface AuthResponse {
   token: string;
   photoURL?: string;
   provider?: "google" | "local";
+  showOnLeaderboard?: boolean;
   isNewUser?: boolean;
 }
 
@@ -70,6 +71,7 @@ export interface UserProfile {
   name: string;
   email: string;
   photoURL?: string;
+  showOnLeaderboard?: boolean;
 }
 // ─── Auth API Methods ────────────────────────────────────────────
 
@@ -226,3 +228,48 @@ export async function initialUploadAfterSignup(): Promise<void> {
   }
 }
 
+// ─── Leaderboard API Types ───────────────────────────────────────
+
+export interface LeaderboardEntry {
+  rank: number;
+  uid: string;
+  displayName: string;
+  photoURL: string | null;
+  totalXp: number;
+  streak: number;
+  completionRate: number;
+}
+
+export interface LeaderboardResponse {
+  entries: LeaderboardEntry[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+  currentUserRank: number | null;
+}
+
+// ─── Leaderboard API Methods ─────────────────────────────────────
+
+/** Get paginated leaderboard */
+export function getLeaderboard(
+  page = 1,
+  pageSize = 20
+): Promise<LeaderboardResponse> {
+  return apiFetch<LeaderboardResponse>(
+    `/leaderboard?page=${page}&pageSize=${pageSize}`
+  );
+}
+
+/** Toggle leaderboard visibility preference */
+export function toggleLeaderboardVisibility(
+  showOnLeaderboard: boolean
+): Promise<{ showOnLeaderboard: boolean }> {
+  return apiFetch<{ showOnLeaderboard: boolean }>(
+    "/auth/leaderboard-visibility",
+    {
+      method: "PATCH",
+      body: JSON.stringify({ showOnLeaderboard }),
+    }
+  );
+}

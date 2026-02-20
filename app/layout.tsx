@@ -6,6 +6,7 @@ import SplashScreen from "@/components/SplashScreen";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import PwaInstallBanner from "@/components/PwaInstallBanner";
 import OfflineDetector from "@/components/OfflineDetector";
+import { AuthProvider } from "@/context/AuthContext";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -87,28 +88,30 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <body className={`${inter.variable} ${notoArabic.variable} antialiased`}>
-        {process.env.NEXT_PUBLIC_GA_ID && (
-          <Suspense fallback={null}>
-            <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
-          </Suspense>
-        )}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              try {
-                const theme = localStorage.getItem('hemma-theme');
-                if (theme === '"dark"' || theme === 'dark') {
-                  document.documentElement.classList.add('dark');
-                } else {
-                  document.documentElement.classList.add('light');
-                }
-              } catch (_) {}
-            `,
-          }}
-        />
-        <SplashScreen>{children}</SplashScreen>
-        <PwaInstallBanner />
-        <OfflineDetector />
+        <AuthProvider>
+          {process.env.NEXT_PUBLIC_GA_ID && (
+            <Suspense fallback={null}>
+              <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
+            </Suspense>
+          )}
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
+                try {
+                  const theme = localStorage.getItem('hemma-theme');
+                  if (theme === '"dark"' || theme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                  } else {
+                    document.documentElement.classList.add('light');
+                  }
+                } catch (_) {}
+              `,
+            }}
+          />
+          <SplashScreen>{children}</SplashScreen>
+          <PwaInstallBanner />
+          <OfflineDetector />
+        </AuthProvider>
       </body>
     </html>
   );
