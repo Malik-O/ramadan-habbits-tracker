@@ -117,7 +117,7 @@ export function getProfile(): Promise<UserProfile> {
 
 /** A single habit tracking record for sync */
 export interface SyncEntryPayload {
-  dayIndex: number;
+  date: string; // The exact date e.g. "2024-03-25"
   habitId: string;
   value: boolean | number;
   updatedAt: string; // ISO string
@@ -168,6 +168,8 @@ export function resetSyncData(): Promise<{ message: string }> {
  * Push existing localStorage data to the server right after sign-up.
  * Reads directly from localStorage so the caller doesn't need to pass state.
  */
+import { getDateStringForDayIndex } from "@/utils/hijri";
+
 export async function initialUploadAfterSignup(): Promise<void> {
   if (typeof window === "undefined") return;
 
@@ -197,10 +199,12 @@ export async function initialUploadAfterSignup(): Promise<void> {
     for (const [dayKey, dayRecord] of Object.entries(trackerState)) {
       const dayIndex = Number(dayKey);
       if (isNaN(dayIndex)) continue;
+      
+      const date = getDateStringForDayIndex(dayIndex);
       const updatedAt = dayTimestamps[dayIndex] || new Date().toISOString();
 
       for (const [habitId, value] of Object.entries(dayRecord as Record<string, boolean | number>)) {
-        entries.push({ dayIndex, habitId, value, updatedAt });
+        entries.push({ date, habitId, value, updatedAt });
       }
     }
 

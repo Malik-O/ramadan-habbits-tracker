@@ -14,8 +14,5 @@ export function getRamadanDay(startDate: Date): number {
   
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
   
-  // If start date is in the future, return 0 or negative
-  if (diffDays < 1) return 0;
-  
   return diffDays;
 }

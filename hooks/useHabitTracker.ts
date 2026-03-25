@@ -1,8 +1,10 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
-import { XP_PER_HABIT, TOTAL_DAYS, type HabitCategory } from "@/constants/habits";
+import { useCallback, useMemo, useEffect } from "react";
+import { XP_PER_HABIT, TOTAL_DAYS, RAMADAN_START_DATE, type HabitCategory } from "@/constants/habits";
+import { getRamadanDay } from "@/utils/date";
 import { useLocalStorage } from "./useLocalStorage";
+import { useState } from "react";
 
 /** State shape for a single habit: `true` for completed booleans, or a number for counters */
 export type HabitValue = boolean | number;
@@ -58,10 +60,19 @@ function computeStreak(state: TrackerState, currentDay: number): number {
   return streak;
 }
 
+
 export function useHabitTracker(categories: HabitCategory[]): UseHabitTrackerReturn {
-  const [currentDay, setCurrentDay] = useLocalStorage<number>("hemma-current-day", 0);
+  const defaultDay = useMemo(() => {
+    // Current day in Ramadan based on the start date (1-indexed from utility)
+    const currentRamadanDay = getRamadanDay(RAMADAN_START_DATE);
+    // Convert to 0-indexed (no upper clamp so it continues past 30 days)
+    return currentRamadanDay - 1;
+  }, []);
+
+  const [currentDay, setCurrentDay] = useState<number>(defaultDay);
   const [trackerState, setTrackerState] = useLocalStorage<TrackerState>("hemma-tracker", {});
   const [dayUpdatedAt, setDayUpdatedAt] = useLocalStorage<DayUpdatedAtMap>("hemma-day-updated-at", {});
+
 
   const dayRecord = trackerState[currentDay] || {};
 

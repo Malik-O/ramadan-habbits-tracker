@@ -95,9 +95,6 @@ export default function HomePage() {
         trackerState={trackerState}
       />
 
-      {/* Day label */}
-      <DayLabel day={currentDay} />
-
       {/* Habit blocks — merged personal + group habits */}
       <div className="flex flex-col gap-3 pb-8">
         {mergedCategories.map((category) => (

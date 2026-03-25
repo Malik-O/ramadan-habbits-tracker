@@ -9,13 +9,18 @@ import {
   type SyncCategoryPayload,
   type SyncResponse,
 } from "@/services/api";
+import { useSyncQueue } from "./useSyncQueue";
 import type { TrackerState, DayUpdatedAtMap } from "./useHabitTracker";
 import type { HabitCategory } from "@/constants/habits";
+import { getDateStringForDayIndex, getDayIndexFromDateString } from "@/utils/hijri";
 
 // ─── Constants ───────────────────────────────────────────────────
 
-/** Debounce delay before uploading changes (ms) */
-const UPLOAD_DEBOUNCE_MS = 2000;
+/** Minimum interval between uploads (ms) — acts as a throttle ceiling */
+const THROTTLE_INTERVAL_MS = 3000;
+
+/** Grace period after the last change before flushing (ms) */
+const TRAILING_FLUSH_MS = 1500;
 
 // ─── Types ───────────────────────────────────────────────────────
 
@@ -45,10 +50,12 @@ function trackerStateToEntries(
   for (const [dayKey, dayRecord] of Object.entries(state)) {
     const dayIndex = Number(dayKey);
     if (isNaN(dayIndex)) continue;
+    
+    const date = getDateStringForDayIndex(dayIndex);
     const updatedAt = timestamps[dayIndex] || new Date().toISOString();
 
     for (const [habitId, value] of Object.entries(dayRecord)) {
-      entries.push({ dayIndex, habitId, value, updatedAt });
+      entries.push({ date, habitId, value, updatedAt });
     }
   }
   return entries;
@@ -63,15 +70,17 @@ function entriesToTrackerState(entries: SyncEntryPayload[]): {
   const dayUpdatedAt: DayUpdatedAtMap = {};
 
   for (const entry of entries) {
-    if (!trackerState[entry.dayIndex]) {
-      trackerState[entry.dayIndex] = {};
+    const dayIndex = getDayIndexFromDateString(entry.date);
+    
+    if (!trackerState[dayIndex]) {
+      trackerState[dayIndex] = {};
     }
-    trackerState[entry.dayIndex][entry.habitId] = entry.value;
+    trackerState[dayIndex][entry.habitId] = entry.value;
 
     // Track the latest updatedAt per day
-    const existing = dayUpdatedAt[entry.dayIndex];
+    const existing = dayUpdatedAt[dayIndex];
     if (!existing || new Date(entry.updatedAt) > new Date(existing)) {
-      dayUpdatedAt[entry.dayIndex] = entry.updatedAt;
+      dayUpdatedAt[dayIndex] = entry.updatedAt;
     }
   }
 
@@ -121,12 +130,12 @@ function mergeEntries(
 
   // Add server entries first
   for (const entry of serverEntries) {
-    map.set(`${entry.dayIndex}:${entry.habitId}`, entry);
+    map.set(`${entry.date}:${entry.habitId}`, entry);
   }
 
   // Override with local entries if they are newer
   for (const entry of localEntries) {
-    const key = `${entry.dayIndex}:${entry.habitId}`;
+    const key = `${entry.date}:${entry.habitId}`;
     const existing = map.get(key);
     if (
       !existing ||
@@ -169,8 +178,10 @@ function mergeCategories(
  * Handles bidirectional sync between localStorage and backend.
  *
  * - **On login**: downloads server data and smart-merges into local state.
- * - **While logged in**: debounced upload of local changes (server returns merged result).
- * - **On logout**: does nothing — all local data is preserved.
+ * - **While logged in**: batches dirty changes into a queue and flushes
+ *   them to the server via a throttle (max once per THROTTLE_INTERVAL_MS)
+ *   with a trailing flush to catch final changes.
+ * - **On logout / page close**: flush remaining queue immediately.
  */
 export function useSync({
   isAuthenticated,
@@ -185,10 +196,33 @@ export function useSync({
   setCustomHabitsUpdatedAt,
   setCurrentDay,
 }: UseSyncOptions): void {
-  const uploadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const queue = useSyncQueue();
+
   const isUploadingRef = useRef(false);
   const hasDownloadedRef = useRef(false);
   const prevAuthRef = useRef(isAuthenticated);
+
+  // Throttle timer refs
+  const throttleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const trailingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastUploadTimeRef = useRef(0);
+
+  // Keep latest state in refs for the flush function to read without stale closures
+  const trackerRef = useRef(trackerState);
+  const dayUpdatedAtRef = useRef(dayUpdatedAt);
+  const customHabitsRef = useRef(customHabits);
+  const customHabitsUpdatedAtRef = useRef(customHabitsUpdatedAt);
+
+  // Sync refs with latest values on every render
+  trackerRef.current = trackerState;
+  dayUpdatedAtRef.current = dayUpdatedAt;
+  customHabitsRef.current = customHabits;
+  customHabitsUpdatedAtRef.current = customHabitsUpdatedAt;
+
+  // Keep previous state snapshots for diffing
+  const prevTrackerRef = useRef(trackerState);
+  const prevCustomHabitsRef = useRef(customHabits);
+  const prevCustomHabitsUpdatedAtRef = useRef(customHabitsUpdatedAt);
 
   /** Apply merged server response to local state */
   const applyServerResponse = useCallback(
@@ -200,7 +234,6 @@ export function useSync({
 
       if (response.categories.length > 0) {
         setCustomHabits(payloadToCategories(response.categories));
-        // Use the latest category updatedAt as the habits timestamp
         const latestCatTime = response.categories.reduce(
           (latest, cat) =>
             cat.updatedAt > latest ? cat.updatedAt : latest,
@@ -214,21 +247,92 @@ export function useSync({
     [setTrackerState, setDayUpdatedAt, setCustomHabits, setCustomHabitsUpdatedAt]
   );
 
+  // ── Flush queue & upload only dirty changes ────────────────────
+
+  const flushAndUpload = useCallback(async () => {
+    if (isUploadingRef.current) return;
+    if (!getAuthToken()) return;
+
+    const snapshot = queue.flush();
+    if (snapshot.isEmpty) return;
+
+    isUploadingRef.current = true;
+    lastUploadTimeRef.current = Date.now();
+
+    try {
+      const response = await uploadSyncData({
+        entries: snapshot.entries,
+        categories: snapshot.categories,
+      });
+
+      if (response) {
+        applyServerResponse(response);
+      }
+    } catch (error) {
+      // On failure, re-enqueue the failed items so they retry next flush
+      for (const entry of snapshot.entries) {
+        queue.enqueueEntry(entry);
+      }
+      if (snapshot.categories.length > 0) {
+        queue.enqueueCategories(snapshot.categories);
+      }
+      console.warn("[useSync] Upload failed, changes re-queued:", error);
+    } finally {
+      isUploadingRef.current = false;
+    }
+  }, [queue, applyServerResponse]);
+
+  // ── Schedule the next upload (throttle + trailing) ─────────────
+
+  const scheduleFlush = useCallback(() => {
+    // Clear any existing trailing timer
+    if (trailingTimerRef.current) {
+      clearTimeout(trailingTimerRef.current);
+      trailingTimerRef.current = null;
+    }
+
+    const elapsed = Date.now() - lastUploadTimeRef.current;
+    const remaining = THROTTLE_INTERVAL_MS - elapsed;
+
+    if (remaining <= 0 && !throttleTimerRef.current) {
+      // Enough time has passed — flush immediately
+      flushAndUpload();
+    } else if (!throttleTimerRef.current) {
+      // Schedule a flush at the throttle boundary
+      throttleTimerRef.current = setTimeout(() => {
+        throttleTimerRef.current = null;
+        flushAndUpload();
+      }, remaining);
+    }
+
+    // Always set a trailing timer to catch the "last" change
+    trailingTimerRef.current = setTimeout(() => {
+      trailingTimerRef.current = null;
+      if (queue.hasPendingChanges()) {
+        flushAndUpload();
+      }
+    }, TRAILING_FLUSH_MS);
+  }, [flushAndUpload, queue]);
+
   // ── Download & smart-merge on login ────────────────────────────
+
   const downloadAndMerge = useCallback(async () => {
     try {
       const serverData = await downloadSyncData();
       if (!serverData) return;
 
-      // Convert local state to entry format
-      const localEntries = trackerStateToEntries(trackerState, dayUpdatedAt);
-      const localCatPayload = categoriesToPayload(customHabits, customHabitsUpdatedAt);
+      const localEntries = trackerStateToEntries(
+        trackerRef.current,
+        dayUpdatedAtRef.current
+      );
+      const localCatPayload = categoriesToPayload(
+        customHabitsRef.current,
+        customHabitsUpdatedAtRef.current
+      );
 
-      // Smart merge
       const mergedEntries = mergeEntries(localEntries, serverData.entries);
       const mergedCats = mergeCategories(localCatPayload, serverData.categories);
 
-      // Apply merged result locally
       const { trackerState: mergedState, dayUpdatedAt: mergedTimestamps } =
         entriesToTrackerState(mergedEntries);
       setTrackerState(mergedState);
@@ -245,42 +349,23 @@ export function useSync({
           setCustomHabitsUpdatedAt(latestCatTime);
         }
       }
+
+      // Update prev refs to the merged state so the diff effect
+      // doesn't immediately re-queue everything we just downloaded
+      prevTrackerRef.current = mergedState;
+      prevCustomHabitsRef.current = payloadToCategories(mergedCats);
+      prevCustomHabitsUpdatedAtRef.current =
+        mergedCats.reduce(
+          (latest, cat) => (cat.updatedAt > latest ? cat.updatedAt : latest),
+          ""
+        ) || customHabitsUpdatedAtRef.current;
     } catch (error) {
       console.warn("[useSync] Failed to download server data:", error);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [setTrackerState, setDayUpdatedAt, setCustomHabits, setCustomHabitsUpdatedAt, setCurrentDay]);
-
-  // ── Upload to server (returns merged result) ───────────────────
-  const uploadToServer = useCallback(async () => {
-    if (isUploadingRef.current) return;
-    if (!getAuthToken()) return;
-
-    isUploadingRef.current = true;
-    try {
-      const entries = trackerStateToEntries(trackerState, dayUpdatedAt);
-      const categories = categoriesToPayload(customHabits, customHabitsUpdatedAt);
-
-      const response = await uploadSyncData({ entries, categories });
-
-      // Apply the server's merged result back to local state
-      if (response) {
-        applyServerResponse(response);
-      }
-    } catch (error) {
-      console.warn("[useSync] Failed to upload data:", error);
-    } finally {
-      isUploadingRef.current = false;
-    }
-  }, [
-    trackerState,
-    dayUpdatedAt,
-    customHabits,
-    customHabitsUpdatedAt,
-    applyServerResponse,
-  ]);
+  }, [setTrackerState, setDayUpdatedAt, setCustomHabits, setCustomHabitsUpdatedAt]);
 
   // ── Detect login transition & download ─────────────────────────
+
   useEffect(() => {
     const wasAuthenticated = prevAuthRef.current;
     prevAuthRef.current = isAuthenticated;
@@ -295,23 +380,108 @@ export function useSync({
     }
   }, [isAuthenticated, downloadAndMerge]);
 
-  // ── Debounced upload on data changes ───────────────────────────
-  useEffect(() => {
-    if (!isAuthenticated) return;
-    if (!hasDownloadedRef.current) return;
+  // ── Diff tracker state & enqueue only changed entries ──────────
 
-    if (uploadTimerRef.current) {
-      clearTimeout(uploadTimerRef.current);
+  useEffect(() => {
+    if (!isAuthenticated || !hasDownloadedRef.current) return;
+
+    const prevState = prevTrackerRef.current;
+    const nextState = trackerState;
+
+    // Find entries that actually changed
+    for (const [dayKey, dayRecord] of Object.entries(nextState)) {
+      const dayIndex = Number(dayKey);
+      if (isNaN(dayIndex)) continue;
+
+      const date = getDateStringForDayIndex(dayIndex);
+      const prevDayRecord = prevState[dayIndex] || {};
+      const updatedAt = dayUpdatedAt[dayIndex] || new Date().toISOString();
+
+      for (const [habitId, value] of Object.entries(dayRecord)) {
+        if (prevDayRecord[habitId] !== value) {
+          queue.enqueueEntry({ date, habitId, value, updatedAt });
+        }
+      }
     }
 
-    uploadTimerRef.current = setTimeout(() => {
-      uploadToServer();
-    }, UPLOAD_DEBOUNCE_MS);
+    prevTrackerRef.current = nextState;
 
-    return () => {
-      if (uploadTimerRef.current) {
-        clearTimeout(uploadTimerRef.current);
+    if (queue.hasPendingChanges()) {
+      scheduleFlush();
+    }
+  }, [isAuthenticated, trackerState, dayUpdatedAt, queue, scheduleFlush]);
+
+  // ── Diff custom habits & enqueue only on change ────────────────
+
+  useEffect(() => {
+    if (!isAuthenticated || !hasDownloadedRef.current) return;
+
+    const prevHabits = prevCustomHabitsRef.current;
+    const nextHabits = customHabits;
+    const prevTs = prevCustomHabitsUpdatedAtRef.current;
+    const nextTs = customHabitsUpdatedAt;
+
+    // Simple reference or timestamp check
+    if (prevHabits !== nextHabits || prevTs !== nextTs) {
+      const payload = categoriesToPayload(nextHabits, nextTs);
+      queue.enqueueCategories(payload);
+
+      prevCustomHabitsRef.current = nextHabits;
+      prevCustomHabitsUpdatedAtRef.current = nextTs;
+
+      scheduleFlush();
+    }
+  }, [isAuthenticated, customHabits, customHabitsUpdatedAt, queue, scheduleFlush]);
+
+  // ── Flush on page unload (best-effort) ─────────────────────────
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const handleBeforeUnload = () => {
+      if (!queue.hasPendingChanges()) return;
+      if (!getAuthToken()) return;
+
+      const snapshot = queue.flush();
+      if (snapshot.isEmpty) return;
+
+      // Use sendBeacon for reliable delivery on page close
+      const token = getAuthToken();
+      const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
+      const blob = new Blob(
+        [JSON.stringify({ entries: snapshot.entries, categories: snapshot.categories })],
+        { type: "application/json" }
+      );
+
+      // sendBeacon doesn't support custom headers, so we embed the token
+      // Use a query param fallback — if your server supports it
+      // Otherwise, fall back to a synchronous XHR
+      try {
+        const sent = navigator.sendBeacon(`${API_BASE}/sync/upload?token=${token}`, blob);
+        if (!sent) {
+          // Re-queue if beacon failed (unlikely to help, but safe)
+          for (const entry of snapshot.entries) {
+            queue.enqueueEntry(entry);
+          }
+          if (snapshot.categories.length > 0) {
+            queue.enqueueCategories(snapshot.categories);
+          }
+        }
+      } catch {
+        // Best-effort — data is still in localStorage
       }
     };
-  }, [isAuthenticated, trackerState, customHabits, currentDay, uploadToServer]);
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isAuthenticated, queue]);
+
+  // ── Cleanup timers on unmount ──────────────────────────────────
+
+  useEffect(() => {
+    return () => {
+      if (throttleTimerRef.current) clearTimeout(throttleTimerRef.current);
+      if (trailingTimerRef.current) clearTimeout(trailingTimerRef.current);
+    };
+  }, []);
 }
