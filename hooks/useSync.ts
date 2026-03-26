@@ -101,6 +101,13 @@ function categoriesToPayload(
       id: item.id,
       label: item.label,
       type: item.type,
+      repeat: item.repeat || "daily",
+      repeatDays: item.repeatDays,
+      repeatMonthDay: item.repeatMonthDay,
+      repeatMonthHijri: item.repeatMonthHijri,
+      repeatYearlyDate: item.repeatYearlyDate,
+      repeatYearlyHijri: item.repeatYearlyHijri,
+      repeatEndDate: item.repeatEndDate,
     })),
     sortOrder: index,
     updatedAt: ts,
@@ -115,7 +122,18 @@ function payloadToCategories(payload: SyncCategoryPayload[]): HabitCategory[] {
       id: cat.categoryId,
       name: cat.name,
       icon: cat.icon,
-      items: cat.items,
+      items: cat.items.map((item) => ({
+        id: item.id,
+        label: item.label,
+        type: item.type,
+        repeat: (item.repeat as HabitCategory["items"][number]["repeat"]) || "daily",
+        repeatDays: item.repeatDays,
+        repeatMonthDay: item.repeatMonthDay,
+        repeatMonthHijri: item.repeatMonthHijri,
+        repeatYearlyDate: item.repeatYearlyDate,
+        repeatYearlyHijri: item.repeatYearlyHijri,
+        repeatEndDate: item.repeatEndDate,
+      })),
     }));
 }
 

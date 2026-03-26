@@ -30,6 +30,7 @@ export default function DaySelector({
   const {
     weekDays,
     weekOffset,
+    navDirection,
     canGoBack,
     canGoForward,
     goToPreviousWeek,
@@ -81,9 +82,9 @@ export default function DaySelector({
       <AnimatePresence mode="wait">
         <motion.div
           key={weekOffset}
-          initial={{ opacity: 0, x: -30 }}
+          initial={{ opacity: 0, x: navDirection * 40 }}
           animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: 30 }}
+          exit={{ opacity: 0, x: navDirection * -40 }}
           transition={{ duration: 0.2, ease: "easeInOut" }}
           className="grid grid-cols-7 gap-1 px-3 pb-4 pt-2"
         >

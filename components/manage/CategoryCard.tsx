@@ -153,6 +153,14 @@ export default function CategoryCard({
   );
 }
 
+const REPEAT_LABELS: Record<string, string> = {
+  daily: "يومياً",
+  weekly: "أسبوعياً",
+  biweekly: "كل أسبوعين",
+  monthly: "شهرياً",
+  yearly: "سنوياً",
+};
+
 interface HabitItemRowProps {
   item: HabitItem;
   isEditMode: boolean;
@@ -167,9 +175,11 @@ function HabitItemRow({
   onRemove,
 }: HabitItemRowProps) {
   const isCustomHabit = isCustom(item.id);
+  const repeatValue = item.repeat || "daily";
+  const showRepeatBadge = repeatValue !== "daily";
 
   return (
-    <motion.div layout className="flex items-center gap-3 px-4 py-2.5">
+    <motion.div layout className="flex items-center gap-2 px-4 py-2.5">
       {/* Delete button - Only for custom habits */}
       {isEditMode && isCustomHabit && (
         <motion.button
@@ -185,6 +195,13 @@ function HabitItemRow({
       )}
 
       <span className="flex-1 text-sm text-theme-primary">{item.label}</span>
+
+      {/* Repeat badge (only if not daily) */}
+      {showRepeatBadge && (
+        <span className="rounded-full bg-violet-500/10 px-2 py-0.5 text-[10px] font-medium text-violet-400">
+          {REPEAT_LABELS[repeatValue]}
+        </span>
+      )}
 
       {/* Type badge */}
       <span

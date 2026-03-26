@@ -2,15 +2,36 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, CheckCircle2, Hash } from "lucide-react";
-import type { HabitItem } from "@/constants/habits";
+import { X, CheckCircle2, Hash, Repeat } from "lucide-react";
+import type { HabitItem, HabitRepeat } from "@/constants/habits";
+import type { RepeatSchedule } from "@/hooks/useCustomHabits";
+import {
+  WeekDayToggle,
+  MonthDayPicker,
+  YearlyDatePicker,
+  EndDatePicker,
+} from "./RepeatScheduleFields";
+
+// ─── Constants ───────────────────────────────────────────────────
+
+const REPEAT_OPTIONS: { value: HabitRepeat; label: string; description: string }[] = [
+  { value: "daily", label: "يومياً", description: "كل يوم" },
+  { value: "weekly", label: "أسبوعياً", description: "كل أسبوع" },
+  { value: "biweekly", label: "كل أسبوعين", description: "مرة كل ١٤ يوم" },
+  { value: "monthly", label: "شهرياً", description: "كل شهر" },
+  { value: "yearly", label: "سنوياً", description: "كل سنة" },
+];
+
+// ─── Props ───────────────────────────────────────────────────────
 
 interface HabitFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (label: string, type: "boolean" | "number") => void;
+  onSubmit: (label: string, type: "boolean" | "number", schedule: RepeatSchedule) => void;
   initialValues: HabitItem | null;
 }
+
+// ─── Component ───────────────────────────────────────────────────
 
 export default function HabitFormModal({
   isOpen,
@@ -20,18 +41,50 @@ export default function HabitFormModal({
 }: HabitFormModalProps) {
   const [label, setLabel] = useState("");
   const [type, setType] = useState<"boolean" | "number">("boolean");
+  const [repeat, setRepeat] = useState<HabitRepeat>("daily");
+  const [repeatDays, setRepeatDays] = useState<number[]>([]);
+  const [repeatMonthDay, setRepeatMonthDay] = useState(1);
+  const [repeatMonthHijri, setRepeatMonthHijri] = useState(false);
+  const [repeatYearlyDate, setRepeatYearlyDate] = useState("01-01");
+  const [repeatYearlyHijri, setRepeatYearlyHijri] = useState(false);
+  const [repeatEndDate, setRepeatEndDate] = useState("");
 
   useEffect(() => {
     if (isOpen) {
       setLabel(initialValues?.label || "");
       setType(initialValues?.type || "boolean");
+      setRepeat(initialValues?.repeat || "daily");
+      setRepeatDays(initialValues?.repeatDays || []);
+      setRepeatMonthDay(initialValues?.repeatMonthDay || 1);
+      setRepeatMonthHijri(initialValues?.repeatMonthHijri || false);
+      setRepeatYearlyDate(initialValues?.repeatYearlyDate || "01-01");
+      setRepeatYearlyHijri(initialValues?.repeatYearlyHijri || false);
+      setRepeatEndDate(initialValues?.repeatEndDate || "");
     }
   }, [isOpen, initialValues]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!label.trim()) return;
-    onSubmit(label.trim(), type);
+
+    const schedule: RepeatSchedule = { repeat };
+
+    if (repeat === "weekly" || repeat === "biweekly") {
+      schedule.repeatDays = repeatDays;
+    }
+    if (repeat === "monthly") {
+      schedule.repeatMonthDay = repeatMonthDay;
+      schedule.repeatMonthHijri = repeatMonthHijri;
+    }
+    if (repeat === "yearly") {
+      schedule.repeatYearlyDate = repeatYearlyDate;
+      schedule.repeatYearlyHijri = repeatYearlyHijri;
+    }
+    if (repeatEndDate) {
+      schedule.repeatEndDate = repeatEndDate;
+    }
+
+    onSubmit(label.trim(), type, schedule);
   };
 
   const isEditing = !!initialValues;
@@ -40,7 +93,7 @@ export default function HabitFormModal({
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 z-[100] flex items-start justify-center pt-12"
+          className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center pt-0 sm:pt-12"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -54,12 +107,12 @@ export default function HabitFormModal({
             exit={{ opacity: 0 }}
           />
 
-          {/* Modal — positioned at top for keyboard room */}
+          {/* Modal */}
           <motion.div
-            className="relative z-10 w-full max-w-sm rounded-2xl border border-theme-border bg-theme-card p-5 shadow-2xl"
-            initial={{ y: -50, opacity: 0, scale: 0.95 }}
+            className="relative z-10 w-full sm:max-w-sm h-[92vh] sm:h-auto sm:max-h-[85vh] overflow-y-auto rounded-t-[32px] sm:rounded-2xl border border-theme-border bg-theme-card p-5 shadow-2xl pb-8 sm:pb-5"
+            initial={{ y: 50, opacity: 0, scale: 0.95 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
-            exit={{ y: -50, opacity: 0, scale: 0.95 }}
+            exit={{ y: 50, opacity: 0, scale: 0.95 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
           >
             {/* Header */}
@@ -114,6 +167,35 @@ export default function HabitFormModal({
                 </div>
               </div>
 
+              {/* Repeat frequency */}
+              <RepeatSelector value={repeat} onChange={setRepeat} />
+
+              {/* Conditional scheduling UI */}
+              {(repeat === "weekly" || repeat === "biweekly") && (
+                <WeekDayToggle selectedDays={repeatDays} onChange={setRepeatDays} />
+              )}
+
+              {repeat === "monthly" && (
+                <MonthDayPicker
+                  selectedDay={repeatMonthDay}
+                  isHijri={repeatMonthHijri}
+                  onDayChange={setRepeatMonthDay}
+                  onHijriChange={setRepeatMonthHijri}
+                />
+              )}
+
+              {repeat === "yearly" && (
+                <YearlyDatePicker 
+                  value={repeatYearlyDate} 
+                  onChange={setRepeatYearlyDate}
+                  isHijri={repeatYearlyHijri}
+                  onHijriChange={setRepeatYearlyHijri}
+                />
+              )}
+
+              {/* End date */}
+              <EndDatePicker value={repeatEndDate} onChange={setRepeatEndDate} />
+
               {/* Submit */}
               <motion.button
                 type="submit"
@@ -131,6 +213,8 @@ export default function HabitFormModal({
   );
 }
 
+// ─── TypeOption ──────────────────────────────────────────────────
+
 interface TypeOptionProps {
   selected: boolean;
   onSelect: () => void;
@@ -144,7 +228,7 @@ function TypeOption({ selected, onSelect, icon, title, description }: TypeOption
     <button
       type="button"
       onClick={onSelect}
-      className={`flex flex-col items-center gap-1.5 rounded-xl border-2 px-3 py-3 transition-all ${
+      className={`flex flex-col items-center gap-1.5 rounded-xl border-2 px-3 py-3 transition-all cursor-pointer ${
         selected
           ? "border-amber-500/50 bg-amber-500/10"
           : "border-theme-border bg-theme-subtle hover:border-theme-border"
@@ -156,5 +240,42 @@ function TypeOption({ selected, onSelect, icon, title, description }: TypeOption
       </span>
       <span className="text-[10px] text-theme-secondary">{description}</span>
     </button>
+  );
+}
+
+// ─── RepeatSelector ─────────────────────────────────────────────
+
+interface RepeatSelectorProps {
+  value: HabitRepeat;
+  onChange: (value: HabitRepeat) => void;
+}
+
+function RepeatSelector({ value, onChange }: RepeatSelectorProps) {
+  return (
+    <div>
+      <label className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-theme-secondary">
+        <Repeat className="h-3.5 w-3.5" />
+        التكرار
+      </label>
+      <div className="flex flex-wrap gap-1.5">
+        {REPEAT_OPTIONS.map((option) => {
+          const isSelected = value === option.value;
+          return (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => onChange(option.value)}
+              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all cursor-pointer ${
+                isSelected
+                  ? "bg-amber-500/15 text-amber-400 ring-1 ring-amber-500/40"
+                  : "bg-theme-subtle text-theme-secondary hover:bg-theme-border hover:text-theme-primary"
+              }`}
+            >
+              {option.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }

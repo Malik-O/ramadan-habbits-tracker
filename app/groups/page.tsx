@@ -49,7 +49,7 @@ function GroupsPageContent() {
         <LeaderboardSignInPrompt />
       )}
 
-      <BottomNav activeTab="leaderboard" />
+      <BottomNav activeTab="groups" />
     </div>
   );
 }
@@ -88,9 +88,9 @@ function GroupsManager() {
     (groupId: string | null) => {
       setSelectedGroupId(groupId);
       if (groupId) {
-        router.replace(`/leaderboard?group=${groupId}`, { scroll: false });
+        router.replace(`/groups?group=${groupId}`, { scroll: false });
       } else {
-        router.replace("/leaderboard", { scroll: false });
+        router.replace("/groups", { scroll: false });
       }
     },
     [router]
@@ -98,7 +98,7 @@ function GroupsManager() {
 
   useEffect(() => {
     if (initialGroupId && !isLoading && groups.length > 0 && !selectedGroup) {
-      router.replace("/leaderboard", { scroll: false });
+      router.replace("/groups", { scroll: false });
       setSelectedGroupId(null);
     }
   }, [initialGroupId, isLoading, groups, selectedGroup, router]);

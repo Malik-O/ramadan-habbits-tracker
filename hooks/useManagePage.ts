@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useCustomHabits } from "@/hooks/useCustomHabits";
+import { useCustomHabits, type RepeatSchedule } from "@/hooks/useCustomHabits";
 import type { HabitCategory, HabitItem } from "@/constants/habits";
 import {
   trackCategoryAction,
@@ -77,12 +77,16 @@ export function useManagePage() {
     setHabitModalOpen(true);
   };
 
-  const handleHabitSubmit = (label: string, type: "boolean" | "number") => {
+  const handleHabitSubmit = (
+    label: string,
+    type: "boolean" | "number",
+    schedule: RepeatSchedule
+  ) => {
     if (editingHabit) {
-      updateHabit(habitTargetCategoryId, editingHabit.id, label, type);
+      updateHabit(habitTargetCategoryId, editingHabit.id, label, type, schedule);
       trackHabitAction("edit", editingHabit.id);
     } else {
-      addHabit(habitTargetCategoryId, label, type);
+      addHabit(habitTargetCategoryId, label, type, schedule);
       trackHabitAction("add");
     }
     setHabitModalOpen(false);

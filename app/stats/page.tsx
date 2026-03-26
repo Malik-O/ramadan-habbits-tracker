@@ -14,6 +14,7 @@ import DailyHeatmap from "@/components/stats/DailyHeatmap";
 import HabitLineChart from "@/components/stats/HabitLineChart";
 import StatsLeaderboard from "@/components/stats/StatsLeaderboard";
 import LeaderboardSignInPrompt from "@/components/leaderboard/LeaderboardSignInPrompt";
+import TabSwitcher, { TabOption } from "@/components/TabSwitcher";
 
 export default function StatsPage() {
   const [activeTab, setActiveTab] = useState<"stats" | "leaderboard">("leaderboard");
@@ -38,44 +39,16 @@ export default function StatsPage() {
         </div>
 
         {/* Tab Switcher */}
-        <div className="relative flex rounded-xl bg-theme-subtle p-1">
-          <button
-            onClick={() => setActiveTab("leaderboard")}
-            className={`relative z-10 flex w-1/2 items-center justify-center gap-2 py-2 text-sm font-medium transition-colors ${
-              activeTab === "leaderboard"
-                ? "text-theme-primary"
-                : "text-theme-secondary hover:text-theme-primary"
-            }`}
-          >
-            <Trophy className="h-4 w-4" />
-            المتصدرين
-            {activeTab === "leaderboard" && (
-              <motion.div
-                layoutId="statsTab"
-                className="absolute inset-0 -z-10 rounded-lg bg-theme-bg shadow-sm"
-                transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
-              />
-            )}
-          </button>
-
-          <button
-            onClick={() => setActiveTab("stats")}
-            className={`relative z-10 flex w-1/2 items-center justify-center gap-2 py-2 text-sm font-medium transition-colors ${
-              activeTab === "stats"
-                ? "text-theme-primary"
-                : "text-theme-secondary hover:text-theme-primary"
-            }`}
-          >
-            <BarChart3 className="h-4 w-4" />
-            إحصائياتي
-            {activeTab === "stats" && (
-              <motion.div
-                layoutId="statsTab"
-                className="absolute inset-0 -z-10 rounded-lg bg-theme-bg shadow-sm"
-                transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
-              />
-            )}
-          </button>
+        <div className="mb-2">
+          <TabSwitcher<"stats" | "leaderboard">
+            layoutId="statsTab"
+            activeTab={activeTab}
+            onChange={setActiveTab}
+            tabs={[
+              { id: "leaderboard", label: "المتصدرين", icon: <Trophy className="h-4 w-4" /> },
+              { id: "stats", label: "إحصائياتي", icon: <BarChart3 className="h-4 w-4" /> },
+            ]}
+          />
         </div>
       </header>
 

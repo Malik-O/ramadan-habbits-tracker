@@ -123,12 +123,26 @@ export interface SyncEntryPayload {
   updatedAt: string; // ISO string
 }
 
+/** A single habit item for sync payload */
+export interface SyncHabitItemPayload {
+  id: string;
+  label: string;
+  type: "boolean" | "number";
+  repeat?: string;
+  repeatDays?: number[];
+  repeatMonthDay?: number;
+  repeatMonthHijri?: boolean;
+  repeatYearlyDate?: string;
+  repeatYearlyHijri?: boolean;
+  repeatEndDate?: string;
+}
+
 /** A habit category for sync */
 export interface SyncCategoryPayload {
   categoryId: string;
   name: string;
   icon: string;
-  items: { id: string; label: string; type: "boolean" | "number" }[];
+  items: SyncHabitItemPayload[];
   sortOrder: number;
   updatedAt: string; // ISO string
 }
@@ -181,7 +195,7 @@ export async function initialUploadAfterSignup(): Promise<void> {
 
     // Read custom habits
     const rawHabits = localStorage.getItem("hemma-custom-habits");
-    const customHabits: { id: string; name: string; icon: string; items: { id: string; label: string; type: "boolean" | "number" }[] }[] =
+    const customHabits: { id: string; name: string; icon: string; items: { id: string; label: string; type: "boolean" | "number"; repeat?: string; repeatDays?: number[]; repeatMonthDay?: number; repeatMonthHijri?: boolean; repeatYearlyDate?: string; repeatYearlyHijri?: boolean; repeatEndDate?: string; }[] }[] =
       rawHabits ? JSON.parse(rawHabits) : [];
 
     // Read timestamps
@@ -218,6 +232,13 @@ export async function initialUploadAfterSignup(): Promise<void> {
         id: item.id,
         label: item.label,
         type: item.type,
+        repeat: item.repeat,
+        repeatDays: item.repeatDays,
+        repeatMonthDay: item.repeatMonthDay,
+        repeatMonthHijri: item.repeatMonthHijri,
+        repeatYearlyDate: item.repeatYearlyDate,
+        repeatYearlyHijri: item.repeatYearlyHijri,
+        repeatEndDate: item.repeatEndDate,
       })),
       sortOrder: index,
       updatedAt: now,
@@ -430,5 +451,116 @@ export function getMemberProgress(
 ): Promise<MemberProgressResponse> {
   return apiFetch<MemberProgressResponse>(
     `/groups/${groupId}/members/${memberUid}/progress`
+  );
+}
+
+// ─── Template Hub API Types ──────────────────────────────────────
+
+export interface TemplateHabitItem {
+  id: string;
+  label: string;
+  type: "boolean" | "number";
+  repeat?: string;
+  repeatDays?: number[];
+  repeatMonthDay?: number;
+  repeatMonthHijri?: boolean;
+  repeatYearlyDate?: string;
+  repeatYearlyHijri?: boolean;
+  repeatEndDate?: string;
+}
+
+export interface TemplateCategory {
+  categoryId: string;
+  name: string;
+  icon: string;
+  items: TemplateHabitItem[];
+}
+
+export interface TemplateResponse {
+  _id: string;
+  name: string;
+  description: string;
+  authorName: string;
+  authorUid: string;
+  categories: TemplateCategory[];
+  usageCount: number;
+  createdAt: string;
+}
+
+export interface TemplateListResponse {
+  templates: TemplateResponse[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+}
+
+// ─── Template Hub API Methods ────────────────────────────────────
+
+/** List community templates (public, paginated) */
+export function listTemplates(
+  page = 1,
+  pageSize = 20,
+  search = ""
+): Promise<TemplateListResponse> {
+  const params = new URLSearchParams({
+    page: String(page),
+    pageSize: String(pageSize),
+  });
+  if (search) params.set("search", search);
+  return apiFetch<TemplateListResponse>(`/templates?${params}`);
+}
+
+/** Create a new template from current habits */
+export function createTemplate(data: {
+  name: string;
+  description?: string;
+  categories: TemplateCategory[];
+}): Promise<TemplateResponse> {
+  return apiFetch<TemplateResponse>("/templates", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+/** Use (merge) a template — increments usage and returns template data */
+export function useTemplate(
+  templateId: string
+): Promise<TemplateResponse> {
+  return apiFetch<TemplateResponse>(`/templates/${templateId}/use`, {
+    method: "POST",
+  });
+}
+
+/** Delete a template (author only) */
+export function deleteTemplate(
+  templateId: string
+): Promise<{ message: string }> {
+  return apiFetch<{ message: string }>(`/templates/${templateId}`, {
+    method: "DELETE",
+  });
+}
+
+// ─── Habits For Date API ─────────────────────────────────────────
+
+export interface HabitsForDateCategory {
+  categoryId: string;
+  name: string;
+  icon: string;
+  items: SyncHabitItemPayload[];
+  sortOrder: number;
+}
+
+export interface HabitsForDateResponse {
+  date: string;
+  categories: HabitsForDateCategory[];
+}
+
+/** Get user habits filtered by a specific date */
+export function getHabitsForDate(
+  date: string
+): Promise<HabitsForDateResponse> {
+  return apiFetch<HabitsForDateResponse>(
+    `/sync/habits-for-date?date=${encodeURIComponent(date)}`
   );
 }

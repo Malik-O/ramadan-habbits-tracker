@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { HABIT_CATEGORIES, type HabitCategory, type HabitItem } from "@/constants/habits";
+import { HABIT_CATEGORIES, type HabitCategory, type HabitItem, type HabitRepeat } from "@/constants/habits";
 import { useLocalStorage } from "./useLocalStorage";
 
 /** Generates a short unique ID */
@@ -9,20 +9,35 @@ function generateId(): string {
   return `custom-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
+// ─── Types ───────────────────────────────────────────────────────
+
+/** Scheduling options for a habit's repeat pattern */
+export interface RepeatSchedule {
+  repeat: HabitRepeat;
+  repeatDays?: number[];
+  repeatMonthDay?: number;
+  repeatMonthHijri?: boolean;
+  repeatYearlyDate?: string;
+  repeatYearlyHijri?: boolean;
+  repeatEndDate?: string;
+}
+
 export interface UseCustomHabitsReturn {
   categories: HabitCategory[];
-  setCategories: (habits: HabitCategory[]) => void;
+  setCategories: (habits: HabitCategory[] | ((prev: HabitCategory[]) => HabitCategory[])) => void;
   customHabitsUpdatedAt: string;
   setCustomHabitsUpdatedAt: (ts: string) => void;
   addCategory: (name: string, icon: string) => void;
   updateCategory: (categoryId: string, name: string, icon: string) => void;
   removeCategory: (categoryId: string) => void;
   reorderCategories: (fromIndex: number, toIndex: number) => void;
-  addHabit: (categoryId: string, label: string, type: "boolean" | "number") => void;
-  updateHabit: (categoryId: string, habitId: string, label: string, type: "boolean" | "number") => void;
+  addHabit: (categoryId: string, label: string, type: "boolean" | "number", schedule?: RepeatSchedule) => void;
+  updateHabit: (categoryId: string, habitId: string, label: string, type: "boolean" | "number", schedule?: RepeatSchedule) => void;
   removeHabit: (categoryId: string, habitId: string) => void;
   resetToDefaults: () => void;
 }
+
+// ─── Hook ────────────────────────────────────────────────────────
 
 export function useCustomHabits(): UseCustomHabitsReturn {
   const [categories, setCategories] = useLocalStorage<HabitCategory[]>(
@@ -84,8 +99,19 @@ export function useCustomHabits(): UseCustomHabitsReturn {
   );
 
   const addHabit = useCallback(
-    (categoryId: string, label: string, type: "boolean" | "number") => {
-      const newHabit: HabitItem = { id: generateId(), label, type };
+    (categoryId: string, label: string, type: "boolean" | "number", schedule?: RepeatSchedule) => {
+      const newHabit: HabitItem = {
+        id: generateId(),
+        label,
+        type,
+        repeat: schedule?.repeat || "daily",
+        repeatDays: schedule?.repeatDays,
+        repeatMonthDay: schedule?.repeatMonthDay,
+        repeatMonthHijri: schedule?.repeatMonthHijri,
+        repeatYearlyDate: schedule?.repeatYearlyDate,
+        repeatYearlyHijri: schedule?.repeatYearlyHijri,
+        repeatEndDate: schedule?.repeatEndDate,
+      };
       stampAndSet((prev) =>
         prev.map((cat) =>
           cat.id === categoryId
@@ -98,14 +124,27 @@ export function useCustomHabits(): UseCustomHabitsReturn {
   );
 
   const updateHabit = useCallback(
-    (categoryId: string, habitId: string, label: string, type: "boolean" | "number") => {
+    (categoryId: string, habitId: string, label: string, type: "boolean" | "number", schedule?: RepeatSchedule) => {
       stampAndSet((prev) =>
         prev.map((cat) =>
           cat.id === categoryId
             ? {
                 ...cat,
                 items: cat.items.map((item) =>
-                  item.id === habitId ? { ...item, label, type } : item
+                  item.id === habitId
+                    ? {
+                        ...item,
+                        label,
+                        type,
+                        repeat: schedule?.repeat || "daily",
+                        repeatDays: schedule?.repeatDays,
+                        repeatMonthDay: schedule?.repeatMonthDay,
+                        repeatMonthHijri: schedule?.repeatMonthHijri,
+                        repeatYearlyDate: schedule?.repeatYearlyDate,
+                        repeatYearlyHijri: schedule?.repeatYearlyHijri,
+                        repeatEndDate: schedule?.repeatEndDate,
+                      }
+                    : item
                 ),
               }
             : cat

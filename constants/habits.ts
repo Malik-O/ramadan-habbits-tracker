@@ -1,7 +1,16 @@
+export type HabitRepeat = "daily" | "weekly" | "biweekly" | "monthly" | "yearly";
+
 export interface HabitItem {
   id: string;
   label: string;
   type: "boolean" | "number";
+  repeat?: HabitRepeat;
+  repeatDays?: number[];       // For weekly/biweekly: day-of-week (0=Sun..6=Sat)
+  repeatMonthDay?: number;     // For monthly: day of month (1–31)
+  repeatMonthHijri?: boolean;  // For monthly: use Hijri calendar day
+  repeatYearlyDate?: string;   // For yearly: "MM-DD" format
+  repeatYearlyHijri?: boolean; // For yearly: use Hijri calendar
+  repeatEndDate?: string;      // End repeat date "YYYY-MM-DD"
 }
 
 export interface HabitCategory {

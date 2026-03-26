@@ -14,6 +14,7 @@ interface WeekDay {
 interface UseWeekSelectorReturn {
   weekDays: WeekDay[];
   weekOffset: number;
+  navDirection: -1 | 1;
   canGoBack: boolean;
   canGoForward: boolean;
   goToPreviousWeek: () => void;
@@ -44,6 +45,7 @@ export function useWeekSelector(
   onSelectDay: (day: number) => void,
 ): UseWeekSelectorReturn {
   const [weekOffset, setWeekOffset] = useState<number>(() => computeWeekOffset(currentDay));
+  const [navDirection, setNavDirection] = useState<-1 | 1>(1);
 
   // Sync displayed week if currentDay changes externally (or when manually selected)
   useEffect(() => {
@@ -74,10 +76,12 @@ export function useWeekSelector(
   const canGoForward = true;
 
   const goToPreviousWeek = useCallback(() => {
+    setNavDirection(-1);
     setWeekOffset((prev) => prev - 7);
   }, []);
 
   const goToNextWeek = useCallback(() => {
+    setNavDirection(1);
     setWeekOffset((prev) => prev + 7);
   }, []);
 
@@ -89,6 +93,7 @@ export function useWeekSelector(
   return {
     weekDays,
     weekOffset,
+    navDirection,
     canGoBack,
     canGoForward,
     goToPreviousWeek,

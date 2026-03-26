@@ -2,7 +2,10 @@
 
 import { useMemo } from "react";
 import { INSPIRATIONAL_QUOTES } from "@/constants/habits";
+import type { HabitCategory } from "@/constants/habits";
 import { getActiveBlockId } from "@/utils/timeBlocks";
+import { filterHabitsForDate } from "@/utils/habitSchedule";
+import { getGregorianDateForDay } from "@/utils/hijri";
 import { useHabitTracker } from "@/hooks/useHabitTracker";
 import { useCustomHabits } from "@/hooks/useCustomHabits";
 import { useAuth } from "@/hooks/useAuth";
@@ -43,6 +46,17 @@ export default function HomePage() {
     totalHabits,
     completedHabits,
   } = useHabitTracker(mergedCategories);
+
+  // Filter habits based on repeat schedule for the selected date
+  const filteredCategories = useMemo((): HabitCategory[] => {
+    const dateForDay = getGregorianDateForDay(currentDay);
+    return mergedCategories
+      .map((cat) => ({
+        ...cat,
+        items: filterHabitsForDate(cat.items, dateForDay),
+      }))
+      .filter((cat) => cat.items.length > 0);
+  }, [mergedCategories, currentDay]);
 
   // Background sync: uploads on change when logged in, downloads on login
   useSync({
@@ -95,9 +109,9 @@ export default function HomePage() {
         trackerState={trackerState}
       />
 
-      {/* Habit blocks — merged personal + group habits */}
+      {/* Habit blocks — merged personal + group habits, filtered by schedule */}
       <div className="flex flex-col gap-3 pb-8">
-        {mergedCategories.map((category) => (
+        {filteredCategories.map((category) => (
           <HabitBlock
             key={category.id}
             category={category}
