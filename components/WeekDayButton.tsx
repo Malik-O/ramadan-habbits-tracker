@@ -27,41 +27,42 @@ export default function WeekDayButton({
   hasActivity,
   onSelect,
 }: WeekDayButtonProps) {
-  // We no longer restrict clicks, everything is interactive:
   const isOutOfRange = !isInRange;
 
   return (
     <motion.button
-      whileTap={{ scale: 0.9 }}
+      whileTap={{ scale: 0.92 }}
       onClick={() => onSelect(dayIndex)}
-      className={`relative flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-[16px] transition-all cursor-pointer ${resolveStyle(isActive, isOutOfRange, hasActivity, isToday)}`}
+      className={`relative flex flex-col items-center justify-center gap-0.5 py-2 rounded-xl transition-all cursor-pointer ${resolveStyle(isActive, isOutOfRange, hasActivity, isToday)}`}
     >
       {/* Day name label */}
       <span
-        className={`text-[10px] font-semibold leading-none mb-0.5 ${
+        className={`text-[10px] font-medium leading-none mb-0.5 ${
           isActive
             ? "text-stone-950"
             : isOutOfRange
-              ? "text-theme-secondary/40"
-              : "text-theme-secondary/80"
+              ? "text-theme-secondary/30"
+              : "text-theme-secondary/70"
         }`}
       >
         {dayNameShort}
       </span>
 
       {/* Gregorian Number */}
-      <span className={`text-[14px] font-bold leading-none ${isActive ? "text-stone-950" : ""}`}>{gregorianDayNumber}</span>
+      <span className={`text-[14px] font-bold leading-none ${isActive ? "text-stone-950" : ""}`}>
+        {gregorianDayNumber}
+      </span>
       
       {/* Hijri Number */}
       <span className={`text-[10px] font-medium leading-tight mt-0.5 ${
-        isActive ? "text-stone-950 font-bold" : isOutOfRange ? "text-theme-secondary/50" : "text-theme-secondary"
+        isActive ? "text-stone-950/70" : isOutOfRange ? "text-theme-secondary/30" : "text-theme-secondary/60"
       }`}>
         {hijriShortStr}
       </span>
 
       {/* Activity dot indicator */}
       {hasActivity && !isActive && !isToday && (
-        <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-emerald-400" />
+        <span className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-emerald-400/80" />
       )}
     </motion.button>
   );
@@ -71,16 +72,16 @@ export default function WeekDayButton({
 
 function resolveStyle(isActive: boolean, isOutOfRange: boolean, hasActivity: boolean, isToday: boolean): string {
   if (isActive) {
-    return "bg-amber-500 text-stone-950 shadow-lg shadow-amber-500/40 ring-2 ring-amber-400";
+    return "bg-amber-500 text-stone-950 shadow-md shadow-amber-500/25";
   }
   if (isToday) {
-    return "ring-2 ring-amber-400/60 text-theme-primary bg-amber-500/10";
+    return "ring-1.5 ring-amber-500/40 text-theme-primary bg-amber-500/8";
   }
   if (hasActivity) {
-    return "bg-emerald-500/10 ring-1 ring-emerald-500/20 text-theme-primary";
+    return "bg-emerald-500/8 text-theme-primary";
   }
   if (isOutOfRange) {
-    return "text-theme-secondary/50 hover:bg-theme-subtle hover:text-theme-primary/70";
+    return "text-theme-secondary/40 hover:bg-theme-subtle/50";
   }
   return "text-theme-primary hover:bg-theme-subtle";
 }

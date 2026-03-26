@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import {
   listTemplates,
   createTemplate,
@@ -13,14 +13,21 @@ import { useCustomHabits } from "./useCustomHabits";
 import { getAuthToken } from "@/services/api";
 import type { HabitCategory, HabitRepeat } from "@/constants/habits";
 
+// ─── Constants ───────────────────────────────────────────────────
+
+const PAGE_SIZE = 10;
+
 // ─── Types ───────────────────────────────────────────────────────
 
 interface UseTemplateHubReturn {
   templates: TemplateResponse[];
   isLoading: boolean;
+  isLoadingMore: boolean;
   error: string | null;
+  hasMore: boolean;
   isAuthenticated: boolean;
   fetchTemplates: (search?: string) => Promise<void>;
+  loadMore: () => Promise<void>;
   publishTemplate: (name: string, description: string) => Promise<void>;
   mergeTemplate: (template: TemplateResponse) => Promise<void>;
   replaceWithTemplate: (template: TemplateResponse) => Promise<void>;
@@ -61,21 +68,46 @@ export function useTemplateHub(): UseTemplateHubReturn {
   const { categories, setCategories } = useCustomHabits();
   const [templates, setTemplates] = useState<TemplateResponse[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
   const isAuthenticated = !!getAuthToken();
 
+  const currentPageRef = useRef(1);
+  const searchQueryRef = useRef("");
+
   const fetchTemplates = useCallback(async (search = "") => {
+    searchQueryRef.current = search;
+    currentPageRef.current = 1;
     setIsLoading(true);
     setError(null);
     try {
-      const result = await listTemplates(1, 50, search);
+      const result = await listTemplates(1, PAGE_SIZE, search);
       setTemplates(result.templates);
+      setHasMore(result.page < result.totalPages);
     } catch (err: any) {
       setError(err.message || "فشل تحميل القوالب");
     } finally {
       setIsLoading(false);
     }
   }, []);
+
+  const loadMore = useCallback(async () => {
+    if (isLoadingMore) return;
+    const nextPage = currentPageRef.current + 1;
+    setIsLoadingMore(true);
+    setError(null);
+    try {
+      const result = await listTemplates(nextPage, PAGE_SIZE, searchQueryRef.current);
+      currentPageRef.current = nextPage;
+      setTemplates((prev) => [...prev, ...result.templates]);
+      setHasMore(result.page < result.totalPages);
+    } catch (err: any) {
+      setError(err.message || "فشل تحميل المزيد");
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [isLoadingMore]);
 
   useEffect(() => {
     fetchTemplates();
@@ -170,9 +202,12 @@ export function useTemplateHub(): UseTemplateHubReturn {
   return {
     templates,
     isLoading,
+    isLoadingMore,
     error,
+    hasMore,
     isAuthenticated,
     fetchTemplates,
+    loadMore,
     publishTemplate,
     mergeTemplate,
     replaceWithTemplate,

@@ -8,8 +8,7 @@ import {
   Trash2,
   User,
   Layers,
-  ChevronDown,
-  ChevronUp,
+  Eye,
 } from "lucide-react";
 import type { TemplateResponse } from "@/services/api";
 import ConfirmDialog from "@/components/ConfirmDialog";
@@ -86,12 +85,12 @@ export default function TemplateCard({
           </div>
         </div>
 
-        {/* Expandable toggle */}
+        {/* Show details */}
         <button
           onClick={() => setDetailsModalOpen(true)}
-          className="flex w-full items-center justify-center gap-1 border-t border-theme-border py-1.5 text-[11px] text-theme-secondary transition-colors hover:bg-theme-subtle"
+          className="mx-4 mb-3 mt-1 flex cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-theme-subtle py-2 text-[11px] font-medium text-theme-secondary transition-all hover:bg-amber-500/10 hover:text-amber-400"
         >
-          <ChevronDown className="h-3 w-3" />
+          <Eye className="h-3.5 w-3.5" />
           عرض التفاصيل
         </button>
 

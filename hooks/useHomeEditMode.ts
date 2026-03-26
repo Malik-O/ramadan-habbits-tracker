@@ -1,16 +1,19 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useCustomHabits, type RepeatSchedule } from "@/hooks/useCustomHabits";
 import { useCategoryEditorModals } from "@/hooks/useCategoryEditorModals";
-import type { HabitCategory } from "@/constants/habits";
 import {
   trackCategoryAction,
   trackHabitAction,
-  trackDataReset,
 } from "@/utils/analytics";
 
-export function useManagePage() {
+/**
+ * Encapsulates edit-mode state for the home page.
+ * Reuses the shared `useCategoryEditorModals` hook so the editing
+ * experience (modals, confirmations) is identical to the manage page.
+ */
+export function useHomeEditMode() {
   const {
     categories,
     addCategory,
@@ -19,10 +22,13 @@ export function useManagePage() {
     addHabit,
     updateHabit,
     removeHabit,
-    resetToDefaults,
   } = useCustomHabits();
 
-  // Wrap mutations with analytics tracking
+  const [isEditing, setIsEditing] = useState(false);
+
+  const toggleEditing = useCallback(() => setIsEditing((prev) => !prev), []);
+
+  // Wrap mutations with analytics (mirrors useManagePage)
   const mutations = useMemo(
     () => ({
       addCategory: (name: string, icon: string) => {
@@ -37,11 +43,22 @@ export function useManagePage() {
         removeCategory(id);
         trackCategoryAction("remove", id);
       },
-      addHabit: (catId: string, label: string, type: "boolean" | "number", schedule?: RepeatSchedule) => {
+      addHabit: (
+        catId: string,
+        label: string,
+        type: "boolean" | "number",
+        schedule?: RepeatSchedule
+      ) => {
         addHabit(catId, label, type, schedule);
         trackHabitAction("add");
       },
-      updateHabit: (catId: string, habitId: string, label: string, type: "boolean" | "number", schedule?: RepeatSchedule) => {
+      updateHabit: (
+        catId: string,
+        habitId: string,
+        label: string,
+        type: "boolean" | "number",
+        schedule?: RepeatSchedule
+      ) => {
         updateHabit(catId, habitId, label, type, schedule);
         trackHabitAction("edit", habitId);
       },
@@ -55,20 +72,10 @@ export function useManagePage() {
 
   const editor = useCategoryEditorModals(mutations);
 
-  // Reset state
-  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
-
-  const handleReset = () => {
-    resetToDefaults();
-    trackDataReset();
-    setResetConfirmOpen(false);
-  };
-
   return {
+    isEditing,
+    toggleEditing,
     categories,
     ...editor,
-    resetConfirmOpen,
-    setResetConfirmOpen,
-    handleReset,
   };
 }

@@ -91,11 +91,11 @@ export default function TemplateDetailsModal({
                         </span>
                       </div>
                       
-                      <ul className="space-y-2">
+                      <ul className="divide-y divide-[#00000020]">
                         {cat.items.map((item) => (
                           <li
                             key={item.id}
-                            className="flex items-center gap-3 rounded-xl bg-theme-card px-3 py-2 text-sm text-theme-secondary shadow-sm ring-1 ring-theme-border/50"
+                            className="flex items-center gap-3 px-3 py-2.5 text-sm text-theme-secondary"
                           >
                             <span className="flex h-1.5 w-1.5 rounded-full bg-amber-500/60" />
                             <span className="flex-1">{item.label}</span>

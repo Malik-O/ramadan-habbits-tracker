@@ -69,9 +69,9 @@ export default function StatsPage() {
                 <DailyHeatmap dailyCompletions={dailyCompletions} />
               </motion.div>
               
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+              {/* <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
                 <HabitLineChart categories={categories} trackerState={trackerState} />
-              </motion.div>
+              </motion.div> */}
               
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
                 <CategoryBreakdown categoryStats={categoryStats} trackerState={trackerState} />
