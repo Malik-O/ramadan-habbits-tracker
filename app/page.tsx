@@ -26,7 +26,8 @@ import EditModeList from "@/components/home/EditModeList";
 import EditToggle from "@/components/home/EditToggle";
 
 export default function HomePage() {
-  const { categories, setCategories, customHabitsUpdatedAt, setCustomHabitsUpdatedAt } = useCustomHabits();
+  const customHabits = useCustomHabits();
+  const { categories, setCategories, customHabitsUpdatedAt, setCustomHabitsUpdatedAt } = customHabits;
   const { user } = useAuth();
   const { theme } = useTheme();
 
@@ -101,7 +102,7 @@ export default function HomePage() {
     handleCategorySubmit,
     closeCategoryModal,
     closeHabitModal,
-  } = useHomeEditMode();
+  } = useHomeEditMode(customHabits);
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-md flex-col bg-theme-bg pb-20">
@@ -130,7 +131,7 @@ export default function HomePage() {
         <AnimatePresence mode="wait">
           {isEditing ? (
             <EditModeList
-              categories={mergedCategories}
+              categories={categories}
               onEditCategory={handleEditCategory}
               onRemoveCategory={handleRemoveCategory}
               onAddHabit={handleAddHabit}

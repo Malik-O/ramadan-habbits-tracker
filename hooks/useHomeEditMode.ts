@@ -13,7 +13,7 @@ import {
  * Reuses the shared `useCategoryEditorModals` hook so the editing
  * experience (modals, confirmations) is identical to the manage page.
  */
-export function useHomeEditMode() {
+export function useHomeEditMode(customHabits: ReturnType<typeof useCustomHabits>) {
   const {
     categories,
     addCategory,
@@ -22,7 +22,7 @@ export function useHomeEditMode() {
     addHabit,
     updateHabit,
     removeHabit,
-  } = useCustomHabits();
+  } = customHabits;
 
   const [isEditing, setIsEditing] = useState(false);
 

@@ -73,7 +73,7 @@ export default function FolderCard({
                 {category.items.length === 0 ? (
                   <EmptyFolderMessage />
                 ) : (
-                  <div className="divide-y divide-theme-border/50">
+                  <div className="divide-y divide-[#00000020]">
                     {category.items.map((item) => (
                       <FolderHabitRow
                         key={item.id}
@@ -88,7 +88,7 @@ export default function FolderCard({
                 {/* Add habit button */}
                 <button
                   onClick={onAddHabit}
-                  className="flex w-full cursor-pointer items-center justify-center gap-2 border-t border-theme-border/50 py-2.5 text-theme-secondary/60 transition-colors hover:bg-amber-500/5 hover:text-amber-400"
+                  className="flex w-full cursor-pointer items-center justify-center gap-2 border-t border-[#00000020] py-2.5 text-theme-secondary/60 transition-colors hover:bg-amber-500/5 hover:text-amber-400"
                 >
                   <Plus className="h-3.5 w-3.5" />
                   <span className="text-xs font-medium">إضافة عبادة</span>
