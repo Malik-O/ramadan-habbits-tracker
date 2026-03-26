@@ -2,16 +2,16 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FolderPlus, ListChecks, BookTemplate } from "lucide-react";
+import { ListChecks, BookTemplate } from "lucide-react";
 import { useManagePage } from "@/hooks/useManagePage";
 import { useAuth } from "@/hooks/useAuth";
 import BottomNav from "@/components/BottomNav";
 import ConfirmDialog from "@/components/ConfirmDialog";
-import FolderCard from "@/components/manage/FolderCard";
-import CategoryFormModal from "@/components/manage/CategoryFormModal";
-import HabitFormModal from "@/components/manage/HabitFormModal";
 import ManageHeader from "@/components/manage/ManageHeader";
 import TemplateHubSection from "@/components/manage/TemplateHubSection";
+import HabitsTabContent from "@/components/manage/HabitsTabContent";
+import CategoryFormModal from "@/components/manage/CategoryFormModal";
+import HabitFormModal from "@/components/manage/HabitFormModal";
 import TabSwitcher from "@/components/TabSwitcher";
 import type { HabitCategory, HabitItem } from "@/constants/habits";
 
@@ -55,7 +55,7 @@ export default function ManagePage() {
           activeTab={activeTab}
           onChange={setActiveTab}
           tabs={[
-            { id: "habits", label: "عاداتي", icon: <ListChecks className="h-4 w-4" /> },
+            { id: "habits", label: "عباداتي", icon: <ListChecks className="h-4 w-4" /> },
             { id: "templates", label: "مركز القوالب", icon: <BookTemplate className="h-4 w-4" /> },
           ]}
         />
@@ -106,7 +106,7 @@ export default function ManagePage() {
       <ConfirmDialog
         isOpen={resetConfirmOpen}
         title="إعادة تعيين"
-        message="سيتم إعادة جميع الأقسام والعادات إلى الإعدادات الافتراضية. هل أنت متأكد؟"
+        message="سيتم إعادة جميع الأقسام والعبادات إلى الإعدادات الافتراضية. هل أنت متأكد؟"
         confirmLabel="إعادة تعيين"
         cancelLabel="إلغاء"
         variant="danger"
@@ -117,66 +117,3 @@ export default function ManagePage() {
   );
 }
 
-// ─── HabitsTabContent ────────────────────────────────────────────
-
-interface HabitsTabContentProps {
-  categories: HabitCategory[];
-  onEditCategory: (category: HabitCategory) => void;
-  onRemoveCategory: (categoryId: string) => void;
-  onAddHabit: (categoryId: string) => void;
-  onEditHabit: (categoryId: string, habit: HabitItem) => void;
-  onRemoveHabit: (categoryId: string, habitId: string) => void;
-  onAddCategory: () => void;
-}
-
-function HabitsTabContent({
-  categories,
-  onEditCategory,
-  onRemoveCategory,
-  onAddHabit,
-  onEditHabit,
-  onRemoveHabit,
-  onAddCategory,
-}: HabitsTabContentProps) {
-  return (
-    <>
-      {/* Folder summary */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between rounded-xl bg-gradient-to-l from-amber-500/5 to-transparent px-4 py-2.5"
-      >
-        <span className="text-xs text-theme-secondary">
-          {categories.length} أقسام ·{" "}
-          {categories.reduce((acc, cat) => acc + cat.items.length, 0)} عبادة
-        </span>
-      </motion.div>
-
-      {/* Folder cards */}
-      <AnimatePresence mode="popLayout">
-        {categories.map((category, index) => (
-          <FolderCard
-            key={category.id}
-            category={category}
-            defaultOpen={index === 0}
-            onEditCategory={() => onEditCategory(category)}
-            onRemoveCategory={() => onRemoveCategory(category.id)}
-            onAddHabit={() => onAddHabit(category.id)}
-            onEditHabit={(habit) => onEditHabit(category.id, habit)}
-            onRemoveHabit={(habitId) => onRemoveHabit(category.id, habitId)}
-          />
-        ))}
-      </AnimatePresence>
-
-      {/* Add Folder button */}
-      <motion.button
-        onClick={onAddCategory}
-        className="flex cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-theme-border/50 py-4 text-theme-secondary/60 transition-colors hover:border-amber-500/40 hover:text-amber-400"
-        whileTap={{ scale: 0.98 }}
-      >
-        <FolderPlus className="h-5 w-5" />
-        <span className="text-sm font-medium">إضافة قسم جديد</span>
-      </motion.button>
-    </>
-  );
-}

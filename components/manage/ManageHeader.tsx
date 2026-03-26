@@ -10,7 +10,7 @@ export default function ManageHeader({ onReset, showReset = false }: ManageHeade
     <header className="sticky top-0 z-50 border-b border-theme-border bg-theme-header backdrop-blur-xl">
       <div className="flex items-center justify-between px-4 py-4">
         <div className="flex items-center gap-3">
-          <h1 className="text-lg font-bold text-theme-primary">إدارة العادات</h1>
+          <h1 className="text-lg font-bold text-theme-primary">إدارة العبادات</h1>
         </div>
         {showReset && onReset && (
           <button

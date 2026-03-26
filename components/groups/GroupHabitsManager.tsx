@@ -210,7 +210,7 @@ export default function GroupHabitsManager({
           </button>
 
           <h3 className="text-sm font-bold text-theme-primary">
-            إدارة عادات المجموعة
+            إدارة عبادات المجموعة
           </h3>
 
           <motion.button

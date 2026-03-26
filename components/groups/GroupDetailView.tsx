@@ -146,7 +146,7 @@ export default function GroupDetailView({
             whileTap={{ scale: 0.98 }}
           >
             <Settings className="h-3.5 w-3.5" />
-            إدارة العادات
+            إدارة العبادات
           </motion.button>
           <motion.button
             onClick={() => setShowDeleteConfirm(true)}

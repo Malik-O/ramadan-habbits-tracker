@@ -116,7 +116,7 @@ function SectionHeader({ isAuthenticated, onPublish }: SectionHeaderProps) {
         <div>
           <h2 className="text-sm font-bold text-theme-primary">مركز القوالب</h2>
           <p className="text-[10px] leading-relaxed text-theme-secondary">
-            شارك عاداتك أو استخدم قوالب الآخرين
+            شارك عباداتك أو استخدم قوالب الآخرين
           </p>
         </div>
       </div>

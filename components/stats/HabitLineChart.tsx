@@ -184,7 +184,7 @@ export default function HabitLineChart({
       {/* ── Habit toggles ── */}
       <div className="p-5">
         <p className="mb-4 text-xs font-semibold text-theme-secondary tracking-wide">
-          اختر العادات لعرضها
+          اختر العبادات لعرضها
         </p>
         
         {/* Added divide-y to create dividers between groups, correcting visual consistency */}

@@ -103,7 +103,7 @@ export default function FolderCard({
       <ConfirmDialog
         isOpen={confirmDeleteCat}
         title="حذف القسم"
-        message={`هل أنت متأكد من حذف "${category.name}" وجميع عاداته؟`}
+        message={`هل أنت متأكد من حذف "${category.name}" وجميع عباداته؟`}
         confirmLabel="حذف"
         cancelLabel="إلغاء"
         variant="danger"

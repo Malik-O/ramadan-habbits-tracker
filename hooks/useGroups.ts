@@ -124,7 +124,7 @@ export function useGroups(): UseGroupsState {
         setGroups((prev) => prev.map((g) => (g._id === groupId ? updated : g)));
         return updated;
       } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : "حدث خطأ أثناء تحديث العادات";
+        const message = err instanceof Error ? err.message : "حدث خطأ أثناء تحديث العبادات";
         setError(message);
         return null;
       }

@@ -178,7 +178,7 @@ export function useTemplateHub(): UseTemplateHubReturn {
         const newCategories = convertTemplateToLocal(template);
         setCategories(() => newCategories);
       } catch (err: any) {
-        setError(err.message || "فشل استبدال العادات");
+        setError(err.message || "فشل استبدال العبادات");
         throw err;
       }
     },

@@ -357,7 +357,7 @@ function TemplateInfoCard({
             type="text"
             value={name}
             onChange={(e) => onNameChange(e.target.value)}
-            placeholder="مثال: عادات رمضان المكثفة"
+            placeholder="مثال: عبادات رمضان المكثفة"
             autoFocus
             className="w-full rounded-xl border border-theme-border bg-theme-subtle px-4 py-2.5 text-sm text-theme-primary outline-none transition-colors placeholder:text-theme-secondary/50 focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/25"
           />
@@ -377,7 +377,7 @@ function TemplateInfoCard({
         </div>
 
         <p className="text-[11px] leading-relaxed text-theme-secondary/60">
-          يمكنك تعديل الأقسام والعادات أدناه قبل النشر. التغييرات هنا لن تؤثر على عاداتك الشخصية.
+          يمكنك تعديل الأقسام والعبادات أدناه قبل النشر. التغييرات هنا لن تؤثر على عباداتك الشخصية.
         </p>
       </div>
     </div>

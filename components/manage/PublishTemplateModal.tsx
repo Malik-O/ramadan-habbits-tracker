@@ -82,7 +82,7 @@ export default function PublishTemplateModal({
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="مثال: عادات رمضان المكثفة"
+                  placeholder="مثال: عبادات رمضان المكثفة"
                   autoFocus
                   className="w-full rounded-xl border border-theme-border bg-theme-subtle px-4 py-2.5 text-sm text-theme-primary outline-none transition-colors placeholder:text-theme-secondary/50 focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/25"
                 />
@@ -102,7 +102,7 @@ export default function PublishTemplateModal({
               </div>
 
               <p className="text-[11px] text-theme-secondary/70">
-                سيتم نشر جميع أقسامك وعاداتك الحالية كقالب يمكن للآخرين استخدامه.
+                سيتم نشر جميع أقسامك وعباداته الحالية كقالب يمكن للآخرين استخدامه.
               </p>
 
               <motion.button

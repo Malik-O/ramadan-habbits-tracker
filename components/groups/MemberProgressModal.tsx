@@ -86,7 +86,7 @@ export default function MemberProgressModal({
             </div>
           ) : data.categories.length === 0 ? (
             <div className="py-8 text-center text-sm text-theme-secondary">
-              لا توجد عادات محددة في هذه المجموعة
+              لا توجد عبادات محددة في هذه المجموعة
             </div>
           ) : (
             <DayByDayProgress

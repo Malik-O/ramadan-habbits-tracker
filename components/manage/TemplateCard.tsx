@@ -135,7 +135,7 @@ export default function TemplateCard({
       <ConfirmDialog
         isOpen={confirmMerge}
         title="دمج القالب"
-        message={`سيتم إضافة ${template.categories.length} قسم و ${totalHabits} عبادة من "${template.name}" إلى عاداتك الحالية. هل تريد المتابعة؟`}
+        message={`سيتم إضافة ${template.categories.length} قسم و ${totalHabits} عبادة من "${template.name}" إلى عباداتك الحالية. هل تريد المتابعة؟`}
         confirmLabel="دمج"
         cancelLabel="إلغاء"
         variant="warning"
@@ -149,8 +149,8 @@ export default function TemplateCard({
       {/* Confirm replace */}
       <ConfirmDialog
         isOpen={confirmReplace}
-        title="استبدال العادات"
-        message={`سيتم استبدال جميع عاداتك الحالية بمحتوى "${template.name}" (${template.categories.length} قسم و ${totalHabits} عبادة). هذا الإجراء لا يمكن التراجع عنه.`}
+        title="استبدال العبادات"
+        message={`سيتم استبدال جميع عباداتك الحالية بمحتوى "${template.name}" (${template.categories.length} قسم و ${totalHabits} عبادة). هذا الإجراء لا يمكن التراجع عنه.`}
         confirmLabel="استبدال"
         cancelLabel="إلغاء"
         variant="danger"
