@@ -29,7 +29,7 @@ export default function GroupLeaderboardRow({
     <motion.button
       onClick={onClick}
       disabled={!isAdmin}
-      className={`flex w-full items-center gap-3 px-4 py-3 text-right transition-colors ${
+      className={`flex w-full items-center gap-3 border-b border-[#00000020] px-4 py-3 text-right transition-colors last:border-b-0 ${
         isAdmin ? "cursor-pointer hover:bg-theme-subtle/50" : "cursor-default"
       }`}
       whileTap={isAdmin ? { scale: 0.99 } : undefined}

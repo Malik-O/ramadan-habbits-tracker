@@ -108,7 +108,7 @@ export default function TemplateCard({
         <div className="flex border-t border-theme-border">
           <button
             onClick={() => setConfirmMerge(true)}
-            className="flex flex-1 items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-amber-400 transition-colors hover:bg-amber-500/5"
+            className="cursor-pointer flex flex-1 items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-amber-400 transition-colors hover:bg-amber-500/5"
           >
             <Download className="h-3.5 w-3.5" />
             دمج
@@ -116,7 +116,7 @@ export default function TemplateCard({
 
           <button
             onClick={() => setConfirmReplace(true)}
-            className="flex flex-1 items-center justify-center gap-1.5 border-r border-theme-border py-2.5 text-xs font-medium text-orange-400 transition-colors hover:bg-orange-500/5"
+            className="cursor-pointer flex flex-1 items-center justify-center gap-1.5 border-r border-theme-border py-2.5 text-xs font-medium text-orange-400 transition-colors hover:bg-orange-500/5"
           >
             <RefreshCw className="h-3.5 w-3.5" />
             استبدال
@@ -125,7 +125,7 @@ export default function TemplateCard({
           {isOwner && (
             <button
               onClick={() => setConfirmDelete(true)}
-              className="flex items-center justify-center gap-1.5 border-r border-theme-border px-4 py-2.5 text-xs font-medium text-red-400 transition-colors hover:bg-red-500/5"
+              className="cursor-pointer flex items-center justify-center gap-1.5 border-r border-theme-border px-4 py-2.5 text-xs font-medium text-red-400 transition-colors hover:bg-red-500/5"
             >
               <Trash2 className="h-3.5 w-3.5" />
             </button>

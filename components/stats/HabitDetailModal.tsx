@@ -78,7 +78,7 @@ export default function HabitDetailModal({
               </h3>
               <button
                 onClick={onClose}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-theme-subtle transition-colors hover:bg-theme-border"
+                className="cursor-pointer flex h-8 w-8 items-center justify-center rounded-full bg-theme-subtle transition-colors hover:bg-theme-border"
               >
                 <X className="h-4 w-4 text-theme-secondary" />
               </button>

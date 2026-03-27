@@ -44,7 +44,7 @@ export default function SignInPrompt({ title, description, icon }: SignInPromptP
       >
         <Link
           href="/profile"
-          className="inline-flex items-center gap-2 rounded-full bg-amber-400 px-6 py-3 text-sm font-bold text-slate-950 transition-all hover:bg-amber-300 active:scale-95"
+          className="cursor-pointer inline-flex items-center gap-2 rounded-full bg-amber-400 px-6 py-3 text-sm font-bold text-slate-950 transition-all hover:bg-amber-300 active:scale-95"
         >
           <LogIn className="h-4 w-4" />
           <span>تسجيل الدخول</span>

@@ -27,7 +27,7 @@ export default function TabSwitcher<T extends string>({
         <button
           key={tab.id}
           onClick={() => onChange(tab.id)}
-          className={`relative z-10 flex flex-1 items-center justify-center gap-2 py-2 text-sm font-medium transition-colors ${
+          className={`cursor-pointer relative z-10 flex flex-1 items-center justify-center gap-2 py-2 text-sm font-medium transition-colors ${
             activeTab === tab.id
               ? "text-theme-primary"
               : "text-theme-secondary hover:text-theme-primary"

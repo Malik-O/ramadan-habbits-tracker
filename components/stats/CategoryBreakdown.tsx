@@ -74,7 +74,7 @@ function CategoryStatRow({ stat, trackerState, onSelectHabit }: CategoryStatRowP
       {/* Category row */}
       <button
         onClick={() => setIsExpanded((p) => !p)}
-        className="flex w-full items-center gap-3 px-4 py-3 transition-colors hover:bg-theme-subtle"
+        className="cursor-pointer flex w-full items-center gap-3 px-4 py-3 transition-colors hover:bg-theme-subtle"
       >
         {/* Progress bar */}
         <div className="flex flex-1 flex-col gap-1.5">
@@ -167,7 +167,7 @@ function HabitStatRow({ label, habitId, trackerState, onSelect }: HabitStatRowPr
   return (
     <button
       onClick={onSelect}
-      className="flex w-full items-center gap-3 rounded-lg py-2 transition-colors hover:bg-theme-subtle"
+      className="cursor-pointer flex w-full items-center gap-3 rounded-lg py-2 transition-colors hover:bg-theme-subtle"
     >
       <span className="flex-1 text-right text-xs text-theme-secondary">
         {label}

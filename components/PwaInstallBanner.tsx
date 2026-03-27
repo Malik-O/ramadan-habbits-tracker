@@ -104,7 +104,7 @@ export default function PwaInstallBanner() {
                   <button
                     id="pwa-install-btn"
                     onClick={handleInstall}
-                    className="rounded-lg bg-amber-400 px-3 py-1.5 text-xs font-bold text-slate-950 transition-transform active:scale-95"
+                    className="cursor-pointer rounded-lg bg-amber-400 px-3 py-1.5 text-xs font-bold text-slate-950 transition-transform active:scale-95"
                   >
                     تثبيت
                   </button>
@@ -113,7 +113,7 @@ export default function PwaInstallBanner() {
                     id="pwa-dismiss-btn"
                     onClick={handleDismiss}
                     aria-label="إغلاق"
-                    className="flex h-7 w-7 items-center justify-center rounded-full text-theme-secondary transition-colors hover:bg-theme-subtle"
+                    className="cursor-pointer flex h-7 w-7 items-center justify-center rounded-full text-theme-secondary transition-colors hover:bg-theme-subtle"
                   >
                     <X className="h-4 w-4" />
                   </button>

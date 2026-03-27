@@ -258,7 +258,7 @@ function CategoryChipGroup({
     <div>
       <button
         onClick={onToggleCategory}
-        className={`mb-3 flex items-center gap-2 rounded-lg py-1 text-sm font-bold transition-all duration-200 ${
+        className={`cursor-pointer mb-3 flex items-center gap-2 rounded-lg py-1 text-sm font-bold transition-all duration-200 ${
           allSelected
             ? "text-amber-500"
             : "text-theme-secondary hover:text-theme-primary"
@@ -278,7 +278,7 @@ function CategoryChipGroup({
               whileTap={{ scale: 0.93 }}
               whileHover={{ scale: 1.03 }}
               layout
-              className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium transition-all duration-200 ${
+              className={`cursor-pointer flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium transition-all duration-200 ${
                 active
                   ? "bg-theme-card-hover text-theme-primary shadow-sm"
                   : "bg-theme-subtle text-theme-secondary hover:bg-theme-card-hover"

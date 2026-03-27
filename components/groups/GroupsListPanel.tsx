@@ -27,7 +27,7 @@ export default function GroupsListPanel({
       {/* Create/Join button */}
       <motion.button
         onClick={onOpenCreateJoin}
-        className="flex items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-amber-500/30 bg-amber-500/5 py-4 text-amber-500 transition-all hover:border-amber-500/50 hover:bg-amber-500/10"
+        className="cursor-pointer flex items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-amber-500/30 bg-amber-500/5 py-4 text-amber-500 transition-all hover:border-amber-500/50 hover:bg-amber-500/10"
         whileTap={{ scale: 0.98 }}
       >
         <Plus className="h-5 w-5" />
