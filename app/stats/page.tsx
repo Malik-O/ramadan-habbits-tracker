@@ -15,6 +15,7 @@ import HabitLineChart from "@/components/stats/HabitLineChart";
 import StatsLeaderboard from "@/components/stats/StatsLeaderboard";
 import LeaderboardSignInPrompt from "@/components/leaderboard/LeaderboardSignInPrompt";
 import TabSwitcher, { TabOption } from "@/components/TabSwitcher";
+import PageLoadingSkeleton from "@/components/PageLoadingSkeleton";
 
 export default function StatsPage() {
   const [activeTab, setActiveTab] = useState<"stats" | "leaderboard">("leaderboard");
@@ -86,14 +87,7 @@ export default function StatsPage() {
               transition={{ duration: 0.2 }}
             >
               {isAuthLoading ? (
-                <div className="p-4 flex flex-col gap-4">
-                  <div className="h-24 rounded-2xl bg-theme-subtle animate-pulse" />
-                  <div className="flex-1 space-y-4">
-                    {[1, 2, 3, 4].map((i) => (
-                      <div key={i} className="h-16 rounded-2xl bg-theme-subtle animate-pulse" />
-                    ))}
-                  </div>
-                </div>
+                <PageLoadingSkeleton />
               ) : isSignedIn ? (
                 <StatsLeaderboard currentUserUid={user.uid} />
               ) : (

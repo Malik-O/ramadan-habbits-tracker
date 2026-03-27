@@ -42,7 +42,7 @@ export interface UseCustomHabitsReturn {
 export function useCustomHabits(): UseCustomHabitsReturn {
   const [categories, setCategories] = useLocalStorage<HabitCategory[]>(
     "hemma-custom-habits",
-    []
+    HABIT_CATEGORIES
   );
   const [customHabitsUpdatedAt, setCustomHabitsUpdatedAt] = useLocalStorage<string>(
     "hemma-custom-habits-updated-at",

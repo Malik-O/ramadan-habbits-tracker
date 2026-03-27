@@ -1,12 +1,15 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { Copy } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import BottomNav from "@/components/BottomNav";
 import TemplateHubSection from "@/components/manage/TemplateHubSection";
+import SignInPrompt from "@/components/SignInPrompt";
+import PageLoadingSkeleton from "@/components/PageLoadingSkeleton";
 
 export default function TemplatesPage() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-md flex-col bg-theme-bg pb-20">
@@ -20,13 +23,25 @@ export default function TemplatesPage() {
       </header>
 
       {/* Content */}
-      <div className="flex flex-col gap-3 px-4 pt-4 pb-4">
-        <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-        >
-          <TemplateHubSection currentUserUid={user?.uid ?? null} />
-        </motion.div>
+      <div className="flex flex-1 flex-col gap-3 px-4 pt-4 pb-4">
+        {isLoading ? (
+          <PageLoadingSkeleton />
+        ) : user ? (
+          <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+          >
+            <TemplateHubSection currentUserUid={user.uid} />
+          </motion.div>
+        ) : (
+          <div className="flex flex-1 flex-col justify-center py-10">
+            <SignInPrompt
+              title="مركز القوالب"
+              description="سجّل دخولك لمشاركة قوالبك الخاصة واكتشاف قوالب الآخرين"
+              icon={<Copy className="h-12 w-12 text-amber-500" />}
+            />
+          </div>
+        )}
       </div>
 
       <BottomNav activeTab="templates" />
