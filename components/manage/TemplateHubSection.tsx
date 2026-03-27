@@ -43,7 +43,7 @@ export default function TemplateHubSection({ currentUserUid }: TemplateHubSectio
       {/* Section header card */}
       <SectionHeader
         isAuthenticated={isAuthenticated}
-        onPublish={() => router.push("/manage/publish")}
+        onPublish={() => router.push("/templates/publish")}
       />
 
       {/* Search bar */}

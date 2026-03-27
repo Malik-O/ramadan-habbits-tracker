@@ -56,7 +56,7 @@ export default function DangerSection() {
         <button
           onClick={() => setIsConfirmOpen(true)}
           disabled={isResetting}
-          className="flex w-full items-center gap-3 px-4 py-3.5 text-red-400 transition-colors hover:bg-red-500/5 disabled:opacity-50"
+          className="flex w-full items-center gap-3 px-4 py-3.5 text-red-400 transition-colors hover:bg-red-500/5 disabled:opacity-50 cursor-pointer"
         >
           <RotateCcw className={`h-5 w-5 ${isResetting ? "animate-spin" : ""}`} />
           <span className="text-sm">إعادة تعيين جميع البيانات</span>

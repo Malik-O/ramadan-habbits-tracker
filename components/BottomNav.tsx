@@ -6,14 +6,14 @@ import { motion } from "framer-motion";
 import { trackNavTap } from "@/utils/analytics";
 
 interface BottomNavProps {
-  activeTab: "home" | "stats" | "manage" | "groups";
+  activeTab: "home" | "stats" | "templates" | "groups";
 }
 
 const NAV_ITEMS = [
   { id: "home" as const, label: "الرئيسية", icon: Home, href: "/" },
   { id: "groups" as const, label: "المجموعات", icon: Users, href: "/groups" },
   { id: "stats" as const, label: "الإحصائيات", icon: BarChart3, href: "/stats" },
-  { id: "manage" as const, label: "إدارة", icon: Settings2, href: "/manage" },
+  { id: "templates" as const, label: "القوالب", icon: Settings2, href: "/templates" },
 ];
 
 export default function BottomNav({ activeTab }: BottomNavProps) {

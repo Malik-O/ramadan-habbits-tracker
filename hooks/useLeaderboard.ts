@@ -60,7 +60,7 @@ export function useLeaderboard(): UseLeaderboardState {
       const data = await getLeaderboard(1, PAGE_SIZE);
       applyResponse(data, false);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "حدث خطأ أثناء تحميل لوحة المتصدرين";
+      const message = err instanceof Error ? err.message : "حدث خطأ أثناء تحميل لوحة السابقين";
       setError(message);
     } finally {
       setIsLoading(false);

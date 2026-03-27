@@ -7,7 +7,7 @@ export default function ProfileHeader() {
       <div className="flex items-center gap-3">
         <Link
           href="/"
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-theme-subtle transition-colors hover:bg-theme-border"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-theme-subtle transition-colors hover:bg-theme-border cursor-pointer"
         >
           <ArrowRight className="h-4 w-4 text-theme-secondary" />
         </Link>

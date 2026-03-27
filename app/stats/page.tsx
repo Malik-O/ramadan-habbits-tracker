@@ -45,7 +45,7 @@ export default function StatsPage() {
             activeTab={activeTab}
             onChange={setActiveTab}
             tabs={[
-              { id: "leaderboard", label: "المتصدرين", icon: <Trophy className="h-4 w-4" /> },
+              { id: "leaderboard", label: "السابقين", icon: <Trophy className="h-4 w-4" /> },
               { id: "stats", label: "إحصائياتي", icon: <BarChart3 className="h-4 w-4" /> },
             ]}
           />

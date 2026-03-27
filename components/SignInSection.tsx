@@ -63,7 +63,7 @@ function SignedInView({
       {/* Sign out */}
       <button
         onClick={onSignOut}
-        className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-red-400 transition-colors hover:bg-red-500/5"
+        className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-red-400 transition-colors hover:bg-red-500/5 cursor-pointer"
       >
         <LogOut className="h-3.5 w-3.5" />
         <span>تسجيل الخروج</span>
@@ -187,7 +187,7 @@ function EmailForm({
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-theme-secondary/60 transition-colors hover:text-theme-primary"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-theme-secondary/60 transition-colors hover:text-theme-primary cursor-pointer"
             >
               {showPassword ? (
                 <EyeOff className="h-4 w-4" />
@@ -201,7 +201,7 @@ function EmailForm({
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full rounded-xl bg-amber-500 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+            className="w-full rounded-xl bg-amber-500 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 cursor-pointer"
           >
             {isSubmitting ? (
               <div className="mx-auto h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
@@ -219,7 +219,7 @@ function EmailForm({
           <button
             type="button"
             onClick={switchMode}
-            className="font-semibold text-amber-500 hover:underline"
+            className="font-semibold text-amber-500 hover:underline cursor-pointer"
           >
             {mode === "signin" ? "أنشئ حسابك" : "سجّل دخولك"}
           </button>
@@ -229,7 +229,7 @@ function EmailForm({
         <button
           type="button"
           onClick={onBack}
-          className="text-xs text-theme-secondary/60 transition-colors hover:text-theme-secondary"
+          className="text-xs text-theme-secondary/60 transition-colors hover:text-theme-secondary cursor-pointer"
         >
           رجوع
         </button>
@@ -267,7 +267,7 @@ function SignedOutView({
       <button
         onClick={onGoogleSignIn}
         disabled={isSubmitting}
-        className="flex w-full items-center justify-center gap-3 rounded-xl border border-theme-border bg-theme-card py-2.5 text-sm font-medium text-theme-primary transition-colors hover:bg-theme-subtle disabled:opacity-50"
+        className="flex w-full items-center justify-center gap-3 rounded-xl border border-theme-border bg-theme-card py-2.5 text-sm font-medium text-theme-primary transition-colors hover:bg-theme-subtle disabled:opacity-50 cursor-pointer"
       >
         {isSubmitting && !showEmailForm ? (
           <div className="h-5 w-5 animate-spin rounded-full border-2 border-theme-border border-t-amber-400" />
@@ -300,7 +300,7 @@ function SignedOutView({
             exit={{ opacity: 0 }}
             type="button"
             onClick={() => setShowEmailForm(true)}
-            className="text-xs text-amber-500 transition-colors hover:underline"
+            className="text-xs text-amber-500 transition-colors hover:underline cursor-pointer"
           >
             أو المتابعة بالبريد الإلكتروني وكلمة المرور
           </motion.button>

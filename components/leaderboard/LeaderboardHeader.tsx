@@ -14,7 +14,7 @@ export default function LeaderboardHeader() {
           <ArrowRight className="h-4 w-4 text-theme-secondary" />
         </Link>
         <h1 className="text-lg font-bold text-theme-primary">
-          لوحة المتصدرين
+          لوحة السابقين
         </h1>
       </div>
     </header>

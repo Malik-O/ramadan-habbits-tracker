@@ -24,7 +24,7 @@ export default function LeaderboardSignInPrompt() {
         className="flex flex-col gap-2"
       >
         <h2 className="text-xl font-extrabold text-theme-primary">
-          لوحة المتصدرين
+          لوحة السابقين
         </h2>
         <p className="mx-auto max-w-[260px] text-sm leading-relaxed text-theme-secondary">
           سجّل دخولك لمشاهدة ترتيبك ومنافسة الآخرين في إتمام العبادات اليومية

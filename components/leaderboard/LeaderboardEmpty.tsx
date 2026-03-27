@@ -19,7 +19,7 @@ export default function LeaderboardEmpty() {
           لا توجد بيانات بعد
         </h3>
         <p className="mt-1 text-xs text-theme-secondary">
-          ابدأ بإتمام عباداتك اليومية لتظهر في لوحة المتصدرين
+          ابدأ بإتمام عباداتك اليومية لتظهر في لوحة السابقين
         </p>
       </div>
     </motion.div>

@@ -105,7 +105,7 @@ function ThemeToggleButton({
   return (
     <button
       onClick={onToggle}
-      className="flex w-full items-center justify-between px-4 py-3.5 transition-colors hover:bg-theme-subtle"
+      className="flex w-full items-center justify-between px-4 py-3.5 transition-colors hover:bg-theme-subtle cursor-pointer"
     >
       <div className="flex items-center gap-3">
         {theme === "dark" ? (
@@ -135,11 +135,11 @@ function LeaderboardVisibilityToggle({
     <button
       onClick={onToggle}
       disabled={isToggling}
-      className="flex w-full items-center justify-between border-t border-theme-border px-4 py-3.5 transition-colors hover:bg-theme-subtle disabled:opacity-70"
+      className="flex w-full items-center justify-between border-t border-theme-border px-4 py-3.5 transition-colors hover:bg-theme-subtle disabled:opacity-70 cursor-pointer"
     >
       <div className="flex items-center gap-3">
         <Trophy className="h-5 w-5 text-amber-400" />
-        <span className="text-sm text-theme-primary">الظهور في لوحة المتصدرين</span>
+        <span className="text-sm text-theme-primary">الظهور في لوحة السابقين</span>
       </div>
       {/* Toggle switch */}
       <div
@@ -161,7 +161,7 @@ function InstallAppButton({ onInstall }: { onInstall: () => void }) {
   return (
     <button
       onClick={onInstall}
-      className="flex w-full items-center justify-between border-t border-theme-border px-4 py-3.5 transition-colors hover:bg-theme-subtle"
+      className="flex w-full items-center justify-between border-t border-theme-border px-4 py-3.5 transition-colors hover:bg-theme-subtle cursor-pointer"
     >
       <div className="flex items-center gap-3">
         <Download className="h-5 w-5 text-amber-400" />

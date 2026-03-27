@@ -11,7 +11,7 @@ interface LeaderboardTabSwitcherProps {
 }
 
 const TABS: { id: LeaderboardTab; label: string; icon: typeof Trophy }[] = [
-  { id: "leaderboard", label: "المتصدرين", icon: Trophy },
+  { id: "leaderboard", label: "السابقين", icon: Trophy },
   { id: "groups", label: "المجموعات", icon: Users },
 ];
 

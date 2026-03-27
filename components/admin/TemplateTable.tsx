@@ -210,7 +210,7 @@ export default function TemplateTable({
           />
         </div>
         <Link
-          href="/manage/publish"
+          href="/templates/publish"
           className="flex h-[42px] items-center gap-2 rounded-xl bg-amber-500 px-4 text-sm font-semibold text-black transition-colors hover:bg-amber-400 shrink-0"
         >
           <Plus className="h-4 w-4" />

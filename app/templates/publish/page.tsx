@@ -156,7 +156,7 @@ export default function PublishTemplatePage() {
         description: description.trim(),
         categories: toTemplateCategories(categories),
       });
-      router.push("/manage");
+      router.push("/templates");
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "فشل نشر القالب";
       setError(message);
@@ -297,7 +297,7 @@ export default function PublishTemplatePage() {
         initialValues={editor.editingHabit}
       />
 
-      <BottomNav activeTab="manage" />
+      <BottomNav activeTab="templates" />
     </div>
   );
 }
