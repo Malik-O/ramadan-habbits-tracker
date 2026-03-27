@@ -16,6 +16,7 @@ import {
   setAuthToken,
   getAuthToken,
   initialUploadAfterSignup,
+  updateProfileName,
   type AuthResponse,
 } from "@/services/api";
 
@@ -56,6 +57,8 @@ export interface AuthState {
   signOut: () => void;
   /** Clear any auth error */
   clearError: () => void;
+  /** Update user name */
+  updateUserName: (name: string) => Promise<void>;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────
@@ -290,6 +293,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setError(null);
   }, []);
 
+  // ── Update user name ──
+  const updateUserName = useCallback(async (name: string) => {
+    if (!user) return;
+    try {
+      const res = await updateProfileName(name);
+      const updatedUser = { ...user, name: res.name };
+      setUser(updatedUser);
+      storeUser(updatedUser);
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "فشل تحديث الاسم";
+      setError(message);
+      throw new Error(message);
+    }
+  }, [user]);
+
   // ── Clear error ──
   const clearError = useCallback(() => setError(null), []);
 
@@ -303,6 +322,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signInWithGoogle,
     signOut,
     clearError,
+    updateUserName,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

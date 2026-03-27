@@ -113,6 +113,14 @@ export function getProfile(): Promise<UserProfile> {
   return apiFetch<UserProfile>("/auth/profile");
 }
 
+/** Update user profile name */
+export function updateProfileName(name: string): Promise<{ name: string }> {
+  return apiFetch<{ name: string }>("/auth/name", {
+    method: "PATCH",
+    body: JSON.stringify({ name }),
+  });
+}
+
 // ─── Sync API Types ──────────────────────────────────────────────
 
 /** A single habit tracking record for sync */

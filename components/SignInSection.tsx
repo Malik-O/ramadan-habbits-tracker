@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { LogIn, LogOut, User, Eye, EyeOff } from "lucide-react";
+import { LogIn, LogOut, User, Eye, EyeOff, Edit2, Check, X } from "lucide-react";
 import { useAuth, type AuthMode } from "@/hooks/useAuth";
 
 // ─── Sub-Components ──────────────────────────────────────────────
@@ -34,10 +34,32 @@ function GoogleLogo({ className }: { className?: string }) {
 function SignedInView({
   user,
   onSignOut,
+  onUpdateName,
 }: {
   user: { name: string; email: string; photoURL?: string; provider: string };
   onSignOut: () => void;
+  onUpdateName: (name: string) => Promise<void>;
 }) {
+  const [isEditingMode, setIsEditingMode] = useState(false);
+  const [editedName, setEditedName] = useState(user.name);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSaveName = async () => {
+    if (!editedName.trim() || editedName.trim() === user.name) {
+      setIsEditingMode(false);
+      return;
+    }
+    try {
+      setIsSaving(true);
+      await onUpdateName(editedName.trim());
+      setIsEditingMode(false);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div className="flex flex-col items-center gap-3 p-5">
       {/* Avatar */}
@@ -55,8 +77,51 @@ function SignedInView({
       )}
 
       {/* Info */}
-      <div className="text-center">
-        <p className="text-sm font-semibold text-theme-primary">{user.name}</p>
+      <div className="text-center w-full flex flex-col items-center">
+        {isEditingMode ? (
+          <div className="flex items-center gap-2 mb-1 w-full justify-center">
+            <input
+              type="text"
+              value={editedName}
+              onChange={(e) => setEditedName(e.target.value)}
+              className="w-3/4 rounded-lg border border-theme-border bg-theme-subtle px-3 py-1.5 text-sm text-theme-primary outline-none transition-colors focus:border-amber-400/40"
+              autoFocus
+              onKeyDown={(e) => e.key === 'Enter' && handleSaveName()}
+              disabled={isSaving}
+            />
+            {isSaving ? (
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-theme-border border-t-amber-400" />
+            ) : (
+              <>
+                <button
+                  onClick={handleSaveName}
+                  className="rounded p-1 text-green-500 transition-colors hover:bg-green-500/10 cursor-pointer"
+                >
+                  <Check className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => {
+                    setEditedName(user.name);
+                    setIsEditingMode(false);
+                  }}
+                  className="rounded p-1 text-red-500 transition-colors hover:bg-red-500/10 cursor-pointer"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </>
+            )}
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-semibold text-theme-primary">{user.name}</p>
+            <button
+              onClick={() => setIsEditingMode(true)}
+              className="rounded p-1 text-theme-secondary/60 transition-colors hover:bg-theme-subtle hover:text-amber-500 cursor-pointer"
+            >
+              <Edit2 className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
         <p className="mt-0.5 text-xs text-theme-secondary">{user.email}</p>
       </div>
 
@@ -323,6 +388,7 @@ export default function SignInSection() {
     signInWithGoogle,
     signOut,
     clearError,
+    updateUserName,
   } = useAuth();
 
   return (
@@ -342,7 +408,7 @@ export default function SignInSection() {
       {isLoading ? (
         <AuthSkeleton />
       ) : user ? (
-        <SignedInView user={user} onSignOut={signOut} />
+        <SignedInView user={user} onSignOut={signOut} onUpdateName={updateUserName} />
       ) : (
         <SignedOutView
           isSubmitting={isSubmitting}
