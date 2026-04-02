@@ -11,16 +11,18 @@ import {
   Eye,
 } from "lucide-react";
 import type { TemplateResponse } from "@/services/api";
+import type { SelectionMap } from "./TemplateSelectionModal";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import TemplateDetailsModal from "./TemplateDetailsModal";
+import TemplateSelectionModal from "./TemplateSelectionModal";
 
 // ─── Props ───────────────────────────────────────────────────────
 
 interface TemplateCardProps {
   template: TemplateResponse;
   currentUserUid: string | null;
-  onMerge: (template: TemplateResponse) => void;
-  onReplace: (template: TemplateResponse) => void;
+  onMerge: (template: TemplateResponse, selection: SelectionMap) => void;
+  onReplace: (template: TemplateResponse, selection: SelectionMap) => void;
   onDelete: (templateId: string) => void;
 }
 
@@ -34,8 +36,7 @@ export default function TemplateCard({
   onDelete,
 }: TemplateCardProps) {
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
-  const [confirmMerge, setConfirmMerge] = useState(false);
-  const [confirmReplace, setConfirmReplace] = useState(false);
+  const [selectionMode, setSelectionMode] = useState<"merge" | "replace" | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const isOwner = currentUserUid === template.authorUid;
@@ -43,6 +44,14 @@ export default function TemplateCard({
     (sum, cat) => sum + cat.items.length,
     0
   );
+
+  const handleSelectionConfirm = (selection: SelectionMap) => {
+    if (selectionMode === "merge") {
+      onMerge(template, selection);
+    } else if (selectionMode === "replace") {
+      onReplace(template, selection);
+    }
+  };
 
   return (
     <>
@@ -107,16 +116,16 @@ export default function TemplateCard({
         {/* Actions */}
         <div className="flex border-t border-theme-border">
           <button
-            onClick={() => setConfirmMerge(true)}
-            className="cursor-pointer flex flex-1 items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-amber-400 transition-colors hover:bg-amber-500/5"
+            onClick={() => setSelectionMode("merge")}
+            className="flex flex-1 cursor-pointer items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-amber-400 transition-colors hover:bg-amber-500/5"
           >
             <Download className="h-3.5 w-3.5" />
             دمج
           </button>
 
           <button
-            onClick={() => setConfirmReplace(true)}
-            className="cursor-pointer flex flex-1 items-center justify-center gap-1.5 border-r border-theme-border py-2.5 text-xs font-medium text-orange-400 transition-colors hover:bg-orange-500/5"
+            onClick={() => setSelectionMode("replace")}
+            className="flex flex-1 cursor-pointer items-center justify-center gap-1.5 border-r border-theme-border py-2.5 text-xs font-medium text-orange-400 transition-colors hover:bg-orange-500/5"
           >
             <RefreshCw className="h-3.5 w-3.5" />
             استبدال
@@ -125,7 +134,7 @@ export default function TemplateCard({
           {isOwner && (
             <button
               onClick={() => setConfirmDelete(true)}
-              className="cursor-pointer flex items-center justify-center gap-1.5 border-r border-theme-border px-4 py-2.5 text-xs font-medium text-red-400 transition-colors hover:bg-red-500/5"
+              className="flex cursor-pointer items-center justify-center gap-1.5 border-r border-theme-border px-4 py-2.5 text-xs font-medium text-red-400 transition-colors hover:bg-red-500/5"
             >
               <Trash2 className="h-3.5 w-3.5" />
             </button>
@@ -133,34 +142,14 @@ export default function TemplateCard({
         </div>
       </motion.div>
 
-      {/* Confirm merge */}
-      <ConfirmDialog
-        isOpen={confirmMerge}
-        title="دمج القالب"
-        message={`سيتم إضافة ${template.categories.length} قسم و ${totalHabits} عبادة من "${template.name}" إلى عباداتك الحالية. هل تريد المتابعة؟`}
-        confirmLabel="دمج"
-        cancelLabel="إلغاء"
-        variant="warning"
-        onConfirm={() => {
-          setConfirmMerge(false);
-          onMerge(template);
-        }}
-        onCancel={() => setConfirmMerge(false)}
-      />
-
-      {/* Confirm replace */}
-      <ConfirmDialog
-        isOpen={confirmReplace}
-        title="استبدال العبادات"
-        message={`سيتم استبدال جميع عباداتك الحالية بمحتوى "${template.name}" (${template.categories.length} قسم و ${totalHabits} عبادة). هذا الإجراء لا يمكن التراجع عنه.`}
-        confirmLabel="استبدال"
-        cancelLabel="إلغاء"
-        variant="danger"
-        onConfirm={() => {
-          setConfirmReplace(false);
-          onReplace(template);
-        }}
-        onCancel={() => setConfirmReplace(false)}
+      {/* Selection modal (merge or replace) */}
+      <TemplateSelectionModal
+        isOpen={selectionMode !== null}
+        onClose={() => setSelectionMode(null)}
+        mode={selectionMode ?? "merge"}
+        templateName={template.name}
+        categories={template.categories}
+        onConfirm={handleSelectionConfirm}
       />
 
       {/* Confirm delete */}

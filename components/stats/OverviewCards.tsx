@@ -7,6 +7,7 @@ interface OverviewCardsProps {
   totalXp: number;
   streak: number;
   activeDays: number;
+  totalTrackedDays: number;
   overallRate: number;
 }
 
@@ -14,25 +15,27 @@ interface StatCardProps {
   icon: React.ReactNode;
   label: string;
   value: string;
+  subLabel?: string;
   accent: string;
   delay: number;
 }
 
-function StatCard({ icon, label, value, accent, delay }: StatCardProps) {
+function StatCard({ icon, label, value, subLabel, accent, delay }: StatCardProps) {
   return (
     <motion.div
-      className={`flex flex-col items-center gap-2 rounded-2xl border border-theme-border bg-theme-card p-4`}
+      className="flex flex-col items-center gap-2 rounded-2xl border border-theme-border bg-theme-card p-4"
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay, duration: 0.3, type: "spring", stiffness: 200 }}
     >
-      <div
-        className={`flex h-10 w-10 items-center justify-center rounded-xl ${accent}`}
-      >
+      <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${accent}`}>
         {icon}
       </div>
       <span className="text-xl font-bold text-theme-primary">{value}</span>
-      <span className="text-[11px] text-theme-secondary">{label}</span>
+      <span className="text-[11px] text-theme-secondary text-center">{label}</span>
+      {subLabel && (
+        <span className="text-[10px] text-theme-secondary/60">{subLabel}</span>
+      )}
     </motion.div>
   );
 }
@@ -41,14 +44,19 @@ export default function OverviewCards({
   totalXp,
   streak,
   activeDays,
+  totalTrackedDays,
   overallRate,
 }: OverviewCardsProps) {
+  const activeDaysLabel = totalTrackedDays > 0
+    ? `${activeDays}/${totalTrackedDays}`
+    : `${activeDays}`;
+
   return (
     <div className="grid grid-cols-2 gap-3">
       <StatCard
         icon={<Sparkles className="h-5 w-5 text-amber-400" />}
         label="إجمالي النقاط"
-        value={`${totalXp}`}
+        value={`${totalXp.toLocaleString()}`}
         accent="bg-amber-500/10"
         delay={0}
       />
@@ -62,7 +70,7 @@ export default function OverviewCards({
       <StatCard
         icon={<CalendarDays className="h-5 w-5 text-emerald-400" />}
         label="أيام نشطة"
-        value={`${activeDays}/30`}
+        value={activeDaysLabel}
         accent="bg-emerald-500/10"
         delay={0.1}
       />

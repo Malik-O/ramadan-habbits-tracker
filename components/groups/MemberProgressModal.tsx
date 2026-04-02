@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { X, Check, Minus } from "lucide-react";
+import { X, Check, Minus, ChevronLeft, ChevronRight } from "lucide-react";
 import type { MemberProgressResponse, GroupCategory } from "@/services/api";
 import { getIconComponent } from "@/utils/iconMap";
-import { TOTAL_DAYS } from "@/constants/habits";
+import { RAMADAN_START_DATE } from "@/constants/habits";
+import { getMonthCells, addMonths, formatMonthLabel } from "@/utils/calendar";
 
 // ─── Types ───────────────────────────────────────────────────────
 
@@ -15,6 +16,19 @@ interface MemberProgressModalProps {
   memberUid: string;
   getMemberProgress: (memberUid: string) => Promise<MemberProgressResponse | null>;
   onClose: () => void;
+}
+
+// ─── Date utils ──────────────────────────────────────────────────
+
+function getDayDate(dayIndex: number): Date {
+  const d = new Date(RAMADAN_START_DATE);
+  d.setDate(d.getDate() + dayIndex);
+  d.setHours(12, 0, 0, 0);
+  return d;
+}
+
+function toDateKey(date: Date) {
+  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
 }
 
 // ─── Component ───────────────────────────────────────────────────
@@ -109,50 +123,151 @@ function DayByDayProgress({
   categories: GroupCategory[];
   dayMap: Record<number, Record<string, boolean | number>>;
 }) {
-  const allHabits = categories.flatMap((cat) =>
-    cat.items.map((item) => ({
-      ...item,
-      categoryName: cat.name,
-      categoryIcon: cat.icon,
-    }))
+  const [viewDate, setViewDate] = useState<Date>(() => {
+    const d = new Date(RAMADAN_START_DATE);
+    d.setDate(1);
+    d.setHours(12, 0, 0, 0);
+    return d;
+  });
+  const [isHijri, setIsHijri] = useState(false);
+
+  const allHabits = useMemo(
+    () =>
+      categories.flatMap((cat) =>
+        cat.items.map((item) => ({
+          ...item,
+          categoryName: cat.name,
+          categoryIcon: cat.icon,
+        }))
+      ),
+    [categories]
   );
 
-  // Show days that have any data, plus today
-  const today = Math.min(
-    Math.floor(
-      (Date.now() - new Date("2026-02-18T00:00:00").getTime()) /
-        (1000 * 60 * 60 * 24)
-    ),
-    TOTAL_DAYS - 1
-  );
+  // Build dayIndex → dateKey lookup
+  const dayIndexByDateKey = useMemo<Map<string, number>>(() => {
+    const map = new Map<string, number>();
+    for (const rawKey of Object.keys(dayMap)) {
+      const idx = Number(rawKey);
+      map.set(toDateKey(getDayDate(idx)), idx);
+    }
+    return map;
+  }, [dayMap]);
 
-  const daysToShow = Array.from(
-    new Set([
-      ...Object.keys(dayMap).map(Number),
-      today,
-    ])
-  )
-    .filter((d) => d >= 0 && d < TOTAL_DAYS)
-    .sort((a, b) => b - a); // newest first
+  // Calendar cells for current month view (Hijri-aware)
+  const cells = useMemo(() => {
+    const baseCells = getMonthCells(viewDate, isHijri);
+    return baseCells.map((c) => {
+      const dayIndex = dayIndexByDateKey.get(toDateKey(c.date));
+      return { ...c, dayIndex };
+    });
+  }, [viewDate, isHijri, dayIndexByDateKey]);
+
+  // All recorded day indices (for the detail list below)
+  const recordedDays = useMemo(() => {
+    return Object.keys(dayMap)
+      .map(Number)
+      .sort((a, b) => b - a);
+  }, [dayMap]);
+
+  const prevMonth = () => setViewDate((d) => addMonths(d, -1, isHijri));
+  const nextMonth = () => setViewDate((d) => addMonths(d, 1, isHijri));
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-4">
       {/* Summary cards per category */}
       {categories.map((cat) => (
         <CategorySummary
           key={cat.categoryId}
           category={cat}
           dayMap={dayMap}
-          totalDays={daysToShow.length}
         />
       ))}
 
-      {/* Day-by-day detail */}
-      <h4 className="mt-2 text-xs font-semibold text-theme-secondary">
+      {/* ── Month heatmap grid ── */}
+      <div className="rounded-2xl border border-theme-border bg-theme-card/50 p-3">
+        {/* Month nav row */}
+        <div className="mb-2 flex items-center gap-1.5">
+          <h4 className="flex-1 text-xs font-semibold text-theme-secondary">
+            الأداء اليومي
+          </h4>
+
+          {/* Hijri toggle */}
+          <button
+            onClick={() => setIsHijri((h) => !h)}
+            className={`cursor-pointer rounded-lg px-2 py-0.5 text-[10px] font-bold transition-all ${
+              isHijri
+                ? "bg-amber-500 text-white"
+                : "bg-theme-subtle text-theme-secondary hover:bg-theme-border"
+            }`}
+          >
+            {isHijri ? "هجري" : "ميلادي"}
+          </button>
+
+          <button
+            onClick={prevMonth}
+            className="cursor-pointer flex h-5 w-5 items-center justify-center rounded-md bg-theme-subtle text-theme-secondary transition-colors hover:bg-theme-border"
+          >
+            <ChevronRight className="h-3 w-3" />
+          </button>
+          <span className="min-w-[72px] text-center text-[9px] text-theme-secondary">
+            {formatMonthLabel(viewDate, isHijri)}
+          </span>
+          <button
+            onClick={nextMonth}
+            className="cursor-pointer flex h-5 w-5 items-center justify-center rounded-md bg-theme-subtle text-theme-secondary transition-colors hover:bg-theme-border"
+          >
+            <ChevronLeft className="h-3 w-3" />
+          </button>
+        </div>
+
+        {/* Grid */}
+        <div className="grid grid-cols-10 gap-1" dir="ltr">
+          {cells.map(({ date, dayNum, dayIndex }, i) => {
+            const dayData = dayIndex !== undefined ? dayMap[dayIndex] ?? {} : null;
+            const completed = dayData
+              ? allHabits.filter((h) => {
+                  const val = dayData[h.id];
+                  return val === true || (typeof val === "number" && val > 0);
+                }).length
+              : 0;
+            const total = allHabits.length;
+            const ratio = dayData && total > 0 ? completed / total : -1;
+
+            return (
+              <motion.div
+                key={toDateKey(date)}
+                className={`flex aspect-square items-center justify-center rounded-lg transition-colors ${
+                  ratio === -1
+                    ? "bg-theme-subtle/40"
+                    : ratio === 0
+                      ? "bg-red-500/10"
+                      : ratio < 0.5
+                        ? "bg-emerald-500/20"
+                        : ratio < 1
+                          ? "bg-emerald-500/60"
+                          : "bg-emerald-500"
+                }`}
+                style={{ opacity: ratio === -1 ? 0.25 : 1 }}
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: ratio === -1 ? 0.25 : 1, scale: 1 }}
+                transition={{ delay: i * 0.01, duration: 0.15 }}
+                title={dayData ? `${dayNum}: ${completed}/${total}` : undefined}
+              >
+                <span className="text-[8px] font-medium text-theme-secondary">
+                  {dayNum}
+                </span>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── Day-by-day detail ── */}
+      <h4 className="text-xs font-semibold text-theme-secondary">
         التفاصيل اليومية
       </h4>
 
-      {daysToShow.map((dayIndex) => {
+      {recordedDays.map((dayIndex) => {
         const dayData = dayMap[dayIndex] || {};
         const completed = allHabits.filter((h) => {
           const val = dayData[h.id];
@@ -214,15 +329,12 @@ function DayByDayProgress({
 function CategorySummary({
   category,
   dayMap,
-  totalDays,
 }: {
   category: GroupCategory;
   dayMap: Record<number, Record<string, boolean | number>>;
-  totalDays: number;
 }) {
   const IconComponent = getIconComponent(category.icon);
 
-  // Calculate completion across all days
   let totalCompleted = 0;
   let totalPossible = 0;
 
@@ -252,7 +364,11 @@ function CategorySummary({
           <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-theme-subtle">
             <motion.div
               className={`h-full rounded-full ${
-                rate >= 80 ? "bg-emerald-500" : rate >= 50 ? "bg-amber-500" : "bg-theme-secondary"
+                rate >= 80
+                  ? "bg-emerald-500"
+                  : rate >= 50
+                    ? "bg-amber-500"
+                    : "bg-theme-secondary"
               }`}
               initial={{ width: 0 }}
               animate={{ width: `${rate}%` }}
@@ -298,10 +414,7 @@ function ProgressSkeleton() {
   return (
     <div className="flex flex-col gap-3">
       {[1, 2, 3].map((i) => (
-        <div
-          key={i}
-          className="h-16 animate-pulse rounded-xl bg-theme-subtle"
-        />
+        <div key={i} className="h-16 animate-pulse rounded-xl bg-theme-subtle" />
       ))}
     </div>
   );

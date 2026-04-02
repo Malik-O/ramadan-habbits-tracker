@@ -6,7 +6,7 @@ import { ChevronDown } from "lucide-react";
 import type { HabitCategory } from "@/constants/habits";
 import type { TrackerState } from "@/hooks/useHabitTracker";
 import { isHabitCompleted } from "@/hooks/useHabitTracker";
-import { TOTAL_DAYS } from "@/constants/habits";
+
 import HabitDetailModal from "./HabitDetailModal";
 
 interface CategoryStat {
@@ -150,11 +150,10 @@ interface HabitStatRowProps {
 }
 
 function HabitStatRow({ label, habitId, trackerState, onSelect }: HabitStatRowProps) {
-  // Count days this habit was completed
+  // Count days this habit was completed across all tracked days
   let completed = 0;
   let totalActive = 0;
-  for (let d = 0; d < TOTAL_DAYS; d++) {
-    const record = trackerState[d];
+  for (const record of Object.values(trackerState)) {
     if (record) {
       totalActive++;
       if (isHabitCompleted(record[habitId])) {

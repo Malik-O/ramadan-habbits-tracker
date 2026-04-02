@@ -540,6 +540,18 @@ export function useTemplate(
   });
 }
 
+/** Apply a template on the server (merge or replace) and return updated user categories */
+export function applyTemplate(
+  templateId: string,
+  mode: "merge" | "replace",
+  selectedItems: Record<string, string[]>
+): Promise<{ categories: SyncCategoryPayload[] }> {
+  return apiFetch<{ categories: SyncCategoryPayload[] }>(`/templates/${templateId}/apply`, {
+    method: "POST",
+    body: JSON.stringify({ mode, selectedItems }),
+  });
+}
+
 /** Delete a template (author only) */
 export function deleteTemplate(
   templateId: string

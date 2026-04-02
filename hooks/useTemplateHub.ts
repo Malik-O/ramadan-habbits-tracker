@@ -5,6 +5,7 @@ import {
   listTemplates,
   createTemplate,
   useTemplate,
+  applyTemplate,
   deleteTemplate,
   type TemplateResponse,
   type TemplateCategory,
@@ -12,6 +13,7 @@ import {
 import { useCustomHabits } from "./useCustomHabits";
 import { getAuthToken } from "@/services/api";
 import type { HabitCategory, HabitRepeat } from "@/constants/habits";
+import type { SelectionMap } from "@/components/manage/TemplateSelectionModal";
 
 // ─── Constants ───────────────────────────────────────────────────
 
@@ -29,8 +31,8 @@ interface UseTemplateHubReturn {
   fetchTemplates: (search?: string) => Promise<void>;
   loadMore: () => Promise<void>;
   publishTemplate: (name: string, description: string) => Promise<void>;
-  mergeTemplate: (template: TemplateResponse) => Promise<void>;
-  replaceWithTemplate: (template: TemplateResponse) => Promise<void>;
+  mergeTemplate: (template: TemplateResponse, selection: SelectionMap) => Promise<void>;
+  replaceWithTemplate: (template: TemplateResponse, selection: SelectionMap) => Promise<void>;
   removeTemplate: (templateId: string) => Promise<void>;
 }
 
@@ -132,57 +134,80 @@ export function useTemplateHub(): UseTemplateHubReturn {
     [categories]
   );
 
-  /** Convert template categories to local HabitCategory format with fresh IDs */
-  const convertTemplateToLocal = useCallback(
-    (template: TemplateResponse): HabitCategory[] =>
-      template.categories.map((tCat) => ({
-        id: generateMergeId(),
-        name: tCat.name,
-        icon: tCat.icon,
-        items: tCat.items.map((tItem) => ({
-          id: generateMergeId(),
-          label: tItem.label,
-          type: tItem.type,
-          repeat: (tItem.repeat as HabitRepeat) || "daily",
-          repeatDays: tItem.repeatDays,
-          repeatMonthDay: tItem.repeatMonthDay,
-          repeatMonthHijri: tItem.repeatMonthHijri,
-          repeatYearlyDate: tItem.repeatYearlyDate,
-          repeatYearlyHijri: tItem.repeatYearlyHijri,
-          repeatEndDate: tItem.repeatEndDate,
-        })),
-      })),
-    []
-  );
+  const mapSelectionToPayload = (selection: SelectionMap) => {
+    const result: Record<string, string[]> = {};
+    for (const [key, set] of Object.entries(selection)) {
+      result[key] = Array.from(set);
+    }
+    return result;
+  };
 
   const mergeTemplate = useCallback(
-    async (template: TemplateResponse) => {
+    async (template: TemplateResponse, selection: SelectionMap) => {
       setError(null);
       try {
-        await useTemplate(template._id);
-        const newCategories = convertTemplateToLocal(template);
-        setCategories((prev: HabitCategory[]) => [...prev, ...newCategories]);
+        const payload = mapSelectionToPayload(selection);
+        const res = await applyTemplate(template._id, "merge", payload);
+        
+        const newCategoriesServer = res.categories.map((c) => ({
+          id: c.categoryId,
+          name: c.name,
+          icon: c.icon,
+          items: c.items.map((item) => ({
+            id: item.id,
+            label: item.label,
+            type: item.type as "boolean" | "number",
+            repeat: (item.repeat as HabitRepeat) || "daily",
+            repeatDays: item.repeatDays,
+            repeatMonthDay: item.repeatMonthDay,
+            repeatMonthHijri: item.repeatMonthHijri,
+            repeatYearlyDate: item.repeatYearlyDate,
+            repeatYearlyHijri: item.repeatYearlyHijri,
+            repeatEndDate: item.repeatEndDate,
+          })),
+        }));
+        
+        setCategories(() => newCategoriesServer);
       } catch (err: any) {
         setError(err.message || "فشل دمج القالب");
         throw err;
       }
     },
-    [setCategories, convertTemplateToLocal]
+    [setCategories]
   );
 
   const replaceWithTemplate = useCallback(
-    async (template: TemplateResponse) => {
+    async (template: TemplateResponse, selection: SelectionMap) => {
       setError(null);
       try {
-        await useTemplate(template._id);
-        const newCategories = convertTemplateToLocal(template);
-        setCategories(() => newCategories);
+        const payload = mapSelectionToPayload(selection);
+        const res = await applyTemplate(template._id, "replace", payload);
+        
+        const newCategoriesServer = res.categories.map((c) => ({
+          id: c.categoryId,
+          name: c.name,
+          icon: c.icon,
+          items: c.items.map((item) => ({
+            id: item.id,
+            label: item.label,
+            type: item.type as "boolean" | "number",
+            repeat: (item.repeat as HabitRepeat) || "daily",
+            repeatDays: item.repeatDays,
+            repeatMonthDay: item.repeatMonthDay,
+            repeatMonthHijri: item.repeatMonthHijri,
+            repeatYearlyDate: item.repeatYearlyDate,
+            repeatYearlyHijri: item.repeatYearlyHijri,
+            repeatEndDate: item.repeatEndDate,
+          })),
+        }));
+        
+        setCategories(() => newCategoriesServer);
       } catch (err: any) {
         setError(err.message || "فشل استبدال العبادات");
         throw err;
       }
     },
-    [setCategories, convertTemplateToLocal]
+    [setCategories]
   );
 
   const removeTemplate = useCallback(

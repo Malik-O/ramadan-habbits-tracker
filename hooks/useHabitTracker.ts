@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useEffect } from "react";
-import { XP_PER_HABIT, TOTAL_DAYS, RAMADAN_START_DATE, type HabitCategory } from "@/constants/habits";
+import { XP_PER_HABIT, RAMADAN_START_DATE, type HabitCategory } from "@/constants/habits";
 import { getRamadanDay } from "@/utils/date";
 import { useLocalStorage } from "./useLocalStorage";
 import { useState } from "react";
@@ -136,11 +136,11 @@ export function useHabitTracker(categories: HabitCategory[]): UseHabitTrackerRet
   // Today's progress (0–1)
   const todayProgress = totalHabits > 0 ? completedHabits / totalHabits : 0;
 
-  // Total XP across all days
+  // Total XP across all recorded days
   const totalXp = useMemo(() => {
     let total = 0;
-    for (let d = 0; d < TOTAL_DAYS; d++) {
-      total += countCompletedInDay(trackerState[d]) * XP_PER_HABIT;
+    for (const record of Object.values(trackerState)) {
+      total += countCompletedInDay(record) * XP_PER_HABIT;
     }
     return total;
   }, [trackerState]);

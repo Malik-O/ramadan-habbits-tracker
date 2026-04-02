@@ -1,10 +1,13 @@
 "use client";
 
+import { useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Check, Minus } from "lucide-react";
-import { TOTAL_DAYS } from "@/constants/habits";
+import { X } from "lucide-react";
 import type { TrackerState } from "@/hooks/useHabitTracker";
 import { isHabitCompleted } from "@/hooks/useHabitTracker";
+import DailyHeatmap from "./DailyHeatmap";
+
+// ─── Types ───────────────────────────────────────────────────────
 
 interface HabitDetailModalProps {
   isOpen: boolean;
@@ -14,6 +17,8 @@ interface HabitDetailModalProps {
   onClose: () => void;
 }
 
+// ─── Component ───────────────────────────────────────────────────
+
 export default function HabitDetailModal({
   isOpen,
   label,
@@ -21,29 +26,52 @@ export default function HabitDetailModal({
   trackerState,
   onClose,
 }: HabitDetailModalProps) {
-  // Compute daily status for this habit
-  const dailyStatus = Array.from({ length: TOTAL_DAYS }, (_, d) => {
-    const record = trackerState[d];
-    if (!record) return { completed: false, value: undefined as (boolean | number | undefined) };
-    const val = record[habitId];
-    return { completed: isHabitCompleted(val), value: val };
-  });
+  // Build daily completions for this specific habit using the exact same day index format DailyHeatmap expects
+  const dailyCompletions = useMemo(() => {
+    const completions: { day: number; value: number }[] = [];
+    for (const [dayKey, record] of Object.entries(trackerState)) {
+      const day = Number(dayKey);
+      if (!isNaN(day) && record) {
+        const val = record[habitId];
+        if (val !== undefined) {
+          completions.push({
+            day,
+            value: isHabitCompleted(val) ? 1 : 0,
+          });
+        }
+      }
+    }
+    return completions;
+  }, [trackerState, habitId]);
 
-  const completedDays = dailyStatus.filter((d) => d.completed).length;
-  const activeDays = dailyStatus.filter((d) => d.value !== undefined).length;
+  const completedDays = useMemo(
+    () => dailyCompletions.filter((c) => c.value === 1).length,
+    [dailyCompletions]
+  );
+  
+  const activeDays = dailyCompletions.length;
   const rate = activeDays > 0 ? completedDays / activeDays : 0;
 
-  // Find best streak
-  let bestStreak = 0;
-  let currentStreak = 0;
-  for (const day of dailyStatus) {
-    if (day.completed) {
-      currentStreak++;
-      bestStreak = Math.max(bestStreak, currentStreak);
-    } else {
-      currentStreak = 0;
+  // Best streak across the entire tracker for this specific habit
+  const bestStreak = useMemo(() => {
+    const allDayIndices = Object.keys(trackerState)
+      .map(Number)
+      .sort((a, b) => a - b);
+    let best = 0;
+    let cur = 0;
+    let prev = -2;
+    for (const d of allDayIndices) {
+      const record = trackerState[d];
+      if (isHabitCompleted(record?.[habitId])) {
+        cur = d === prev + 1 ? cur + 1 : 1;
+        best = Math.max(best, cur);
+      } else {
+        cur = 0;
+      }
+      prev = d;
     }
-  }
+    return best;
+  }, [trackerState, habitId]);
 
   return (
     <AnimatePresence>
@@ -65,17 +93,18 @@ export default function HabitDetailModal({
 
           {/* Modal */}
           <motion.div
-            className="relative z-10 w-full max-w-sm rounded-t-3xl border border-theme-border bg-theme-card p-5 shadow-2xl sm:rounded-3xl"
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
+            className="relative w-full max-w-full rounded-t-3xl border border-theme-border bg-theme-bg p-5 shadow-2xl sm:max-w-sm sm:rounded-3xl"
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
           >
+            {/* Handle for mobile */}
+            <div className="absolute left-1/2 top-2 h-1 w-12 -translate-x-1/2 rounded-full bg-theme-border sm:hidden" />
+
             {/* Header */}
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-base font-semibold text-theme-primary">
-                {label}
-              </h3>
+            <div className="mb-4 mt-2 flex items-center justify-between">
+              <h3 className="text-base font-semibold text-theme-primary">{label}</h3>
               <button
                 onClick={onClose}
                 className="cursor-pointer flex h-8 w-8 items-center justify-center rounded-full bg-theme-subtle transition-colors hover:bg-theme-border"
@@ -91,70 +120,9 @@ export default function HabitDetailModal({
               <MiniStat label="أفضل تتالي" value={`${bestStreak}`} />
             </div>
 
-            {/* Day-by-day grid */}
-            <div className="mb-2">
-              <p className="mb-2 text-xs font-medium text-theme-secondary">
-                الأداء اليومي
-              </p>
-              <div className="grid grid-cols-10 gap-1.5" dir="ltr">
-                {dailyStatus.map((day, i) => (
-                  <motion.div
-                    key={i}
-                    className={`flex aspect-square items-center justify-center rounded-lg transition-colors ${
-                      day.completed
-                        ? "bg-emerald-500/20"
-                        : day.value !== undefined
-                          ? "bg-red-500/10"
-                          : "bg-theme-subtle"
-                    }`}
-                    initial={{ opacity: 0, scale: 0 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: i * 0.015, duration: 0.15 }}
-                  >
-                    {day.completed ? (
-                      <Check className="h-3 w-3 text-emerald-400" />
-                    ) : day.value !== undefined ? (
-                      <Minus className="h-3 w-3 text-red-400/60" />
-                    ) : (
-                      <span className="text-[8px] text-theme-secondary/40">
-                        {i + 1}
-                      </span>
-                    )}
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-
-            {/* Bar chart — completion by day */}
-            <div className="mt-4">
-              <p className="mb-2 text-xs font-medium text-theme-secondary">
-                مخطط الأيام
-              </p>
-              <div className="flex items-end gap-[3px]" dir="ltr" style={{ height: 64 }}>
-                {dailyStatus.map((day, i) => {
-                  const barValue = day.completed ? 1 : day.value !== undefined ? 0.15 : 0.05;
-                  return (
-                    <motion.div
-                      key={i}
-                      className={`flex-1 rounded-t transition-colors ${
-                        day.completed
-                          ? "bg-emerald-500/70"
-                          : day.value !== undefined
-                            ? "bg-red-500/20"
-                            : "bg-theme-subtle"
-                      }`}
-                      initial={{ height: 0 }}
-                      animate={{ height: `${barValue * 100}%` }}
-                      transition={{ delay: i * 0.02, duration: 0.3, ease: "easeOut" }}
-                    />
-                  );
-                })}
-              </div>
-              <div className="mt-1 flex justify-between" dir="ltr">
-                <span className="text-[9px] text-theme-secondary/50">1</span>
-                <span className="text-[9px] text-theme-secondary/50">15</span>
-                <span className="text-[9px] text-theme-secondary/50">30</span>
-              </div>
+            {/* Reused generic DailyHeatmap */}
+            <div className="-mx-1">
+              <DailyHeatmap dailyCompletions={dailyCompletions} />
             </div>
           </motion.div>
         </motion.div>
@@ -162,6 +130,8 @@ export default function HabitDetailModal({
     </AnimatePresence>
   );
 }
+
+// ─── MiniStat ────────────────────────────────────────────────────
 
 function MiniStat({ label, value }: { label: string; value: string }) {
   return (

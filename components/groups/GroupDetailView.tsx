@@ -15,9 +15,11 @@ import {
 } from "lucide-react";
 import type { GroupResponse, GroupLeaderboardEntry } from "@/services/api";
 import { useGroupLeaderboard } from "@/hooks/useGroupLeaderboard";
+import { useAuth } from "@/hooks/useAuth";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import GroupLeaderboardRow from "./GroupLeaderboardRow";
 import MemberProgressModal from "./MemberProgressModal";
+import GroupTopThreePodium from "./GroupTopThreePodium";
 
 // ─── Types ───────────────────────────────────────────────────────
 
@@ -40,6 +42,7 @@ export default function GroupDetailView({
 }: GroupDetailViewProps) {
   const { entries, isLoading, error, getMemberProgress } =
     useGroupLeaderboard(group._id);
+  const { user } = useAuth();
 
   const [copiedCode, setCopiedCode] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -196,6 +199,16 @@ export default function GroupDetailView({
           </div>
         ) : (
           <div className="flex flex-col">
+            {/* Top-3 podium — only when group has more than 4 members */}
+            {entries.length > 4 && (
+              <>
+                <GroupTopThreePodium
+                  entries={entries}
+                  currentUserUid={user?.uid ?? null}
+                />
+                <div className="mx-4 my-3 border-t border-theme-border" />
+              </>
+            )}
             {entries.map((entry) => (
               <GroupLeaderboardRow
                 key={entry.uid}
