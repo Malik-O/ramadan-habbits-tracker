@@ -106,13 +106,7 @@ function PodiumCard({ entry, isCurrentUser, position }: PodiumCardProps) {
         {entry.displayName}
       </p>
 
-      {/* XP */}
-      <div className="flex items-center gap-1">
-        <Star className="h-3 w-3 text-amber-400" />
-        <span className="text-xs font-bold text-amber-500">
-          {entry.totalXp.toLocaleString()}
-        </span>
-      </div>
+
 
       {/* Streak */}
       {entry.streak > 0 && (

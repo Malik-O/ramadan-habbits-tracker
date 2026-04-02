@@ -28,8 +28,6 @@ export interface UseHabitTrackerReturn {
   toggleHabit: (habitId: string) => void;
   setHabitValue: (habitId: string, value: number) => void;
   getHabitValue: (habitId: string) => HabitValue;
-  totalXp: number;
-  todayXp: number;
   todayProgress: number;
   streak: number;
   blockCompletion: Record<string, boolean>;
@@ -43,15 +41,18 @@ export function isHabitCompleted(value: HabitValue | undefined): boolean {
   return value > 0;
 }
 
-function countCompletedInDay(dayRecord: DayRecord | undefined): number {
+function countCompletedInDay(dayRecord: DayRecord | undefined, validHabitIds?: Set<string>): number {
   if (!dayRecord) return 0;
-  return Object.values(dayRecord).filter(isHabitCompleted).length;
+  return Object.entries(dayRecord).filter(([id, val]) => {
+    if (validHabitIds && !validHabitIds.has(id)) return false;
+    return isHabitCompleted(val);
+  }).length;
 }
 
-function computeStreak(state: TrackerState, currentDay: number): number {
+function computeStreak(state: TrackerState, currentDay: number, validHabitIds: Set<string>): number {
   let streak = 0;
   for (let d = currentDay; d >= 0; d--) {
-    if (countCompletedInDay(state[d]) > 0) {
+    if (countCompletedInDay(state[d], validHabitIds) > 0) {
       streak++;
     } else {
       break;
@@ -118,6 +119,13 @@ export function useHabitTracker(categories: HabitCategory[]): UseHabitTrackerRet
     [updateDayRecord]
   );
 
+  // Set of valid habit IDs to ignore removed habits
+  const validHabitIds = useMemo(() => {
+    const ids = new Set<string>();
+    categories.forEach((cat) => cat.items.forEach((item) => ids.add(item.id)));
+    return ids;
+  }, [categories]);
+
   // Total habits count
   const totalHabits = useMemo(
     () => categories.reduce((sum, cat) => sum + cat.items.length, 0),
@@ -126,29 +134,17 @@ export function useHabitTracker(categories: HabitCategory[]): UseHabitTrackerRet
 
   // Completed habits for current day
   const completedHabits = useMemo(
-    () => countCompletedInDay(dayRecord),
-    [dayRecord]
+    () => countCompletedInDay(dayRecord, validHabitIds),
+    [dayRecord, validHabitIds]
   );
-
-  // Today's XP
-  const todayXp = completedHabits * XP_PER_HABIT;
 
   // Today's progress (0–1)
   const todayProgress = totalHabits > 0 ? completedHabits / totalHabits : 0;
 
-  // Total XP across all recorded days
-  const totalXp = useMemo(() => {
-    let total = 0;
-    for (const record of Object.values(trackerState)) {
-      total += countCompletedInDay(record) * XP_PER_HABIT;
-    }
-    return total;
-  }, [trackerState]);
-
   // Streak
   const streak = useMemo(
-    () => computeStreak(trackerState, currentDay),
-    [trackerState, currentDay]
+    () => computeStreak(trackerState, currentDay, validHabitIds),
+    [trackerState, currentDay, validHabitIds]
   );
 
   // Block completion status (for confetti triggers)
@@ -173,8 +169,6 @@ export function useHabitTracker(categories: HabitCategory[]): UseHabitTrackerRet
     toggleHabit,
     setHabitValue,
     getHabitValue,
-    totalXp,
-    todayXp,
     todayProgress,
     streak,
     blockCompletion,

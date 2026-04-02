@@ -28,6 +28,12 @@ export function useHabitStats(
     [categories]
   );
 
+  const validHabitIds = useMemo(() => {
+    const ids = new Set<string>();
+    categories.forEach((cat) => cat.items.forEach((item) => ids.add(item.id)));
+    return ids;
+  }, [categories]);
+
   /** All day indices that have any recorded data (sorted ascending) */
   const trackedDayIndices = useMemo(() => {
     return Object.keys(trackerState)
@@ -41,13 +47,14 @@ export function useHabitStats(
 
   const totalTrackedDays = trackedDayIndices.length;
 
-  /** How many days the user has any completed habit */
+  /** How many days the user has any valid completed habit */
   const activeDays = useMemo(() => {
     return trackedDayIndices.filter((d) => {
       const record = trackerState[d];
-      return record && Object.values(record).some(isHabitCompleted);
+      if (!record) return false;
+      return Object.entries(record).some(([id, val]) => validHabitIds.has(id) && isHabitCompleted(val));
     }).length;
-  }, [trackedDayIndices, trackerState]);
+  }, [trackedDayIndices, trackerState, validHabitIds]);
 
   /** Overall completion rate across all tracked days */
   const overallRate = useMemo(() => {
@@ -57,12 +64,12 @@ export function useHabitStats(
     for (const d of trackedDayIndices) {
       const record = trackerState[d];
       if (record) {
-        totalCompleted += Object.values(record).filter(isHabitCompleted).length;
+        totalCompleted += Object.entries(record).filter(([id, val]) => validHabitIds.has(id) && isHabitCompleted(val)).length;
         totalPossible += totalHabits;
       }
     }
     return totalPossible > 0 ? totalCompleted / totalPossible : 0;
-  }, [trackedDayIndices, trackerState, totalHabits, totalTrackedDays]);
+  }, [trackedDayIndices, trackerState, totalHabits, totalTrackedDays, validHabitIds]);
 
   /** Per-category stats across all tracked days */
   const categoryStats = useMemo(() => {
@@ -90,10 +97,10 @@ export function useHabitStats(
     return trackedDayIndices.map((d) => {
       const record = trackerState[d];
       if (!record || totalHabits === 0) return { day: d, value: 0 };
-      const completed = Object.values(record).filter(isHabitCompleted).length;
+      const completed = Object.entries(record).filter(([id, val]) => validHabitIds.has(id) && isHabitCompleted(val)).length;
       return { day: d, value: completed / totalHabits };
     });
-  }, [trackedDayIndices, trackerState, totalHabits]);
+  }, [trackedDayIndices, trackerState, totalHabits, validHabitIds]);
 
   return {
     activeDays,

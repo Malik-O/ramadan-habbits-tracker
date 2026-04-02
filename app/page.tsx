@@ -44,8 +44,6 @@ export default function HomePage() {
     toggleHabit,
     setHabitValue,
     getHabitValue,
-    totalXp,
-    todayXp,
     todayProgress,
     streak,
     blockCompletion,
@@ -108,8 +106,6 @@ export default function HomePage() {
     <div className="mx-auto flex min-h-dvh max-w-md flex-col bg-theme-bg pb-20">
       {/* Sticky header */}
       <Header
-        todayXp={todayXp}
-        totalXp={totalXp}
         progress={todayProgress}
         streak={streak}
         completedHabits={completedHabits}

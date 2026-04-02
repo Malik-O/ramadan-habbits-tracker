@@ -12,7 +12,7 @@ import DailyHeatmap from "@/components/stats/DailyHeatmap";
 
 export default function StatsPage() {
   const { categories } = useCustomHabits();
-  const { trackerState, totalXp, streak } = useHabitTracker(categories);
+  const { trackerState, streak } = useHabitTracker(categories);
   const {
     activeDays,
     totalTrackedDays,
@@ -39,7 +39,6 @@ export default function StatsPage() {
         transition={{ duration: 0.25 }}
       >
         <OverviewCards
-          totalXp={totalXp}
           streak={streak}
           activeDays={activeDays}
           totalTrackedDays={totalTrackedDays}

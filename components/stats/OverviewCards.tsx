@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import { Sparkles, Flame, CalendarDays, Target } from "lucide-react";
 
 interface OverviewCardsProps {
-  totalXp: number;
   streak: number;
   activeDays: number;
   totalTrackedDays: number;
@@ -41,7 +40,6 @@ function StatCard({ icon, label, value, subLabel, accent, delay }: StatCardProps
 }
 
 export default function OverviewCards({
-  totalXp,
   streak,
   activeDays,
   totalTrackedDays,
@@ -53,13 +51,6 @@ export default function OverviewCards({
 
   return (
     <div className="grid grid-cols-2 gap-3">
-      <StatCard
-        icon={<Sparkles className="h-5 w-5 text-amber-400" />}
-        label="إجمالي النقاط"
-        value={`${totalXp.toLocaleString()}`}
-        accent="bg-amber-500/10"
-        delay={0}
-      />
       <StatCard
         icon={<Flame className="h-5 w-5 text-orange-400" />}
         label="أيام متتالية"

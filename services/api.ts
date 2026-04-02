@@ -268,7 +268,6 @@ export interface LeaderboardEntry {
   uid: string;
   displayName: string;
   photoURL: string | null;
-  totalXp: number;
   streak: number;
   completionRate: number;
 }

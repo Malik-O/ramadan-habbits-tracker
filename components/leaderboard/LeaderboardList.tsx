@@ -77,13 +77,6 @@ function LeaderboardRow({ entry, index, isCurrentUser }: LeaderboardRowProps) {
         )}
       </div>
 
-      {/* XP */}
-      <div className="flex items-center gap-1 rounded-full bg-amber-400/10 px-2.5 py-1">
-        <Star className="h-3 w-3 text-amber-400" />
-        <span className="text-xs font-bold text-amber-500">
-          {entry.totalXp.toLocaleString()}
-        </span>
-      </div>
     </motion.div>
   );
 }

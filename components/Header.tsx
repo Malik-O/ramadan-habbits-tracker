@@ -7,8 +7,6 @@ import ProgressRing from "./ProgressRing";
 import StreakBadge from "./StreakBadge";
 
 interface HeaderProps {
-  todayXp: number;
-  totalXp: number;
   progress: number;
   streak: number;
   completedHabits: number;
@@ -16,7 +14,6 @@ interface HeaderProps {
 }
 
 export default function Header({
-  todayXp,
   progress,
   streak,
   completedHabits,
@@ -30,15 +27,12 @@ export default function Header({
         {/* Progress ring */}
         <ProgressRing progress={progress} />
 
-        {/* XP & habit count */}
-        <div className="flex flex-col items-center gap-0.5">
-          <div className="flex items-center gap-1.5">
-            <Sparkles className="h-4 w-4 text-amber-500" />
-            <span className="text-lg font-bold text-amber-500">
-              {todayXp} XP
-            </span>
-          </div>
-          <span className="text-xs text-theme-secondary">
+        {/* Habit count */}
+        <div className="flex flex-col items-center justify-center">
+          <span className="text-sm font-bold text-theme-primary">
+            إنجاز اليوم
+          </span>
+          <span className="text-xs font-semibold text-theme-secondary mt-0.5">
             {completedHabits}/{totalHabits}
           </span>
         </div>
