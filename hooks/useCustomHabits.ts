@@ -31,8 +31,8 @@ export interface UseCustomHabitsReturn {
   updateCategory: (categoryId: string, name: string, icon: string) => void;
   removeCategory: (categoryId: string) => void;
   reorderCategories: (fromIndex: number, toIndex: number) => void;
-  addHabit: (categoryId: string, label: string, type: "boolean" | "number", schedule?: RepeatSchedule) => void;
-  updateHabit: (categoryId: string, habitId: string, label: string, type: "boolean" | "number", schedule?: RepeatSchedule) => void;
+  addHabit: (categoryId: string, label: string, type: "boolean" | "number", schedule?: RepeatSchedule, goal?: number) => void;
+  updateHabit: (categoryId: string, habitId: string, label: string, type: "boolean" | "number", schedule?: RepeatSchedule, goal?: number) => void;
   removeHabit: (categoryId: string, habitId: string) => void;
   resetToDefaults: () => void;
 }
@@ -99,11 +99,12 @@ export function useCustomHabits(): UseCustomHabitsReturn {
   );
 
   const addHabit = useCallback(
-    (categoryId: string, label: string, type: "boolean" | "number", schedule?: RepeatSchedule) => {
+    (categoryId: string, label: string, type: "boolean" | "number", schedule?: RepeatSchedule, goal?: number) => {
       const newHabit: HabitItem = {
         id: generateId(),
         label,
         type,
+        goal,
         repeat: schedule?.repeat || "daily",
         repeatDays: schedule?.repeatDays,
         repeatMonthDay: schedule?.repeatMonthDay,
@@ -124,7 +125,7 @@ export function useCustomHabits(): UseCustomHabitsReturn {
   );
 
   const updateHabit = useCallback(
-    (categoryId: string, habitId: string, label: string, type: "boolean" | "number", schedule?: RepeatSchedule) => {
+    (categoryId: string, habitId: string, label: string, type: "boolean" | "number", schedule?: RepeatSchedule, goal?: number) => {
       stampAndSet((prev) =>
         prev.map((cat) =>
           cat.id === categoryId
@@ -136,6 +137,7 @@ export function useCustomHabits(): UseCustomHabitsReturn {
                         ...item,
                         label,
                         type,
+                        goal,
                         repeat: schedule?.repeat || "daily",
                         repeatDays: schedule?.repeatDays,
                         repeatMonthDay: schedule?.repeatMonthDay,

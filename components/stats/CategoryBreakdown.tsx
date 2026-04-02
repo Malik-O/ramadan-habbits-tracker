@@ -28,6 +28,7 @@ export default function CategoryBreakdown({
   const [selectedHabit, setSelectedHabit] = useState<{
     id: string;
     label: string;
+    goal?: number;
   } | null>(null);
 
   return (
@@ -53,6 +54,7 @@ export default function CategoryBreakdown({
         isOpen={!!selectedHabit}
         label={selectedHabit?.label ?? ""}
         habitId={selectedHabit?.id ?? ""}
+        goal={selectedHabit?.goal}
         trackerState={trackerState}
         onClose={() => setSelectedHabit(null)}
       />
@@ -63,7 +65,7 @@ export default function CategoryBreakdown({
 interface CategoryStatRowProps {
   stat: CategoryStat;
   trackerState: TrackerState;
-  onSelectHabit: (habit: { id: string; label: string }) => void;
+  onSelectHabit: (habit: { id: string; label: string; goal?: number }) => void;
 }
 
 function CategoryStatRow({ stat, trackerState, onSelectHabit }: CategoryStatRowProps) {
@@ -128,9 +130,10 @@ function CategoryStatRow({ stat, trackerState, onSelectHabit }: CategoryStatRowP
                   key={item.id}
                   label={item.label}
                   habitId={item.id}
+                  goal={item.type === "number" ? item.goal : undefined}
                   trackerState={trackerState}
                   onSelect={() =>
-                    onSelectHabit({ id: item.id, label: item.label })
+                    onSelectHabit({ id: item.id, label: item.label, goal: item.type === "number" ? item.goal : undefined })
                   }
                 />
               ))}
@@ -145,18 +148,19 @@ function CategoryStatRow({ stat, trackerState, onSelectHabit }: CategoryStatRowP
 interface HabitStatRowProps {
   label: string;
   habitId: string;
+  goal?: number;
   trackerState: TrackerState;
   onSelect: () => void;
 }
 
-function HabitStatRow({ label, habitId, trackerState, onSelect }: HabitStatRowProps) {
+function HabitStatRow({ label, habitId, goal, trackerState, onSelect }: HabitStatRowProps) {
   // Count days this habit was completed across all tracked days
   let completed = 0;
   let totalActive = 0;
   for (const record of Object.values(trackerState)) {
     if (record) {
       totalActive++;
-      if (isHabitCompleted(record[habitId])) {
+      if (isHabitCompleted(record[habitId], goal)) {
         completed++;
       }
     }

@@ -35,17 +35,21 @@ export interface UseHabitTrackerReturn {
   completedHabits: number;
 }
 
-export function isHabitCompleted(value: HabitValue | undefined): boolean {
+export function isHabitCompleted(value: HabitValue | undefined, goal?: number): boolean {
   if (value === undefined) return false;
   if (typeof value === "boolean") return value;
-  return value > 0;
+  return goal ? value >= goal : value > 0;
 }
 
-function countCompletedInDay(dayRecord: DayRecord | undefined, validHabitIds?: Set<string>): number {
+function countCompletedInDay(
+  dayRecord: DayRecord | undefined,
+  validHabitIds?: Set<string>,
+  goalMap?: Map<string, number>
+): number {
   if (!dayRecord) return 0;
   return Object.entries(dayRecord).filter(([id, val]) => {
     if (validHabitIds && !validHabitIds.has(id)) return false;
-    return isHabitCompleted(val);
+    return isHabitCompleted(val, goalMap?.get(id));
   }).length;
 }
 
@@ -126,16 +130,27 @@ export function useHabitTracker(categories: HabitCategory[]): UseHabitTrackerRet
     return ids;
   }, [categories]);
 
+  // Goal map: habitId → goal (only for number habits that have a goal set)
+  const goalMap = useMemo(() => {
+    const map = new Map<string, number>();
+    categories.forEach((cat) =>
+      cat.items.forEach((item) => {
+        if (item.type === "number" && item.goal) map.set(item.id, item.goal);
+      })
+    );
+    return map;
+  }, [categories]);
+
   // Total habits count
   const totalHabits = useMemo(
     () => categories.reduce((sum, cat) => sum + cat.items.length, 0),
     [categories]
   );
 
-  // Completed habits for current day
+  // Completed habits for current day (goal-aware)
   const completedHabits = useMemo(
-    () => countCompletedInDay(dayRecord, validHabitIds),
-    [dayRecord, validHabitIds]
+    () => countCompletedInDay(dayRecord, validHabitIds, goalMap),
+    [dayRecord, validHabitIds, goalMap]
   );
 
   // Today's progress (0–1)
@@ -147,17 +162,17 @@ export function useHabitTracker(categories: HabitCategory[]): UseHabitTrackerRet
     [trackerState, currentDay, validHabitIds]
   );
 
-  // Block completion status (for confetti triggers)
+  // Block completion status — goal-aware (drives confetti + green block header)
   const blockCompletion = useMemo(() => {
     const result: Record<string, boolean> = {};
     for (const category of categories) {
       const allCompleted = category.items.every((item) =>
-        isHabitCompleted(dayRecord[item.id])
+        isHabitCompleted(dayRecord[item.id], goalMap.get(item.id))
       );
       result[category.id] = allCompleted;
     }
     return result;
-  }, [dayRecord, categories]);
+  }, [dayRecord, categories, goalMap]);
 
   return {
     currentDay,

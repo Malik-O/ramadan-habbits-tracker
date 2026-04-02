@@ -45,9 +45,6 @@ export default function OverviewCards({
   totalTrackedDays,
   overallRate,
 }: OverviewCardsProps) {
-  const activeDaysLabel = totalTrackedDays > 0
-    ? `${activeDays}/${totalTrackedDays}`
-    : `${activeDays}`;
 
   return (
     <div className="grid grid-cols-2 gap-3">
@@ -57,13 +54,6 @@ export default function OverviewCards({
         value={`${streak}`}
         accent="bg-orange-500/10"
         delay={0.05}
-      />
-      <StatCard
-        icon={<CalendarDays className="h-5 w-5 text-emerald-400" />}
-        label="أيام نشطة"
-        value={activeDaysLabel}
-        accent="bg-emerald-500/10"
-        delay={0.1}
       />
       <StatCard
         icon={<Target className="h-5 w-5 text-sky-400" />}

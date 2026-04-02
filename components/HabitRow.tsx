@@ -10,6 +10,7 @@ interface HabitRowProps {
   label: string;
   type: "boolean" | "number";
   value: HabitValue;
+  goal?: number;
   onToggle: () => void;
   onSetValue: (value: number) => void;
   /** Group names this habit belongs to (for badge display) */
@@ -20,12 +21,18 @@ export default function HabitRow({
   label,
   type,
   value,
+  goal,
   onToggle,
   onSetValue,
   groupNames,
 }: HabitRowProps) {
   const [isNumpadOpen, setIsNumpadOpen] = useState(false);
-  const isChecked = typeof value === "boolean" ? value : (value as number) > 0;
+  
+  // A number habit is considered 'checked' if value >= goal (if goal exists) else if value > 0
+  const numericValue = (value as number) || 0;
+  const isChecked = type === "boolean" 
+    ? (value as boolean) 
+    : (goal ? numericValue >= goal : numericValue > 0);
 
   const handleLabelClick = () => {
     if (type === "boolean") {
@@ -66,7 +73,8 @@ export default function HabitRow({
           <AnimatedCheckbox checked={value as boolean} onToggle={onToggle} />
         ) : (
           <CounterDisplay
-            value={(value as number) || 0}
+            value={numericValue}
+            goal={goal}
             onOpen={() => setIsNumpadOpen(true)}
           />
         )}
@@ -89,22 +97,29 @@ export default function HabitRow({
 /** Tappable counter display that opens the numpad */
 function CounterDisplay({
   value,
+  goal,
   onOpen,
 }: {
   value: number;
+  goal?: number;
   onOpen: () => void;
 }) {
+  const isCompleted = goal ? value >= goal : value > 0;
+  
   return (
     <motion.button
       onClick={onOpen}
       whileTap={{ scale: 0.9 }}
       className={`flex h-8 min-w-[44px] items-center justify-center rounded-xl border px-3 transition-all ${
-        value > 0
+        isCompleted
           ? "border-amber-500/30 bg-amber-500/10 text-amber-500"
           : "border-theme-border bg-theme-subtle text-theme-secondary"
       }`}
     >
-      <span className="text-sm font-bold tabular-nums">{value}</span>
+      <span className="text-sm font-bold tabular-nums">
+        {value}
+        {goal && <span className="text-[10px] text-theme-secondary ml-0.5">/{goal}</span>}
+      </span>
     </motion.button>
   );
 }

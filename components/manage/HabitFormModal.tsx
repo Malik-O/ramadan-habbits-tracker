@@ -27,7 +27,7 @@ const REPEAT_OPTIONS: { value: HabitRepeat; label: string; description: string }
 interface HabitFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (label: string, type: "boolean" | "number", schedule: RepeatSchedule) => void;
+  onSubmit: (label: string, type: "boolean" | "number", schedule: RepeatSchedule, goal?: number) => void;
   initialValues: HabitItem | null;
 }
 
@@ -41,6 +41,7 @@ export default function HabitFormModal({
 }: HabitFormModalProps) {
   const [label, setLabel] = useState("");
   const [type, setType] = useState<"boolean" | "number">("boolean");
+  const [goal, setGoal] = useState<string>("");
   const [repeat, setRepeat] = useState<HabitRepeat>("daily");
   const [repeatDays, setRepeatDays] = useState<number[]>([]);
   const [repeatMonthDay, setRepeatMonthDay] = useState(1);
@@ -53,6 +54,7 @@ export default function HabitFormModal({
     if (isOpen) {
       setLabel(initialValues?.label || "");
       setType(initialValues?.type || "boolean");
+      setGoal(initialValues?.goal ? String(initialValues.goal) : "");
       setRepeat(initialValues?.repeat || "daily");
       setRepeatDays(initialValues?.repeatDays || []);
       setRepeatMonthDay(initialValues?.repeatMonthDay || 1);
@@ -84,7 +86,10 @@ export default function HabitFormModal({
       schedule.repeatEndDate = repeatEndDate;
     }
 
-    onSubmit(label.trim(), type, schedule);
+    const parsedGoal = type === "number" && goal ? parseInt(goal, 10) : undefined;
+    const finalGoal = parsedGoal && parsedGoal > 0 ? parsedGoal : undefined;
+
+    onSubmit(label.trim(), type, schedule, finalGoal);
   };
 
   const isEditing = !!initialValues;
@@ -166,6 +171,32 @@ export default function HabitFormModal({
                   />
                 </div>
               </div>
+
+              {/* Goal input (only for number type) */}
+              <AnimatePresence>
+                {type === "number" && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="pt-2">
+                      <label className="mb-1.5 block text-xs font-medium text-theme-secondary">
+                        الهدف (اختياري)
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={goal}
+                        onChange={(e) => setGoal(e.target.value)}
+                        placeholder="مثال: 100"
+                        className="w-full rounded-xl border border-theme-border bg-theme-subtle px-4 py-2.5 text-sm text-theme-primary outline-none transition-colors placeholder:text-theme-secondary/50 focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/25"
+                      />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Repeat frequency */}
               <RepeatSelector value={repeat} onChange={setRepeat} />

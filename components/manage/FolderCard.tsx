@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Plus, Pencil, Trash2, FolderOpen, Folder } from "lucide-react";
+import { ChevronDown, Plus, Pencil, Trash2, Folder } from "lucide-react";
 import type { HabitCategory, HabitItem } from "@/constants/habits";
 import { getIconComponent } from "@/utils/iconMap";
 import ConfirmDialog from "@/components/ConfirmDialog";
@@ -162,11 +162,7 @@ function FolderHeader({
       >
         {/* Folder icon */}
         <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/10 transition-colors">
-          {isOpen ? (
-            <FolderOpen className="h-4 w-4 text-amber-400" />
-          ) : (
-            icon
-          )}
+          {icon}
         </div>
 
         {/* Name & count */}

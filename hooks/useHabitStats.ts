@@ -34,6 +34,17 @@ export function useHabitStats(
     return ids;
   }, [categories]);
 
+  // Goal map: habitId → goal (for number habits only)
+  const goalMap = useMemo(() => {
+    const map = new Map<string, number>();
+    categories.forEach((cat) =>
+      cat.items.forEach((item) => {
+        if (item.type === "number" && item.goal) map.set(item.id, item.goal);
+      })
+    );
+    return map;
+  }, [categories]);
+
   /** All day indices that have any recorded data (sorted ascending) */
   const trackedDayIndices = useMemo(() => {
     return Object.keys(trackerState)
@@ -52,9 +63,11 @@ export function useHabitStats(
     return trackedDayIndices.filter((d) => {
       const record = trackerState[d];
       if (!record) return false;
-      return Object.entries(record).some(([id, val]) => validHabitIds.has(id) && isHabitCompleted(val));
+      return Object.entries(record).some(
+        ([id, val]) => validHabitIds.has(id) && isHabitCompleted(val, goalMap.get(id))
+      );
     }).length;
-  }, [trackedDayIndices, trackerState, validHabitIds]);
+  }, [trackedDayIndices, trackerState, validHabitIds, goalMap]);
 
   /** Overall completion rate across all tracked days */
   const overallRate = useMemo(() => {
@@ -64,12 +77,14 @@ export function useHabitStats(
     for (const d of trackedDayIndices) {
       const record = trackerState[d];
       if (record) {
-        totalCompleted += Object.entries(record).filter(([id, val]) => validHabitIds.has(id) && isHabitCompleted(val)).length;
+        totalCompleted += Object.entries(record).filter(
+          ([id, val]) => validHabitIds.has(id) && isHabitCompleted(val, goalMap.get(id))
+        ).length;
         totalPossible += totalHabits;
       }
     }
     return totalPossible > 0 ? totalCompleted / totalPossible : 0;
-  }, [trackedDayIndices, trackerState, totalHabits, totalTrackedDays, validHabitIds]);
+  }, [trackedDayIndices, trackerState, totalHabits, totalTrackedDays, validHabitIds, goalMap]);
 
   /** Per-category stats across all tracked days */
   const categoryStats = useMemo(() => {
@@ -81,7 +96,7 @@ export function useHabitStats(
         if (record) {
           for (const item of cat.items) {
             possible++;
-            if (isHabitCompleted(record[item.id])) {
+            if (isHabitCompleted(record[item.id], goalMap.get(item.id))) {
               completed++;
             }
           }
@@ -90,17 +105,19 @@ export function useHabitStats(
       const rate = possible > 0 ? completed / possible : 0;
       return { category: cat, completed, possible, rate };
     });
-  }, [categories, trackedDayIndices, trackerState]);
+  }, [categories, trackedDayIndices, trackerState, goalMap]);
 
   /** Daily completion percentages for heatmap — all tracked days */
   const dailyCompletions = useMemo(() => {
     return trackedDayIndices.map((d) => {
       const record = trackerState[d];
       if (!record || totalHabits === 0) return { day: d, value: 0 };
-      const completed = Object.entries(record).filter(([id, val]) => validHabitIds.has(id) && isHabitCompleted(val)).length;
+      const completed = Object.entries(record).filter(
+        ([id, val]) => validHabitIds.has(id) && isHabitCompleted(val, goalMap.get(id))
+      ).length;
       return { day: d, value: completed / totalHabits };
     });
-  }, [trackedDayIndices, trackerState, totalHabits, validHabitIds]);
+  }, [trackedDayIndices, trackerState, totalHabits, validHabitIds, goalMap]);
 
   return {
     activeDays,

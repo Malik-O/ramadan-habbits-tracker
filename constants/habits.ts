@@ -4,6 +4,7 @@ export interface HabitItem {
   id: string;
   label: string;
   type: "boolean" | "number";
+  goal?: number;               // Optional goal for number-type habits
   repeat?: HabitRepeat;
   repeatDays?: number[];       // For weekly/biweekly: day-of-week (0=Sun..6=Sat)
   repeatMonthDay?: number;     // For monthly: day of month (1–31)

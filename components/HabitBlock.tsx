@@ -24,9 +24,10 @@ interface HabitBlockProps {
   getGroupNames?: (categoryName: string, habitLabel: string) => string[];
 }
 
-function isItemCompleted(value: HabitValue): boolean {
+function isItemCompleted(value: HabitValue, item?: { type: string; goal?: number }): boolean {
   if (typeof value === "boolean") return value;
-  return (value as number) > 0;
+  const numValue = value as number;
+  return item?.goal ? numValue >= item.goal : numValue > 0;
 }
 
 export default function HabitBlock({
@@ -42,7 +43,7 @@ export default function HabitBlock({
   const IconComponent = getIconComponent(category.icon);
 
   const completedCount = category.items.filter((item) =>
-    isItemCompleted(getHabitValue(item.id))
+    isItemCompleted(getHabitValue(item.id), item)
   ).length;
   const totalCount = category.items.length;
 
@@ -61,7 +62,8 @@ export default function HabitBlock({
       // but we know it's a toggle. We can assume we are "doing" it if it wasn't done.
       // But accurate tracking might require reading the current value first.
       const currentValue = getHabitValue(id);
-      const isNowCompleted = !isItemCompleted(currentValue);
+      const item = category.items.find((i) => i.id === id);
+      const isNowCompleted = !isItemCompleted(currentValue, item);
       trackHabitToggle(id, isNowCompleted);
     },
     [toggleHabit, getHabitValue]
@@ -151,6 +153,7 @@ export default function HabitBlock({
                   label={item.label}
                   type={item.type}
                   value={getHabitValue(item.id)}
+                  goal={item.goal}
                   onToggle={() => handleToggleHabit(item.id)}
                   onSetValue={(val) => handleSetHabitValue(item.id, val)}
                   groupNames={getGroupNames?.(category.name, item.label)}

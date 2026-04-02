@@ -47,9 +47,10 @@ export function useHomeEditMode(customHabits: ReturnType<typeof useCustomHabits>
         catId: string,
         label: string,
         type: "boolean" | "number",
-        schedule?: RepeatSchedule
+        schedule?: RepeatSchedule,
+        goal?: number
       ) => {
-        addHabit(catId, label, type, schedule);
+        addHabit(catId, label, type, schedule, goal);
         trackHabitAction("add");
       },
       updateHabit: (
@@ -57,9 +58,10 @@ export function useHomeEditMode(customHabits: ReturnType<typeof useCustomHabits>
         habitId: string,
         label: string,
         type: "boolean" | "number",
-        schedule?: RepeatSchedule
+        schedule?: RepeatSchedule,
+        goal?: number
       ) => {
-        updateHabit(catId, habitId, label, type, schedule);
+        updateHabit(catId, habitId, label, type, schedule, goal);
         trackHabitAction("edit", habitId);
       },
       removeHabit: (catId: string, habitId: string) => {

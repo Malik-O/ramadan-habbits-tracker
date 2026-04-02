@@ -6,6 +6,7 @@ import SplashScreen from "@/components/SplashScreen";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import PwaInstallBanner from "@/components/PwaInstallBanner";
 import OfflineDetector from "@/components/OfflineDetector";
+import OnboardingFlow from "@/components/onboarding/OnboardingFlow";
 import { AuthProvider } from "@/context/AuthContext";
 
 const inter = Inter({
@@ -108,7 +109,9 @@ export default function RootLayout({
               `,
             }}
           />
-          <SplashScreen>{children}</SplashScreen>
+          <SplashScreen>
+            <OnboardingFlow>{children}</OnboardingFlow>
+          </SplashScreen>
           <PwaInstallBanner />
           <OfflineDetector />
         </AuthProvider>

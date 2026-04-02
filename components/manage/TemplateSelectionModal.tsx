@@ -339,7 +339,7 @@ function CategorySelectionCard({
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="border-t border-theme-border/50 overflow-hidden"
+            className="border-t border-[#00000020] overflow-hidden"
           >
             {category.items.map((item) => (
               <HabitSelectionRow

@@ -11,8 +11,8 @@ export interface CategoryMutations {
   addCategory: (name: string, icon: string) => void;
   updateCategory: (categoryId: string, name: string, icon: string) => void;
   removeCategory: (categoryId: string) => void;
-  addHabit: (categoryId: string, label: string, type: "boolean" | "number", schedule?: RepeatSchedule) => void;
-  updateHabit: (categoryId: string, habitId: string, label: string, type: "boolean" | "number", schedule?: RepeatSchedule) => void;
+  addHabit: (categoryId: string, label: string, type: "boolean" | "number", schedule?: RepeatSchedule, goal?: number) => void;
+  updateHabit: (categoryId: string, habitId: string, label: string, type: "boolean" | "number", schedule?: RepeatSchedule, goal?: number) => void;
   removeHabit: (categoryId: string, habitId: string) => void;
 }
 
@@ -27,7 +27,7 @@ export interface CategoryEditorModals {
   handleRemoveCategory: (categoryId: string) => void;
   handleAddHabit: (categoryId: string) => void;
   handleEditHabit: (categoryId: string, habit: HabitItem) => void;
-  handleHabitSubmit: (label: string, type: "boolean" | "number", schedule: RepeatSchedule) => void;
+  handleHabitSubmit: (label: string, type: "boolean" | "number", schedule: RepeatSchedule, goal?: number) => void;
   handleRemoveHabit: (categoryId: string, habitId: string) => void;
   closeCategoryModal: () => void;
   closeHabitModal: () => void;
@@ -100,11 +100,11 @@ export function useCategoryEditorModals(
   }, []);
 
   const handleHabitSubmit = useCallback(
-    (label: string, type: "boolean" | "number", schedule: RepeatSchedule) => {
+    (label: string, type: "boolean" | "number", schedule: RepeatSchedule, goal?: number) => {
       if (editingHabit) {
-        mutRef.current.updateHabit(habitTargetCategoryId, editingHabit.id, label, type, schedule);
+        mutRef.current.updateHabit(habitTargetCategoryId, editingHabit.id, label, type, schedule, goal);
       } else {
-        mutRef.current.addHabit(habitTargetCategoryId, label, type, schedule);
+        mutRef.current.addHabit(habitTargetCategoryId, label, type, schedule, goal);
       }
       setHabitModalOpen(false);
       setEditingHabit(null);

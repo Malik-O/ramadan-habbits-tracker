@@ -63,7 +63,7 @@ export default function FolderHabitRow({
           {item.type === "number" ? (
             <>
               <Hash className="h-2.5 w-2.5" />
-              رقم
+              {item.goal ? `رقم (${item.goal})` : "رقم"}
             </>
           ) : (
             <>

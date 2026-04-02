@@ -13,6 +13,7 @@ interface HabitDetailModalProps {
   isOpen: boolean;
   label: string;
   habitId: string;
+  goal?: number;
   trackerState: TrackerState;
   onClose: () => void;
 }
@@ -23,6 +24,7 @@ export default function HabitDetailModal({
   isOpen,
   label,
   habitId,
+  goal,
   trackerState,
   onClose,
 }: HabitDetailModalProps) {
@@ -36,7 +38,7 @@ export default function HabitDetailModal({
         if (val !== undefined) {
           completions.push({
             day,
-            value: isHabitCompleted(val) ? 1 : 0,
+            value: isHabitCompleted(val, goal) ? 1 : 0,
           });
         }
       }
@@ -62,7 +64,7 @@ export default function HabitDetailModal({
     let prev = -2;
     for (const d of allDayIndices) {
       const record = trackerState[d];
-      if (isHabitCompleted(record?.[habitId])) {
+      if (isHabitCompleted(record?.[habitId], goal)) {
         cur = d === prev + 1 ? cur + 1 : 1;
         best = Math.max(best, cur);
       } else {

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Download, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePwaInstall } from "@/hooks/usePwaInstall";
+import { ONBOARDING_KEY } from "@/hooks/useOnboarding";
 import { trackPwaInstallClick, trackPwaInstallDismiss } from "@/utils/analytics";
 import IosInstallGuide from "./IosInstallGuide";
 
@@ -31,6 +32,11 @@ export default function PwaInstallBanner() {
 
     // Do not show on profile page (it has its own install button)
     if (pathname === "/profile") return;
+
+    // Do not show during onboarding (it has its own install step)
+    const onboardingRaw = localStorage.getItem(ONBOARDING_KEY);
+    const isOnboarded = onboardingRaw === "true" || onboardingRaw === '"true"';
+    if (!isOnboarded) return;
 
     const wasDismissed = localStorage.getItem(DISMISS_KEY) === "true";
     if (wasDismissed) return;

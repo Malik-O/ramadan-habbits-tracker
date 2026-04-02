@@ -46,6 +46,16 @@ export default function HabitLineChart({
   categories,
   trackerState,
 }: HabitLineChartProps) {
+  // Build a goal map once from categories
+  const goalMap = useMemo(() => {
+    const map = new Map<string, number>();
+    categories.forEach((cat) =>
+      cat.items.forEach((item) => {
+        if (item.type === "number" && item.goal) map.set(item.id, item.goal);
+      })
+    );
+    return map;
+  }, [categories]);
   const categoryGroups: CategoryGroup[] = useMemo(() => {
     let colorIdx = 0;
     return categories.map((cat) => ({
@@ -127,10 +137,10 @@ export default function HabitLineChart({
   const lastTrackedDay = useMemo(() => {
     for (let d = TOTAL_DAYS - 1; d >= 0; d--) {
       const rec = trackerState[d];
-      if (rec && Object.values(rec).some(isHabitCompleted)) return d;
+      if (rec && Object.entries(rec).some(([id, val]) => isHabitCompleted(val, goalMap.get(id)))) return d;
     }
     return 0;
-  }, [trackerState]);
+  }, [trackerState, goalMap]);
 
   const visibleDays = Math.max(7, Math.min(lastTrackedDay + 3, TOTAL_DAYS));
 
@@ -141,12 +151,12 @@ export default function HabitLineChart({
       let cum = 0;
       const points = Array.from({ length: visibleDays }, (_, d) => {
         const rec = trackerState[d];
-        if (rec && isHabitCompleted(rec[habit.id])) cum++;
+        if (rec && isHabitCompleted(rec[habit.id], goalMap.get(habit.id))) cum++;
         return cum;
       });
       return { ...habit, points };
     });
-  }, [allHabits, selectedIds, trackerState, visibleDays]);
+  }, [allHabits, selectedIds, trackerState, visibleDays, goalMap]);
 
   const maxValue = useMemo(
     () => Math.max(1, ...chartData.flatMap((d) => d.points)),
