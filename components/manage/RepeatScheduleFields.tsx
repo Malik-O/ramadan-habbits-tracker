@@ -207,15 +207,7 @@ export function YearlyDatePicker({ value, onChange, isHijri, onHijriChange }: Ye
         <div className="flex w-full rounded-xl border border-theme-border bg-theme-subtle p-1">
           <button
             type="button"
-            onClick={() => {
-              if (isHijri) {
-                onHijriChange(false);
-                // Reset to Gregorian valid day if needed
-                const gMonth = GREGORIAN_MONTHS.find((m) => m.value === currentMonth) || GREGORIAN_MONTHS[0];
-                const clampedDay = Math.min(currentDay, gMonth.days);
-                onChange(`${String(currentMonth).padStart(2, "0")}-${String(clampedDay).padStart(2, "0")}`);
-              }
-            }}
+            onClick={() => !isHijri || onHijriChange(false)}
             className={`flex-1 rounded-lg py-2 text-xs font-semibold transition-all cursor-pointer ${
               !isHijri
                 ? "bg-theme-card text-amber-500 shadow-sm"
@@ -226,15 +218,7 @@ export function YearlyDatePicker({ value, onChange, isHijri, onHijriChange }: Ye
           </button>
           <button
             type="button"
-            onClick={() => {
-              if (!isHijri) {
-                onHijriChange(true);
-                // Reset to Hijri valid day if needed
-                const hMonth = HIJRI_MONTHS.find((m) => m.value === currentMonth) || HIJRI_MONTHS[0];
-                const clampedDay = Math.min(currentDay, hMonth.days);
-                onChange(`${String(currentMonth).padStart(2, "0")}-${String(clampedDay).padStart(2, "0")}`);
-              }
-            }}
+            onClick={() => isHijri || onHijriChange(true)}
             className={`flex-1 rounded-lg py-2 text-xs font-semibold transition-all cursor-pointer ${
               isHijri
                 ? "bg-theme-card text-amber-500 shadow-sm"

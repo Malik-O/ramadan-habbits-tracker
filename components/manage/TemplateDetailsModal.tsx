@@ -106,7 +106,9 @@ export default function TemplateDetailsModal({
                                   : "bg-emerald-500/10 text-emerald-500"
                               }`}
                             >
-                              {item.type === "number" ? "رقم" : "تحقق"}
+                              {item.type === "number" 
+                                ? (item.goal ? `رقم (${item.goal})` : "رقم") 
+                                : "تحقق"}
                             </span>
                           </li>
                         ))}

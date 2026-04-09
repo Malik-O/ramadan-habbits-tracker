@@ -30,7 +30,7 @@ export default function JoinGroupFromLink({ inviteCode, onJoined }: JoinGroupFro
     setIsOpen(false);
     setTimeout(() => {
       // We do router.replace instead of push to not bloat history
-      router.replace("/leaderboard", { scroll: false });
+      router.replace("/groups", { scroll: false });
     }, 300); // Wait for exit animation
   }, [router]);
 
@@ -57,7 +57,7 @@ export default function JoinGroupFromLink({ inviteCode, onJoined }: JoinGroupFro
         if (alreadyMember) {
           // Already a member → open the group and close sheet
           setIsOpen(false);
-          router.replace(`/leaderboard?group=${groupInfo._id}`, { scroll: false });
+          router.replace(`/groups?group=${groupInfo._id}`, { scroll: false });
         }
       })
       .catch(() => {
@@ -75,14 +75,14 @@ export default function JoinGroupFromLink({ inviteCode, onJoined }: JoinGroupFro
       onJoined?.();
       setIsOpen(false);
       setTimeout(() => {
-        router.replace(`/leaderboard?group=${joined._id}`, { scroll: false });
+        router.replace(`/groups?group=${joined._id}`, { scroll: false });
       }, 300);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "حدث خطأ أثناء الانضمام";
       if (msg.includes("عضو بالفعل")) {
         setIsOpen(false);
         setTimeout(() => {
-          router.replace(`/leaderboard?group=${groupInfo._id}`, { scroll: false });
+          router.replace(`/groups?group=${groupInfo._id}`, { scroll: false });
         }, 300);
         return;
       }

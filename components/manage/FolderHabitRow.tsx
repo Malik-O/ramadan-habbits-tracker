@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Pencil, Trash2, CheckCircle2, Hash, MoreHorizontal } from "lucide-react";
+import { Reorder, useDragControls, AnimatePresence } from "framer-motion";
+import { Pencil, Trash2, CheckCircle2, Hash, MoreHorizontal, GripVertical } from "lucide-react";
 import type { HabitItem } from "@/constants/habits";
+
+// ─── Constants ───────────────────────────────────────────────────
 
 const REPEAT_LABELS: Record<string, string> = {
   daily: "يومياً",
@@ -13,11 +15,15 @@ const REPEAT_LABELS: Record<string, string> = {
   yearly: "سنوياً",
 };
 
+// ─── Props ───────────────────────────────────────────────────────
+
 interface FolderHabitRowProps {
   item: HabitItem;
   onEdit: () => void;
   onDelete: () => void;
 }
+
+// ─── Component ───────────────────────────────────────────────────
 
 export default function FolderHabitRow({
   item,
@@ -25,14 +31,31 @@ export default function FolderHabitRow({
   onDelete,
 }: FolderHabitRowProps) {
   const [showActions, setShowActions] = useState(false);
+  const dragControls = useDragControls();
+
   const repeatValue = item.repeat || "daily";
   const showRepeatBadge = repeatValue !== "daily";
 
   return (
-    <motion.div
-      layout
-      className="group relative flex items-center gap-2.5 px-4 py-2.5 transition-colors hover:bg-white/[0.02]"
+    <Reorder.Item
+      value={item}
+      dragListener={false}
+      dragControls={dragControls}
+      className="group relative flex items-center gap-2.5 px-3 py-2.5 transition-colors hover:bg-white/[0.02]"
+      style={{ touchAction: "none" }}
     >
+      {/* Drag handle */}
+      <button
+        onPointerDown={(e) => {
+          e.preventDefault();
+          dragControls.start(e);
+        }}
+        className="flex h-6 w-5 flex-shrink-0 cursor-grab touch-none items-center justify-center rounded text-theme-secondary/25 transition-colors hover:text-theme-secondary/60 active:cursor-grabbing"
+        title="اسحب لإعادة الترتيب"
+      >
+        <GripVertical className="h-3.5 w-3.5" />
+      </button>
+
       {/* Type indicator dot */}
       <div
         className={`h-1.5 w-1.5 flex-shrink-0 rounded-full ${
@@ -40,19 +63,18 @@ export default function FolderHabitRow({
         }`}
       />
 
-      {/* Label */}
-      <span className="flex-1 text-sm text-theme-primary leading-snug">
-        {item.label}
-      </span>
-
-      {/* Badges */}
-      <div className="flex items-center gap-1.5">
+      {/* Label + repeat badge */}
+      <div className="flex flex-1 items-center gap-1.5 overflow-hidden">
+        <span className="text-sm text-theme-primary leading-snug">{item.label}</span>
         {showRepeatBadge && (
-          <span className="rounded-md bg-violet-500/10 px-1.5 py-0.5 text-[10px] font-medium text-violet-400">
+          <span className="inline-flex w-fit rounded-md bg-violet-500/10 px-1.5 py-0.5 text-[10px] font-medium leading-none text-violet-400">
             {REPEAT_LABELS[repeatValue]}
           </span>
         )}
+      </div>
 
+      {/* Type badge */}
+      <div className="flex items-center gap-1.5">
         <span
           className={`flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium ${
             item.type === "number"
@@ -85,12 +107,16 @@ export default function FolderHabitRow({
       {/* Inline action buttons */}
       <AnimatePresence>
         {showActions && (
-          <motion.div
+          <Reorder.Item
+            value={item}
+            as="div"
+            dragListener={false}
+            style={{}}
+            className="flex items-center gap-1 overflow-hidden"
             initial={{ opacity: 0, width: 0 }}
             animate={{ opacity: 1, width: "auto" }}
             exit={{ opacity: 0, width: 0 }}
             transition={{ duration: 0.15 }}
-            className="flex items-center gap-1 overflow-hidden"
           >
             <button
               onClick={() => {
@@ -110,9 +136,9 @@ export default function FolderHabitRow({
             >
               <Trash2 className="h-3 w-3" />
             </button>
-          </motion.div>
+          </Reorder.Item>
         )}
       </AnimatePresence>
-    </motion.div>
+    </Reorder.Item>
   );
 }

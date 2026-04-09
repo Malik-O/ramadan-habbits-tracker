@@ -1,17 +1,18 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Upload, FolderPlus, Loader2, FileText, Pencil, ChevronUp } from "lucide-react";
+import { useState, useMemo, useCallback, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { motion, AnimatePresence, Reorder } from "framer-motion";
+import { ArrowRight, Upload, FolderPlus, Loader2, FileText } from "lucide-react";
 import { useCustomHabits, type RepeatSchedule } from "@/hooks/useCustomHabits";
 import { useCategoryEditorModals } from "@/hooks/useCategoryEditorModals";
 import type { HabitCategory, HabitItem } from "@/constants/habits";
-import { createTemplate, type TemplateCategory } from "@/services/api";
+import { createTemplate, updateTemplate, type TemplateCategory } from "@/services/api";
 import FolderCard from "@/components/manage/FolderCard";
 import CategoryFormModal from "@/components/manage/CategoryFormModal";
 import HabitFormModal from "@/components/manage/HabitFormModal";
 import BottomNav from "@/components/BottomNav";
+import SourceSelectionScreen from "@/components/publish/SourceSelectionScreen";
 
 // ─── Helpers ─────────────────────────────────────────────────────
 
@@ -28,6 +29,7 @@ function toTemplateCategories(categories: HabitCategory[]): TemplateCategory[] {
       id: item.id,
       label: item.label,
       type: item.type,
+      goal: item.goal,
       repeat: item.repeat || "daily",
       repeatDays: item.repeatDays,
       repeatMonthDay: item.repeatMonthDay,
@@ -39,20 +41,81 @@ function toTemplateCategories(categories: HabitCategory[]): TemplateCategory[] {
   }));
 }
 
+/** Convert TemplateCategory[] (from API / URL) → HabitCategory[] (local state format) */
+function fromTemplateCategories(templateCats: TemplateCategory[]): HabitCategory[] {
+  return templateCats.map((cat) => ({
+    id: cat.categoryId,
+    name: cat.name,
+    icon: cat.icon,
+    items: cat.items.map((item) => ({
+      id: item.id,
+      label: item.label,
+      type: item.type as "boolean" | "number",
+      goal: item.goal,
+      repeat: (item.repeat as HabitCategory["items"][number]["repeat"]) || "daily",
+      repeatDays: item.repeatDays,
+      repeatMonthDay: item.repeatMonthDay,
+      repeatMonthHijri: item.repeatMonthHijri,
+      repeatYearlyDate: item.repeatYearlyDate,
+      repeatYearlyHijri: item.repeatYearlyHijri,
+      repeatEndDate: item.repeatEndDate,
+    })),
+  }));
+}
+
 export default function PublishTemplatePage() {
+  return (
+    <Suspense fallback={<div />}>
+      <PublishTemplateContent />
+    </Suspense>
+  );
+}
+
+function PublishTemplateContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { categories: userCategories } = useCustomHabits();
 
-  // Local copy of categories (editable, does NOT mutate user's habits)
-  const [categories, setCategories] = useState<HabitCategory[]>(() =>
-    JSON.parse(JSON.stringify(userCategories))
-  );
+  const editId = searchParams.get("editId");
+  const initName = searchParams.get("name");
+  const initDesc = searchParams.get("desc");
+  const initCats = searchParams.get("cats");
+  const isEditMode = Boolean(editId);
 
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
+  // Source selection – skip for edit mode (already has data)
+  const [sourceSelected, setSourceSelected] = useState(isEditMode);
+
+  // Local copy of categories (editable, does NOT mutate user's habits)
+  const [categories, setCategories] = useState<HabitCategory[]>(() => {
+    if (editId && initCats) {
+      try {
+        const templateCats: TemplateCategory[] = JSON.parse(decodeURIComponent(initCats));
+        return fromTemplateCategories(templateCats);
+      } catch (e) {
+        // Fallback – empty for edit without valid cats
+      }
+    }
+    return [];
+  });
+
+  const [name, setName] = useState(initName ? decodeURIComponent(initName) : "");
+  const [description, setDescription] = useState(initDesc ? decodeURIComponent(initDesc) : "");
   const [isPublishing, setIsPublishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [editBeforePublish, setEditBeforePublish] = useState(false);
+
+  // ── Source selection handlers ──────────────────────────────
+
+  const userHabitsCount = userCategories.reduce((sum, c) => sum + c.items.length, 0);
+
+  const handleSelectCurrent = useCallback(() => {
+    setCategories(JSON.parse(JSON.stringify(userCategories)));
+    setSourceSelected(true);
+  }, [userCategories]);
+
+  const handleSelectEmpty = useCallback(() => {
+    setCategories([]);
+    setSourceSelected(true);
+  }, []);
 
   // ── Local category mutations ───────────────────────────────
   const mutations = useMemo(
@@ -71,16 +134,26 @@ export default function PublishTemplatePage() {
       removeCategory: (id: string) => {
         setCategories((prev) => prev.filter((c) => c.id !== id));
       },
+      reorderCategories: (newOrder: HabitCategory[]) => {
+        setCategories(newOrder);
+      },
+      reorderHabits: (catId: string, newItems: HabitItem[]) => {
+        setCategories((prev) =>
+          prev.map((c) => (c.id === catId ? { ...c, items: newItems } : c))
+        );
+      },
       addHabit: (
         catId: string,
         label: string,
         type: "boolean" | "number",
-        schedule?: RepeatSchedule
+        schedule?: RepeatSchedule,
+        goal?: number
       ) => {
         const newItem: HabitItem = {
           id: generateId(),
           label,
           type,
+          goal,
           repeat: schedule?.repeat || "daily",
           repeatDays: schedule?.repeatDays,
           repeatMonthDay: schedule?.repeatMonthDay,
@@ -100,7 +173,8 @@ export default function PublishTemplatePage() {
         habitId: string,
         label: string,
         type: "boolean" | "number",
-        schedule?: RepeatSchedule
+        schedule?: RepeatSchedule,
+        goal?: number
       ) => {
         setCategories((prev) =>
           prev.map((c) =>
@@ -113,6 +187,7 @@ export default function PublishTemplatePage() {
                           ...item,
                           label,
                           type,
+                          goal,
                           repeat: schedule?.repeat || "daily",
                           repeatDays: schedule?.repeatDays,
                           repeatMonthDay: schedule?.repeatMonthDay,
@@ -151,11 +226,16 @@ export default function PublishTemplatePage() {
     setIsPublishing(true);
     setError(null);
     try {
-      await createTemplate({
+      const payload = {
         name: name.trim(),
         description: description.trim(),
         categories: toTemplateCategories(categories),
-      });
+      };
+      if (editId) {
+        await updateTemplate(editId, payload);
+      } else {
+        await createTemplate(payload);
+      }
       router.push("/templates");
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "فشل نشر القالب";
@@ -163,82 +243,77 @@ export default function PublishTemplatePage() {
     } finally {
       setIsPublishing(false);
     }
-  }, [name, description, categories, isPublishing, router]);
+  }, [name, description, categories, isPublishing, router, editId]);
 
   const totalHabits = categories.reduce((sum, c) => sum + c.items.length, 0);
   const canPublish = name.trim().length > 0 && categories.length > 0;
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-md flex-col bg-theme-bg pb-24">
+    <div className="mx-auto flex min-h-dvh max-w-md flex-col bg-theme-bg pb-40">
       {/* Header */}
-      <PublishHeader onBack={() => router.back()} />
+      <PublishHeader
+        onBack={() => sourceSelected && !isEditMode ? setSourceSelected(false) : router.back()}
+        title={isEditMode ? "تعديل القالب" : sourceSelected ? "نشر قالب جديد" : "إنشاء قالب"}
+      />
 
-      <div className="flex flex-col gap-4 px-4 pt-4">
-        {/* Template info card */}
-        <TemplateInfoCard
-          name={name}
-          description={description}
-          onNameChange={setName}
-          onDescriptionChange={setDescription}
+      {/* Source selection screen */}
+      {!sourceSelected ? (
+        <SourceSelectionScreen
+          onSelectCurrent={handleSelectCurrent}
+          onSelectEmpty={handleSelectEmpty}
+          habitsCount={userHabitsCount}
+          categoriesCount={userCategories.length}
         />
+      ) : (
+        <>
+          <div className="flex flex-col gap-4 px-4 pt-4">
+            {/* Template info card */}
+            <TemplateInfoCard
+              name={name}
+              description={description}
+              onNameChange={setName}
+              onDescriptionChange={setDescription}
+            />
 
-        {/* Summary + Edit toggle */}
-        <div className="flex items-center justify-between rounded-xl bg-gradient-to-l from-amber-500/5 to-transparent px-4 py-2.5">
-          <span className="text-xs text-theme-secondary">
-            {categories.length} أقسام · {totalHabits} عبادة
-          </span>
-          <button
-            onClick={() => setEditBeforePublish((p) => !p)}
-            className={`flex cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium transition-all ${
-              editBeforePublish
-                ? "bg-amber-500/15 text-amber-400 ring-1 ring-amber-500/30"
-                : "bg-theme-subtle text-theme-secondary hover:text-theme-primary"
-            }`}
-          >
-            {editBeforePublish ? (
-              <>
-                <ChevronUp className="h-3 w-3" />
-                إخفاء
-              </>
-            ) : (
-              <>
-                <Pencil className="h-3 w-3" />
-                تعديل قبل النشر
-              </>
-            )}
-          </button>
-        </div>
+            {/* Summary */}
+            <div className="flex items-center justify-between rounded-xl bg-gradient-to-l from-amber-500/5 to-transparent px-4 py-2.5">
+              <span className="text-xs text-theme-secondary">
+                {categories.length} أقسام · {totalHabits} عبادة
+              </span>
+            </div>
 
-        {/* Editable folder section (toggled) */}
-        <AnimatePresence initial={false}>
-          {editBeforePublish && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="flex flex-col gap-3 overflow-hidden"
-            >
+            {/* Editable folder section */}
+            <div className="flex flex-col gap-3">
               {/* Folder cards */}
               <AnimatePresence mode="popLayout">
-                {categories.map((category) => (
-                  <FolderCard
-                    key={category.id}
-                    category={category}
-                    defaultOpen
-                    onEditCategory={() => editor.handleEditCategory(category)}
-                    onRemoveCategory={() =>
-                      editor.handleRemoveCategory(category.id)
-                    }
-                    onAddHabit={() => editor.handleAddHabit(category.id)}
-                    onEditHabit={(habit) =>
-                      editor.handleEditHabit(category.id, habit)
-                    }
-                    onRemoveHabit={(habitId) =>
-                      editor.handleRemoveHabit(category.id, habitId)
-                    }
-                  />
-                ))}
+                <Reorder.Group
+                  axis="y"
+                  values={categories}
+                  onReorder={mutations.reorderCategories}
+                  className="flex flex-col gap-3"
+                >
+                  {categories.map((category) => (
+                    <FolderCard
+                      key={category.id}
+                      category={category}
+                      defaultOpen={false}
+                      onEditCategory={() => editor.handleEditCategory(category)}
+                      onRemoveCategory={() =>
+                        editor.handleRemoveCategory(category.id)
+                      }
+                      onAddHabit={() => editor.handleAddHabit(category.id)}
+                      onEditHabit={(habit) =>
+                        editor.handleEditHabit(category.id, habit)
+                      }
+                      onRemoveHabit={(habitId) =>
+                        editor.handleRemoveHabit(category.id, habitId)
+                      }
+                      onReorderHabits={(newItems) =>
+                        mutations.reorderHabits(category.id, newItems)
+                      }
+                    />
+                  ))}
+                </Reorder.Group>
               </AnimatePresence>
 
               {/* Add folder */}
@@ -250,37 +325,39 @@ export default function PublishTemplatePage() {
                 <FolderPlus className="h-5 w-5" />
                 <span className="text-sm font-medium">إضافة قسم جديد</span>
               </motion.button>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </div>
 
-        {/* Error */}
-        {error && (
-          <div className="rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-2.5 text-xs text-red-400">
-            {error}
+            {/* Error */}
+            {error && (
+              <div className="rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-2.5 text-xs text-red-400">
+                {error}
+              </div>
+            )}
           </div>
-        )}
 
-        {/* Publish button */}
-        <motion.button
-          onClick={handlePublish}
-          disabled={!canPublish || isPublishing}
-          whileTap={{ scale: 0.97 }}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-amber-500 py-3.5 text-base font-bold text-slate-950 shadow-lg shadow-amber-500/20 transition-all hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          {isPublishing ? (
-            <>
-              <Loader2 className="h-5 w-5 animate-spin" />
-              جاري النشر...
-            </>
-          ) : (
-            <>
-              <Upload className="h-5 w-5" />
-              نشر القالب
-            </>
-          )}
-        </motion.button>
-      </div>
+          {/* Sticky publish button */}
+          <div className="fixed bottom-[60px] left-1/2 z-40 w-full max-w-md -translate-x-1/2 border-t border-theme-border bg-theme-bg/90 px-4 py-3 backdrop-blur-xl">
+            <motion.button
+              onClick={handlePublish}
+              disabled={!canPublish || isPublishing}
+              whileTap={{ scale: 0.97 }}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-amber-500 py-3.5 text-base font-bold text-slate-950 shadow-lg shadow-amber-500/20 transition-all hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {isPublishing ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  جاري النشر...
+                </>
+              ) : (
+                <>
+                  <Upload className="h-5 w-5" />
+                  {editId ? "حفظ التعديلات" : "نشر القالب"}
+                </>
+              )}
+            </motion.button>
+          </div>
+        </>
+      )}
 
       {/* Shared modals (reused from manage page) */}
       <CategoryFormModal
@@ -306,9 +383,10 @@ export default function PublishTemplatePage() {
 
 interface PublishHeaderProps {
   onBack: () => void;
+  title: string;
 }
 
-function PublishHeader({ onBack }: PublishHeaderProps) {
+function PublishHeader({ onBack, title }: PublishHeaderProps) {
   return (
     <header className="sticky top-0 z-50 border-b border-theme-border bg-theme-header backdrop-blur-xl">
       <div className="flex items-center gap-3 px-4 py-4">
@@ -318,7 +396,9 @@ function PublishHeader({ onBack }: PublishHeaderProps) {
         >
           <ArrowRight className="h-4 w-4" />
         </button>
-        <h1 className="text-lg font-bold text-theme-primary">نشر قالب جديد</h1>
+        <h1 className="text-lg font-bold text-theme-primary">
+          {title}
+        </h1>
       </div>
     </header>
   );

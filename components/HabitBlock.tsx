@@ -154,6 +154,7 @@ export default function HabitBlock({
                   type={item.type}
                   value={getHabitValue(item.id)}
                   goal={item.goal}
+                  repeat={item.repeat}
                   onToggle={() => handleToggleHabit(item.id)}
                   onSetValue={(val) => handleSetHabitValue(item.id, val)}
                   groupNames={getGroupNames?.(category.name, item.label)}

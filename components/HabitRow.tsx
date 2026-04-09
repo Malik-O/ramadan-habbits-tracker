@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { Check } from "lucide-react";
 import type { HabitValue } from "@/hooks/useHabitTracker";
 import AnimatedCheckbox from "./AnimatedCheckbox";
 import NumpadModal from "./NumpadModal";
@@ -11,6 +12,7 @@ interface HabitRowProps {
   type: "boolean" | "number";
   value: HabitValue;
   goal?: number;
+  repeat?: string;
   onToggle: () => void;
   onSetValue: (value: number) => void;
   /** Group names this habit belongs to (for badge display) */
@@ -22,6 +24,7 @@ export default function HabitRow({
   type,
   value,
   goal,
+  repeat,
   onToggle,
   onSetValue,
   groupNames,
@@ -54,18 +57,33 @@ export default function HabitRow({
         {/* Habit label + group badges */}
         <div
           onClick={handleLabelClick}
-          className="flex flex-1 cursor-pointer items-center gap-1.5 overflow-hidden"
+          className="flex flex-1 cursor-pointer flex-col gap-0.5 overflow-hidden"
         >
-          <span
-            className={`text-sm leading-relaxed transition-all ${
-              isChecked
-                ? "text-emerald-500 line-through opacity-70"
-                : "text-theme-primary"
-            }`}
-          >
-            {label}
-          </span>
-          <GroupBadges groupNames={groupNames} />
+          <div className="flex items-center gap-1.5">
+            <span
+              className={`text-sm leading-relaxed transition-all flex items-center gap-1.5 ${
+                isChecked
+                  ? "text-emerald-500 font-medium"
+                  : "text-theme-primary"
+              }`}
+            >
+              <AnimatePresence mode="popLayout">
+                {isChecked && (
+                  <motion.span
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0, opacity: 0 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                  >
+                    <Check className="h-4 w-4" strokeWidth={2.5} />
+                  </motion.span>
+                )}
+              </AnimatePresence>
+              {label}
+            </span>
+            <RepeatBadge repeat={repeat} />
+            <GroupBadges groupNames={groupNames} />
+          </div>
         </div>
 
         {/* Checkbox or counter */}
@@ -121,6 +139,24 @@ function CounterDisplay({
         {goal && <span className="text-[10px] text-theme-secondary ml-0.5">/{goal}</span>}
       </span>
     </motion.button>
+  );
+}
+
+const REPEAT_LABELS: Record<string, string> = {
+  daily: "يومياً",
+  weekly: "أسبوعياً",
+  biweekly: "كل أسبوعين",
+  monthly: "شهرياً",
+  yearly: "سنوياً",
+};
+
+/** Small repeat frequency badge shown below the habit label (only for non-daily habits) */
+function RepeatBadge({ repeat }: { repeat?: string }) {
+  if (!repeat || repeat === "daily") return null;
+  return (
+    <span className="inline-flex w-fit rounded-md bg-violet-500/10 px-1.5 py-0.5 text-[10px] font-medium leading-none text-violet-400">
+      {REPEAT_LABELS[repeat] ?? repeat}
+    </span>
   );
 }
 

@@ -7,9 +7,23 @@ import AppInfoCard from "@/components/profile/AppInfoCard";
 import SettingsSection from "@/components/profile/SettingsSection";
 import DangerSection from "@/components/profile/DangerSection";
 import Footer from "@/components/profile/Footer";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function ProfilePage() {
   const { theme, toggleTheme } = useTheme();
+  const { user } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (user) {
+      const pendingCode = localStorage.getItem("pendingGroupJoinCode");
+      if (pendingCode) {
+        router.push("/groups");
+      }
+    }
+  }, [user, router]);
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-md flex-col bg-theme-bg">

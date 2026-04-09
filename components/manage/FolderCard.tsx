@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Plus, Pencil, Trash2, Folder } from "lucide-react";
+import { motion, AnimatePresence, Reorder, useDragControls } from "framer-motion";
+import { ChevronDown, Plus, Pencil, Trash2, Folder, GripVertical } from "lucide-react";
 import type { HabitCategory, HabitItem } from "@/constants/habits";
 import { getIconComponent } from "@/utils/iconMap";
 import ConfirmDialog from "@/components/ConfirmDialog";
@@ -18,6 +18,7 @@ interface FolderCardProps {
   onAddHabit: () => void;
   onEditHabit: (habit: HabitItem) => void;
   onRemoveHabit: (habitId: string) => void;
+  onReorderHabits: (newItems: HabitItem[]) => void;
 }
 
 // ─── Component ───────────────────────────────────────────────────
@@ -30,8 +31,10 @@ export default function FolderCard({
   onAddHabit,
   onEditHabit,
   onRemoveHabit,
+  onReorderHabits,
 }: FolderCardProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
+  const dragControls = useDragControls();
   const [confirmDeleteCat, setConfirmDeleteCat] = useState(false);
   const [confirmDeleteHabitId, setConfirmDeleteHabitId] = useState<string | null>(null);
 
@@ -43,16 +46,21 @@ export default function FolderCard({
 
   return (
     <>
-      <motion.div
+      <Reorder.Item
+        value={category}
+        dragListener={false}
+        dragControls={dragControls}
         layout
         exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
         className="overflow-hidden rounded-2xl border border-theme-border bg-theme-card"
+        style={{ touchAction: "none" }}
       >
         {/* ── Folder Header ───────────────────────────────────── */}
         <FolderHeader
           name={category.name}
           itemCount={category.items.length}
           isOpen={isOpen}
+          dragControls={dragControls}
           icon={<IconComponent className="h-4 w-4 text-amber-400" />}
           onToggle={() => setIsOpen((p) => !p)}
           onEdit={onEditCategory}
@@ -73,7 +81,12 @@ export default function FolderCard({
                 {category.items.length === 0 ? (
                   <EmptyFolderMessage />
                 ) : (
-                  <div className="divide-y divide-[#00000020]">
+                  <Reorder.Group
+                    axis="y"
+                    values={category.items}
+                    onReorder={onReorderHabits}
+                    className="divide-y divide-[#00000020]"
+                  >
                     {category.items.map((item) => (
                       <FolderHabitRow
                         key={item.id}
@@ -82,7 +95,7 @@ export default function FolderCard({
                         onDelete={() => setConfirmDeleteHabitId(item.id)}
                       />
                     ))}
-                  </div>
+                  </Reorder.Group>
                 )}
 
                 {/* Add habit button */}
@@ -97,7 +110,7 @@ export default function FolderCard({
             </motion.div>
           )}
         </AnimatePresence>
-      </motion.div>
+      </Reorder.Item>
 
       {/* ── Confirm: Delete Category ──────────────────────────── */}
       <ConfirmDialog
@@ -139,6 +152,7 @@ interface FolderHeaderProps {
   itemCount: number;
   isOpen: boolean;
   icon: React.ReactNode;
+  dragControls: any;
   onToggle: () => void;
   onEdit: () => void;
   onDelete: () => void;
@@ -149,12 +163,25 @@ function FolderHeader({
   itemCount,
   isOpen,
   icon,
+  dragControls,
   onToggle,
   onEdit,
   onDelete,
 }: FolderHeaderProps) {
   return (
-    <div className="flex items-center gap-0 px-1">
+    <div className="flex items-center gap-0 px-1 py-1">
+      {/* Drag handle */}
+      <button
+        onPointerDown={(e) => {
+          e.preventDefault();
+          dragControls.start(e);
+        }}
+        className="flex h-8 w-6 cursor-grab touch-none items-center justify-center rounded-lg text-theme-secondary/30 transition-colors hover:text-theme-secondary/60 active:cursor-grabbing"
+        title="اسحب لإعادة ترتيب القسم"
+      >
+        <GripVertical className="h-4 w-4" />
+      </button>
+
       {/* Clickable area: icon + name + count + chevron */}
       <button
         onClick={onToggle}

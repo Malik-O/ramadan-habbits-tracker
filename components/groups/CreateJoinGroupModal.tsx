@@ -11,7 +11,7 @@ type ModalMode = "create" | "join";
 interface CreateJoinGroupModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreateGroup: (name: string) => Promise<void>;
+  onCreateGroup: (name: string, description?: string) => Promise<void>;
   onJoinGroup: (inviteCode: string) => Promise<void>;
 }
 
@@ -25,12 +25,14 @@ export default function CreateJoinGroupModal({
 }: CreateJoinGroupModalProps) {
   const [mode, setMode] = useState<ModalMode>("create");
   const [groupName, setGroupName] = useState("");
+  const [groupDescription, setGroupDescription] = useState("");
   const [inviteCode, setInviteCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const resetForm = () => {
     setGroupName("");
+    setGroupDescription("");
     setInviteCode("");
     setError(null);
     setIsSubmitting(false);
@@ -52,7 +54,7 @@ export default function CreateJoinGroupModal({
           setIsSubmitting(false);
           return;
         }
-        await onCreateGroup(groupName.trim());
+        await onCreateGroup(groupName.trim(), groupDescription.trim() || undefined);
       } else {
         if (!inviteCode.trim()) {
           setError("رمز الدعوة مطلوب");
@@ -127,6 +129,8 @@ export default function CreateJoinGroupModal({
                   key="create"
                   groupName={groupName}
                   setGroupName={setGroupName}
+                  groupDescription={groupDescription}
+                  setGroupDescription={setGroupDescription}
                 />
               ) : (
                 <JoinForm
@@ -199,9 +203,13 @@ function ModeButton({
 function CreateForm({
   groupName,
   setGroupName,
+  groupDescription,
+  setGroupDescription,
 }: {
   groupName: string;
   setGroupName: (v: string) => void;
+  groupDescription: string;
+  setGroupDescription: (v: string) => void;
 }) {
   return (
     <motion.div
@@ -223,6 +231,23 @@ function CreateForm({
           className="w-full rounded-xl border border-theme-border bg-theme-subtle px-4 py-3 text-sm text-theme-primary outline-none transition-colors placeholder:text-theme-secondary/50 focus:border-amber-500/50"
           dir="rtl"
         />
+      </div>
+      <div>
+        <label className="mb-1.5 block text-xs font-semibold text-theme-secondary">
+          وصف المجموعة <span className="text-theme-secondary/50">(اختياري)</span>
+        </label>
+        <textarea
+          value={groupDescription}
+          onChange={(e) => setGroupDescription(e.target.value)}
+          placeholder="وصف قصير للمجموعة..."
+          maxLength={200}
+          rows={2}
+          className="w-full resize-none rounded-xl border border-theme-border bg-theme-subtle px-4 py-3 text-sm text-theme-primary outline-none transition-colors placeholder:text-theme-secondary/50 focus:border-amber-500/50"
+          dir="rtl"
+        />
+        <span className="mt-1 block text-left text-[10px] text-theme-secondary/50">
+          {groupDescription.length}/200
+        </span>
       </div>
     </motion.div>
   );

@@ -1,13 +1,16 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Plus } from "lucide-react";
+import { X, Plus, Download } from "lucide-react";
 import type { GroupResponse, GroupCategory } from "@/services/api";
 import CategoryCard from "@/components/manage/CategoryCard";
 import CategoryFormModal from "@/components/manage/CategoryFormModal";
 import HabitFormModal from "@/components/manage/HabitFormModal";
+import GroupTemplateImportModal from "@/components/groups/GroupTemplateImportModal";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import type { HabitCategory, HabitItem } from "@/constants/habits";
+import type { TemplateResponse } from "@/services/api";
 
 // ─── Types ───────────────────────────────────────────────────────
 
@@ -32,6 +35,7 @@ function toHabitCategory(gc: GroupCategory): HabitCategory {
       id: item.id,
       label: item.label,
       type: item.type,
+      goal: (item as any).goal,
     })),
   };
 }
@@ -46,6 +50,7 @@ function toGroupCategory(hc: HabitCategory, index: number): GroupCategory {
       id: item.id,
       label: item.label,
       type: item.type,
+      goal: item.goal,
     })),
     sortOrder: index,
   };
@@ -67,8 +72,24 @@ export default function GroupHabitsManager({
   const [habitModalOpen, setHabitModalOpen] = useState(false);
   const [editingHabit, setEditingHabit] = useState<{
     categoryId: string;
-    habit?: { id: string; label: string; type: "boolean" | "number" };
+    habit?: { id: string; label: string; type: "boolean" | "number"; goal?: number };
   } | null>(null);
+  const [showTemplateImport, setShowTemplateImport] = useState(false);
+  const [showCloseConfirm, setShowCloseConfirm] = useState(false);
+
+  const initialCategoriesJson = useMemo(
+    () => JSON.stringify(group.categories.map(toHabitCategory)),
+    [group.categories]
+  );
+
+  const handleCloseAttempt = useCallback(() => {
+    const hasChanges = initialCategoriesJson !== JSON.stringify(categories);
+    if (hasChanges) {
+      setShowCloseConfirm(true);
+    } else {
+      onClose();
+    }
+  }, [initialCategoriesJson, categories, onClose]);
 
   // ─── Category handlers ─────────────────────────────────────────
 
@@ -116,13 +137,13 @@ export default function GroupHabitsManager({
   const handleEditHabit = useCallback((categoryId: string, habit: HabitItem) => {
     setEditingHabit({
       categoryId,
-      habit: { id: habit.id, label: habit.label, type: habit.type },
+      habit: { id: habit.id, label: habit.label, type: habit.type, goal: habit.goal },
     });
     setHabitModalOpen(true);
   }, []);
 
   const handleHabitSubmit = useCallback(
-    (label: string, type: "boolean" | "number") => {
+    (label: string, type: "boolean" | "number", goal?: number) => {
       if (!editingHabit) return;
 
       if (editingHabit.habit) {
@@ -134,7 +155,7 @@ export default function GroupHabitsManager({
                   ...cat,
                   items: cat.items.map((item) =>
                     item.id === editingHabit.habit!.id
-                      ? { ...item, label, type }
+                      ? { ...item, label, type, goal }
                       : item
                   ),
                 }
@@ -143,7 +164,7 @@ export default function GroupHabitsManager({
         );
       } else {
         // Adding new
-        const newHabit: HabitItem = { id: generateId(), label, type };
+        const newHabit: HabitItem = { id: generateId(), label, type, goal };
         setCategories((prev) =>
           prev.map((cat) =>
             cat.id === editingHabit.categoryId
@@ -169,6 +190,47 @@ export default function GroupHabitsManager({
     );
   }, []);
 
+  // ─── Template import handler ────────────────────────────────────
+
+  const handleImportTemplate = useCallback((template: TemplateResponse) => {
+    const importedCategories: HabitCategory[] = template.categories.map((cat) => ({
+      id: `grp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      name: cat.name,
+      icon: cat.icon,
+      items: cat.items.map((item) => ({
+        id: `grp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        label: item.label,
+        type: item.type,
+        goal: (item as any).goal,
+      })),
+    }));
+
+    setCategories((prev) => {
+      // Smart merge: for each imported category, check if a category with the same name exists
+      const merged = [...prev];
+      for (const imported of importedCategories) {
+        const existingIndex = merged.findIndex(
+          (c) => c.name.trim() === imported.name.trim()
+        );
+        if (existingIndex >= 0) {
+          // Merge items, skip duplicates by label
+          const existing = merged[existingIndex];
+          const existingLabels = new Set(existing.items.map((i) => i.label.trim()));
+          const newItems = imported.items.filter(
+            (item) => !existingLabels.has(item.label.trim())
+          );
+          merged[existingIndex] = {
+            ...existing,
+            items: [...existing.items, ...newItems],
+          };
+        } else {
+          merged.push(imported);
+        }
+      }
+      return merged;
+    });
+  }, []);
+
   // ─── Save ──────────────────────────────────────────────────────
 
   const handleSave = useCallback(async () => {
@@ -189,7 +251,7 @@ export default function GroupHabitsManager({
       {/* Backdrop */}
       <motion.div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
+        onClick={handleCloseAttempt}
       />
 
       {/* Modal */}
@@ -203,7 +265,7 @@ export default function GroupHabitsManager({
         {/* Header */}
         <div className="flex items-center justify-between border-b border-theme-border px-5 py-4">
           <button
-            onClick={onClose}
+            onClick={handleCloseAttempt}
             className="flex h-8 w-8 items-center justify-center rounded-full bg-theme-subtle text-theme-secondary transition-colors hover:bg-theme-border"
           >
             <X className="h-4 w-4" />
@@ -241,15 +303,25 @@ export default function GroupHabitsManager({
               ))}
             </AnimatePresence>
 
-            {/* Add category button */}
-            <motion.button
-              onClick={handleAddCategory}
-              className="flex items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-theme-border py-4 text-theme-secondary transition-colors hover:border-amber-500/50 hover:text-amber-500"
-              whileTap={{ scale: 0.98 }}
-            >
-              <Plus className="h-5 w-5" />
-              <span className="text-sm font-medium">إضافة قسم جديد</span>
-            </motion.button>
+            {/* Action buttons */}
+            <div className="flex gap-2">
+              <motion.button
+                onClick={() => setShowTemplateImport(true)}
+                className="flex flex-1 items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-theme-border py-4 text-theme-secondary transition-colors hover:border-amber-500/50 hover:text-amber-500"
+                whileTap={{ scale: 0.98 }}
+              >
+                <Download className="h-5 w-5" />
+                <span className="text-sm font-medium">استيراد قالب</span>
+              </motion.button>
+              <motion.button
+                onClick={handleAddCategory}
+                className="flex flex-1 items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-theme-border py-4 text-theme-secondary transition-colors hover:border-amber-500/50 hover:text-amber-500"
+                whileTap={{ scale: 0.98 }}
+              >
+                <Plus className="h-5 w-5" />
+                <span className="text-sm font-medium">إضافة قسم</span>
+              </motion.button>
+            </div>
           </div>
         </div>
       </motion.div>
@@ -274,6 +346,25 @@ export default function GroupHabitsManager({
         }}
         onSubmit={handleHabitSubmit}
         initialValues={editingHabit?.habit || null}
+      />
+
+      {/* Template Import Modal */}
+      <GroupTemplateImportModal
+        isOpen={showTemplateImport}
+        onClose={() => setShowTemplateImport(false)}
+        onImport={handleImportTemplate}
+      />
+
+      {/* Unsaved Changes Dialog */}
+      <ConfirmDialog
+        isOpen={showCloseConfirm}
+        title="تجاهل التعديلات؟"
+        message="هناك تعديلات لم يتم حفظها. هل أنت متأكد من رغبتك في تجاهلها وإغلاق النافذة؟"
+        confirmLabel="تجاهل وإغلاق"
+        cancelLabel="إلغاء"
+        variant="warning"
+        onConfirm={onClose}
+        onCancel={() => setShowCloseConfirm(false)}
       />
     </motion.div>
   );

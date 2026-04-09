@@ -100,6 +100,9 @@ export default function HomePage() {
     handleCategorySubmit,
     closeCategoryModal,
     closeHabitModal,
+    reorderCategories,
+    reorderHabits,
+    handleAddCategory,
   } = useHomeEditMode(customHabits);
 
   return (
@@ -128,11 +131,14 @@ export default function HomePage() {
           {isEditing ? (
             <EditModeList
               categories={categories}
+              onAddCategory={handleAddCategory}
               onEditCategory={handleEditCategory}
               onRemoveCategory={handleRemoveCategory}
               onAddHabit={handleAddHabit}
               onEditHabit={handleEditHabit}
               onRemoveHabit={handleRemoveHabit}
+              onReorderCategories={reorderCategories}
+              onReorderHabits={reorderHabits}
             />
           ) : (
             <TrackingModeList

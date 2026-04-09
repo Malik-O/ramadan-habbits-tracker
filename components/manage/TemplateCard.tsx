@@ -24,6 +24,7 @@ interface TemplateCardProps {
   onMerge: (template: TemplateResponse, selection: SelectionMap) => void;
   onReplace: (template: TemplateResponse, selection: SelectionMap) => void;
   onDelete: (templateId: string) => void;
+  onEdit?: (template: TemplateResponse) => void;
 }
 
 // ─── Component ───────────────────────────────────────────────────
@@ -34,6 +35,7 @@ export default function TemplateCard({
   onMerge,
   onReplace,
   onDelete,
+  onEdit,
 }: TemplateCardProps) {
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [selectionMode, setSelectionMode] = useState<"merge" | "replace" | null>(null);
@@ -130,6 +132,15 @@ export default function TemplateCard({
             <RefreshCw className="h-3.5 w-3.5" />
             استبدال
           </button>
+
+          {isOwner && onEdit && (
+            <button
+              onClick={() => onEdit(template)}
+              className="flex cursor-pointer items-center justify-center gap-1.5 border-r border-theme-border px-4 py-2.5 text-xs font-medium text-amber-500 transition-colors hover:bg-amber-500/5"
+            >
+              تعديل
+            </button>
+          )}
 
           {isOwner && (
             <button

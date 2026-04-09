@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import {
   listTemplates,
   createTemplate,
+  updateTemplate,
   useTemplate,
   applyTemplate,
   deleteTemplate,
@@ -12,6 +13,7 @@ import {
 } from "@/services/api";
 import { useCustomHabits } from "./useCustomHabits";
 import { getAuthToken } from "@/services/api";
+import { useAuth } from "./useAuth";
 import type { HabitCategory, HabitRepeat } from "@/constants/habits";
 import type { SelectionMap } from "@/components/manage/TemplateSelectionModal";
 
@@ -28,9 +30,12 @@ interface UseTemplateHubReturn {
   error: string | null;
   hasMore: boolean;
   isAuthenticated: boolean;
+  filter: "all" | "mine";
+  setFilter: (f: "all" | "mine") => void;
   fetchTemplates: (search?: string) => Promise<void>;
   loadMore: () => Promise<void>;
   publishTemplate: (name: string, description: string) => Promise<void>;
+  editPublishedTemplate: (id: string, name: string, description: string, categories: HabitCategory[]) => Promise<void>;
   mergeTemplate: (template: TemplateResponse, selection: SelectionMap) => Promise<void>;
   replaceWithTemplate: (template: TemplateResponse, selection: SelectionMap) => Promise<void>;
   removeTemplate: (templateId: string) => Promise<void>;
@@ -53,6 +58,7 @@ function toTemplateCategories(categories: HabitCategory[]): TemplateCategory[] {
       id: item.id,
       label: item.label,
       type: item.type,
+      goal: item.goal,
       repeat: item.repeat || "daily",
       repeatDays: item.repeatDays,
       repeatMonthDay: item.repeatMonthDay,
@@ -68,11 +74,13 @@ function toTemplateCategories(categories: HabitCategory[]): TemplateCategory[] {
 
 export function useTemplateHub(): UseTemplateHubReturn {
   const { categories, setCategories } = useCustomHabits();
+  const { user } = useAuth();
   const [templates, setTemplates] = useState<TemplateResponse[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
+  const [filter, setFilter] = useState<"all" | "mine">("all");
   const isAuthenticated = !!getAuthToken();
 
   const currentPageRef = useRef(1);
@@ -84,7 +92,8 @@ export function useTemplateHub(): UseTemplateHubReturn {
     setIsLoading(true);
     setError(null);
     try {
-      const result = await listTemplates(1, PAGE_SIZE, search);
+      const targetUid = filter === "mine" ? user?.uid : undefined;
+      const result = await listTemplates(1, PAGE_SIZE, search, targetUid);
       setTemplates(result.templates);
       setHasMore(result.page < result.totalPages);
     } catch (err: any) {
@@ -92,7 +101,7 @@ export function useTemplateHub(): UseTemplateHubReturn {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [filter, user?.uid]);
 
   const loadMore = useCallback(async () => {
     if (isLoadingMore) return;
@@ -100,7 +109,8 @@ export function useTemplateHub(): UseTemplateHubReturn {
     setIsLoadingMore(true);
     setError(null);
     try {
-      const result = await listTemplates(nextPage, PAGE_SIZE, searchQueryRef.current);
+      const targetUid = filter === "mine" ? user?.uid : undefined;
+      const result = await listTemplates(nextPage, PAGE_SIZE, searchQueryRef.current, targetUid);
       currentPageRef.current = nextPage;
       setTemplates((prev) => [...prev, ...result.templates]);
       setHasMore(result.page < result.totalPages);
@@ -109,11 +119,12 @@ export function useTemplateHub(): UseTemplateHubReturn {
     } finally {
       setIsLoadingMore(false);
     }
-  }, [isLoadingMore]);
+  }, [isLoadingMore, filter, user?.uid]);
 
+  // Re-fetch when filter changes
   useEffect(() => {
-    fetchTemplates();
-  }, [fetchTemplates]);
+    fetchTemplates(searchQueryRef.current);
+  }, [filter, fetchTemplates]);
 
   const publishTemplate = useCallback(
     async (name: string, description: string) => {
@@ -132,6 +143,21 @@ export function useTemplateHub(): UseTemplateHubReturn {
       }
     },
     [categories]
+  );
+
+  const editPublishedTemplate = useCallback(
+    async (id: string, name: string, description: string, modifiedCategories: HabitCategory[]) => {
+      setError(null);
+      try {
+        const tCategories = toTemplateCategories(modifiedCategories);
+        const updated = await updateTemplate(id, { name, description, categories: tCategories });
+        setTemplates((prev) => prev.map((t) => (t._id === id ? updated : t)));
+      } catch (err: any) {
+        setError(err.message || "فشل تحديث القالب");
+        throw err;
+      }
+    },
+    []
   );
 
   const mapSelectionToPayload = (selection: SelectionMap) => {
@@ -157,6 +183,7 @@ export function useTemplateHub(): UseTemplateHubReturn {
             id: item.id,
             label: item.label,
             type: item.type as "boolean" | "number",
+            goal: item.goal,
             repeat: (item.repeat as HabitRepeat) || "daily",
             repeatDays: item.repeatDays,
             repeatMonthDay: item.repeatMonthDay,
@@ -191,6 +218,7 @@ export function useTemplateHub(): UseTemplateHubReturn {
             id: item.id,
             label: item.label,
             type: item.type as "boolean" | "number",
+            goal: item.goal,
             repeat: (item.repeat as HabitRepeat) || "daily",
             repeatDays: item.repeatDays,
             repeatMonthDay: item.repeatMonthDay,
@@ -231,9 +259,12 @@ export function useTemplateHub(): UseTemplateHubReturn {
     error,
     hasMore,
     isAuthenticated,
+    filter,
+    setFilter,
     fetchTemplates,
     loadMore,
     publishTemplate,
+    editPublishedTemplate,
     mergeTemplate,
     replaceWithTemplate,
     removeTemplate,

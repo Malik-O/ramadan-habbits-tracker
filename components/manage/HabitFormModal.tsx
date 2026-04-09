@@ -65,6 +65,60 @@ export default function HabitFormModal({
     }
   }, [isOpen, initialValues]);
 
+  const updateMonthlyDay = (date: Date, isHijri: boolean) => {
+    if (isHijri) {
+      try {
+        const formatter = new Intl.DateTimeFormat("en-US-u-ca-islamic-umalqura-nu-latn", { day: "numeric" });
+        const day = parseInt(formatter.format(date), 10);
+        if (!isNaN(day)) setRepeatMonthDay(day);
+      } catch {
+        setRepeatMonthDay(1);
+      }
+    } else {
+      setRepeatMonthDay(date.getDate());
+    }
+  };
+
+  const updateYearlyDate = (date: Date, isHijri: boolean) => {
+    if (isHijri) {
+      try {
+        const dayFormatter = new Intl.DateTimeFormat("en-US-u-ca-islamic-umalqura-nu-latn", { day: "2-digit" });
+        const monthFormatter = new Intl.DateTimeFormat("en-US-u-ca-islamic-umalqura-nu-latn", { month: "2-digit" });
+        const dd = dayFormatter.format(date).padStart(2, "0");
+        const mm = monthFormatter.format(date).padStart(2, "0");
+        setRepeatYearlyDate(`${mm}-${dd}`);
+      } catch {
+        setRepeatYearlyDate("01-01");
+      }
+    } else {
+      const mm = String(date.getMonth() + 1).padStart(2, "0");
+      const dd = String(date.getDate()).padStart(2, "0");
+      setRepeatYearlyDate(`${mm}-${dd}`);
+    }
+  };
+
+  const handleRepeatChange = (newRepeat: HabitRepeat) => {
+    setRepeat(newRepeat);
+    const now = new Date();
+    if (newRepeat === "weekly" || newRepeat === "biweekly") {
+      setRepeatDays([now.getDay()]);
+    } else if (newRepeat === "monthly") {
+      updateMonthlyDay(now, repeatMonthHijri);
+    } else if (newRepeat === "yearly") {
+      updateYearlyDate(now, repeatYearlyHijri);
+    }
+  };
+
+  const handleMonthHijriChange = (isHijri: boolean) => {
+    setRepeatMonthHijri(isHijri);
+    updateMonthlyDay(new Date(), isHijri);
+  };
+
+  const handleYearlyHijriChange = (isHijri: boolean) => {
+    setRepeatYearlyHijri(isHijri);
+    updateYearlyDate(new Date(), isHijri);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!label.trim()) return;
@@ -199,7 +253,7 @@ export default function HabitFormModal({
               </AnimatePresence>
 
               {/* Repeat frequency */}
-              <RepeatSelector value={repeat} onChange={setRepeat} />
+              <RepeatSelector value={repeat} onChange={handleRepeatChange} />
 
               {/* Conditional scheduling UI */}
               {(repeat === "weekly" || repeat === "biweekly") && (
@@ -211,7 +265,7 @@ export default function HabitFormModal({
                   selectedDay={repeatMonthDay}
                   isHijri={repeatMonthHijri}
                   onDayChange={setRepeatMonthDay}
-                  onHijriChange={setRepeatMonthHijri}
+                  onHijriChange={handleMonthHijriChange}
                 />
               )}
 
@@ -220,7 +274,7 @@ export default function HabitFormModal({
                   value={repeatYearlyDate} 
                   onChange={setRepeatYearlyDate}
                   isHijri={repeatYearlyHijri}
-                  onHijriChange={setRepeatYearlyHijri}
+                  onHijriChange={handleYearlyHijriChange}
                 />
               )}
 

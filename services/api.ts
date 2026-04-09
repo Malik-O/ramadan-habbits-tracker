@@ -136,6 +136,7 @@ export interface SyncHabitItemPayload {
   id: string;
   label: string;
   type: "boolean" | "number";
+  goal?: number;
   repeat?: string;
   repeatDays?: number[];
   repeatMonthDay?: number;
@@ -203,7 +204,7 @@ export async function initialUploadAfterSignup(): Promise<void> {
 
     // Read custom habits
     const rawHabits = localStorage.getItem("hemma-custom-habits");
-    const customHabits: { id: string; name: string; icon: string; items: { id: string; label: string; type: "boolean" | "number"; repeat?: string; repeatDays?: number[]; repeatMonthDay?: number; repeatMonthHijri?: boolean; repeatYearlyDate?: string; repeatYearlyHijri?: boolean; repeatEndDate?: string; }[] }[] =
+    const customHabits: { id: string; name: string; icon: string; items: { id: string; label: string; type: "boolean" | "number"; goal?: number; repeat?: string; repeatDays?: number[]; repeatMonthDay?: number; repeatMonthHijri?: boolean; repeatYearlyDate?: string; repeatYearlyHijri?: boolean; repeatEndDate?: string; }[] }[] =
       rawHabits ? JSON.parse(rawHabits) : [];
 
     // Read timestamps
@@ -240,6 +241,7 @@ export async function initialUploadAfterSignup(): Promise<void> {
         id: item.id,
         label: item.label,
         type: item.type,
+        goal: item.goal,
         repeat: item.repeat,
         repeatDays: item.repeatDays,
         repeatMonthDay: item.repeatMonthDay,
@@ -325,6 +327,7 @@ export interface GroupCategory {
 export interface GroupResponse {
   _id: string;
   name: string;
+  description: string;
   adminUid: string;
   isAdmin: boolean;
   memberCount: number;
@@ -364,6 +367,7 @@ export interface MemberProgressResponse {
 export interface GroupPublicInfo {
   _id: string;
   name: string;
+  description: string;
   memberCount: number;
   inviteCode: string;
 }
@@ -393,10 +397,10 @@ export function getGroup(groupId: string): Promise<GroupResponse> {
 }
 
 /** Create a new group */
-export function createGroup(name: string): Promise<GroupResponse> {
+export function createGroup(name: string, description?: string): Promise<GroupResponse> {
   return apiFetch<GroupResponse>("/groups", {
     method: "POST",
-    body: JSON.stringify({ name }),
+    body: JSON.stringify({ name, description }),
   });
 }
 
@@ -425,7 +429,7 @@ export function deleteGroup(groupId: string): Promise<{ message: string }> {
 /** Update group info (admin only) */
 export function updateGroupInfo(
   groupId: string,
-  data: { name?: string }
+  data: { name?: string; description?: string }
 ): Promise<GroupResponse> {
   return apiFetch<GroupResponse>(`/groups/${groupId}`, {
     method: "PATCH",
@@ -467,6 +471,7 @@ export interface TemplateHabitItem {
   id: string;
   label: string;
   type: "boolean" | "number";
+  goal?: number;
   repeat?: string;
   repeatDays?: number[];
   repeatMonthDay?: number;
@@ -508,13 +513,15 @@ export interface TemplateListResponse {
 export function listTemplates(
   page = 1,
   pageSize = 20,
-  search = ""
+  search = "",
+  authorUid?: string
 ): Promise<TemplateListResponse> {
   const params = new URLSearchParams({
     page: String(page),
     pageSize: String(pageSize),
   });
   if (search) params.set("search", search);
+  if (authorUid) params.set("authorUid", authorUid);
   return apiFetch<TemplateListResponse>(`/templates?${params}`);
 }
 
@@ -526,6 +533,21 @@ export function createTemplate(data: {
 }): Promise<TemplateResponse> {
   return apiFetch<TemplateResponse>("/templates", {
     method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+/** Update an existing template */
+export function updateTemplate(
+  templateId: string,
+  data: {
+    name: string;
+    description?: string;
+    categories: TemplateCategory[];
+  }
+): Promise<TemplateResponse> {
+  return apiFetch<TemplateResponse>(`/templates/${templateId}`, {
+    method: "PUT",
     body: JSON.stringify(data),
   });
 }

@@ -10,13 +10,17 @@ import GroupDetailView from "@/components/groups/GroupDetailView";
 import GroupHabitsManager from "@/components/groups/GroupHabitsManager";
 import CreateJoinGroupModal from "@/components/groups/CreateJoinGroupModal";
 import JoinGroupFromLink from "@/components/groups/JoinGroupFromLink";
+import { usePendingJoinCode } from "@/hooks/usePendingJoinCode";
 
 export default function GroupsManager() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialGroupId = searchParams.get("group");
   const joinCodeParam = searchParams.get("joinCode");
-  
+
+  const { consumePendingCode } = usePendingJoinCode();
+  const [activeJoinCode, setActiveJoinCode] = useState<string | null>(null);
+
   const groupsHook = useGroups();
   const {
     groups,
@@ -26,12 +30,26 @@ export default function GroupsManager() {
     leaveGroup,
     deleteGroup,
     updateHabits,
+    updateGroupInfo,
     refresh,
   } = groupsHook;
 
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(initialGroupId);
   const [showCreateJoinModal, setShowCreateJoinModal] = useState(false);
   const [managingGroup, setManagingGroup] = useState<GroupResponse | null>(null);
+
+  // Determine the join code: URL param takes priority, then localStorage
+  useEffect(() => {
+    if (joinCodeParam) {
+      setActiveJoinCode(joinCodeParam);
+      return;
+    }
+
+    const pending = consumePendingCode();
+    if (pending) {
+      setActiveJoinCode(pending);
+    }
+  }, [joinCodeParam, consumePendingCode]);
 
   useEffect(() => {
     if (initialGroupId) {
@@ -60,8 +78,8 @@ export default function GroupsManager() {
     }
   }, [initialGroupId, isLoading, groups, selectedGroup, router]);
 
-  const handleCreateGroup = useCallback(async (name: string) => {
-    const group = await createGroup(name);
+  const handleCreateGroup = useCallback(async (name: string, description?: string) => {
+    const group = await createGroup(name, description);
     if (group) selectGroup(group._id);
   }, [createGroup, selectGroup]);
 
@@ -91,6 +109,12 @@ export default function GroupsManager() {
     return result;
   }, [updateHabits, refresh]);
 
+  const handleUpdateGroupInfo = useCallback(async (groupId: string, data: { name?: string; description?: string }) => {
+    const result = await updateGroupInfo(groupId, data);
+    if (result) refresh();
+    return result;
+  }, [updateGroupInfo, refresh]);
+
   if (selectedGroup) {
     return (
       <div className="flex-1">
@@ -100,6 +124,7 @@ export default function GroupsManager() {
           onLeaveGroup={handleLeaveGroup}
           onDeleteGroup={handleDeleteGroup}
           onManageHabits={setManagingGroup}
+          onUpdateGroupInfo={handleUpdateGroupInfo}
         />
         <AnimatePresence>
           {managingGroup && (
@@ -128,9 +153,9 @@ export default function GroupsManager() {
         onCreateGroup={handleCreateGroup}
         onJoinGroup={handleJoinGroup}
       />
-      {joinCodeParam && (
+      {activeJoinCode && (
         <JoinGroupFromLink
-          inviteCode={joinCodeParam}
+          inviteCode={activeJoinCode}
           onJoined={refresh}
         />
       )}

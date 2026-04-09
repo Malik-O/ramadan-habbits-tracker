@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { Users } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import BottomNav from "@/components/BottomNav";
@@ -7,9 +9,22 @@ import LeaderboardSignInPrompt from "@/components/leaderboard/LeaderboardSignInP
 import LeaderboardSkeleton from "@/components/leaderboard/LeaderboardSkeleton";
 import GroupsManager from "@/components/groups/GroupsManager";
 
+const PENDING_JOIN_KEY = "pendingGroupJoinCode";
+
 export default function GroupsPageContent() {
   const { user, isLoading: isAuthLoading } = useAuth();
+  const searchParams = useSearchParams();
+  const joinCodeParam = searchParams.get("joinCode");
   const isSignedIn = !!user;
+
+  // Store joinCode in localStorage when user is not signed in
+  useEffect(() => {
+    if (isAuthLoading) return;
+
+    if (joinCodeParam && !isSignedIn) {
+      localStorage.setItem(PENDING_JOIN_KEY, joinCodeParam);
+    }
+  }, [joinCodeParam, isSignedIn, isAuthLoading]);
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-md flex-col bg-theme-bg pb-20">

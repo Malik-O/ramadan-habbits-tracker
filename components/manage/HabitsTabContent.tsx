@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, Reorder } from "framer-motion";
 import { FolderPlus } from "lucide-react";
 import FolderCard from "@/components/manage/FolderCard";
 import type { HabitCategory, HabitItem } from "@/constants/habits";
@@ -10,6 +10,8 @@ interface HabitsTabContentProps {
   onAddHabit: (categoryId: string) => void;
   onEditHabit: (categoryId: string, habit: HabitItem) => void;
   onRemoveHabit: (categoryId: string, habitId: string) => void;
+  onReorderCategories: (newOrder: HabitCategory[]) => void;
+  onReorderHabits: (categoryId: string, newItems: HabitItem[]) => void;
   onAddCategory: () => void;
 }
 
@@ -20,6 +22,8 @@ export default function HabitsTabContent({
   onAddHabit,
   onEditHabit,
   onRemoveHabit,
+  onReorderCategories,
+  onReorderHabits,
   onAddCategory,
 }: HabitsTabContentProps) {
   return (
@@ -38,18 +42,26 @@ export default function HabitsTabContent({
 
       {/* Folder cards */}
       <AnimatePresence mode="popLayout">
-        {categories.map((category, index) => (
-          <FolderCard
-            key={category.id}
-            category={category}
-            defaultOpen={index === 0}
-            onEditCategory={() => onEditCategory(category)}
-            onRemoveCategory={() => onRemoveCategory(category.id)}
-            onAddHabit={() => onAddHabit(category.id)}
-            onEditHabit={(habit) => onEditHabit(category.id, habit)}
-            onRemoveHabit={(habitId) => onRemoveHabit(category.id, habitId)}
-          />
-        ))}
+        <Reorder.Group
+          axis="y"
+          values={categories}
+          onReorder={onReorderCategories}
+          className="flex flex-col gap-3"
+        >
+          {categories.map((category, index) => (
+            <FolderCard
+              key={category.id}
+              category={category}
+              defaultOpen={index === 0}
+              onEditCategory={() => onEditCategory(category)}
+              onRemoveCategory={() => onRemoveCategory(category.id)}
+              onAddHabit={() => onAddHabit(category.id)}
+              onEditHabit={(habit) => onEditHabit(category.id, habit)}
+              onRemoveHabit={(habitId) => onRemoveHabit(category.id, habitId)}
+              onReorderHabits={(newItems) => onReorderHabits(category.id, newItems)}
+            />
+          ))}
+        </Reorder.Group>
       </AnimatePresence>
 
       {/* Add Folder button */}

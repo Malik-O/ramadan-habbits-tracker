@@ -8,6 +8,7 @@ import {
   leaveGroup as apiLeaveGroup,
   deleteGroup as apiDeleteGroup,
   updateGroupHabits as apiUpdateGroupHabits,
+  updateGroupInfo as apiUpdateGroupInfo,
   type GroupResponse,
   type GroupCategory,
 } from "@/services/api";
@@ -21,7 +22,7 @@ interface UseGroupsState {
   /** Refresh groups list */
   refresh: () => Promise<void>;
   /** Create a new group */
-  createGroup: (name: string) => Promise<GroupResponse | null>;
+  createGroup: (name: string, description?: string) => Promise<GroupResponse | null>;
   /** Join a group via invite code */
   joinGroup: (inviteCode: string) => Promise<GroupResponse | null>;
   /** Leave a group */
@@ -30,6 +31,8 @@ interface UseGroupsState {
   deleteGroup: (groupId: string) => Promise<boolean>;
   /** Update group habits (admin) */
   updateHabits: (groupId: string, categories: GroupCategory[]) => Promise<GroupResponse | null>;
+  /** Update group info (admin) */
+  updateGroupInfo: (groupId: string, data: { name?: string; description?: string }) => Promise<GroupResponse | null>;
 }
 
 // ─── Hook ────────────────────────────────────────────────────────
@@ -58,9 +61,9 @@ export function useGroups(): UseGroupsState {
   }, [refresh]);
 
   const createGroup = useCallback(
-    async (name: string): Promise<GroupResponse | null> => {
+    async (name: string, description?: string): Promise<GroupResponse | null> => {
       try {
-        const group = await apiCreateGroup(name);
+        const group = await apiCreateGroup(name, description);
         setGroups((prev) => [...prev, group]);
         return group;
       } catch (err: unknown) {
@@ -132,6 +135,21 @@ export function useGroups(): UseGroupsState {
     []
   );
 
+  const updateGroupInfoFn = useCallback(
+    async (groupId: string, data: { name?: string; description?: string }): Promise<GroupResponse | null> => {
+      try {
+        const updated = await apiUpdateGroupInfo(groupId, data);
+        setGroups((prev) => prev.map((g) => (g._id === groupId ? updated : g)));
+        return updated;
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "حدث خطأ أثناء تحديث المجموعة";
+        setError(message);
+        return null;
+      }
+    },
+    []
+  );
+
   return {
     groups,
     isLoading,
@@ -142,5 +160,6 @@ export function useGroups(): UseGroupsState {
     leaveGroup: leaveGroupFn,
     deleteGroup: deleteGroupFn,
     updateHabits,
+    updateGroupInfo: updateGroupInfoFn,
   };
 }

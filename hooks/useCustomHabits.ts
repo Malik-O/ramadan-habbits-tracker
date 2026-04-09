@@ -30,7 +30,8 @@ export interface UseCustomHabitsReturn {
   addCategory: (name: string, icon: string) => void;
   updateCategory: (categoryId: string, name: string, icon: string) => void;
   removeCategory: (categoryId: string) => void;
-  reorderCategories: (fromIndex: number, toIndex: number) => void;
+  reorderCategories: (newCategories: HabitCategory[]) => void;
+  reorderHabits: (categoryId: string, newItems: HabitItem[]) => void;
   addHabit: (categoryId: string, label: string, type: "boolean" | "number", schedule?: RepeatSchedule, goal?: number) => void;
   updateHabit: (categoryId: string, habitId: string, label: string, type: "boolean" | "number", schedule?: RepeatSchedule, goal?: number) => void;
   removeHabit: (categoryId: string, habitId: string) => void;
@@ -87,13 +88,19 @@ export function useCustomHabits(): UseCustomHabitsReturn {
   );
 
   const reorderCategories = useCallback(
-    (fromIndex: number, toIndex: number) => {
-      stampAndSet((prev) => {
-        const result = [...prev];
-        const [removed] = result.splice(fromIndex, 1);
-        result.splice(toIndex, 0, removed);
-        return result;
-      });
+    (newCategories: HabitCategory[]) => {
+      stampAndSet(() => newCategories);
+    },
+    [stampAndSet]
+  );
+
+  const reorderHabits = useCallback(
+    (categoryId: string, newItems: HabitItem[]) => {
+      stampAndSet((prev) =>
+        prev.map((cat) =>
+          cat.id === categoryId ? { ...cat, items: newItems } : cat
+        )
+      );
     },
     [stampAndSet]
   );
@@ -182,6 +189,7 @@ export function useCustomHabits(): UseCustomHabitsReturn {
     updateCategory,
     removeCategory,
     reorderCategories,
+    reorderHabits,
     addHabit,
     updateHabit,
     removeHabit,

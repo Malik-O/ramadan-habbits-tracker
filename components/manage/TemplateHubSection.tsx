@@ -24,6 +24,8 @@ export default function TemplateHubSection({ currentUserUid }: TemplateHubSectio
     error,
     hasMore,
     isAuthenticated,
+    filter,
+    setFilter,
     fetchTemplates,
     loadMore,
     mergeTemplate,
@@ -46,8 +48,34 @@ export default function TemplateHubSection({ currentUserUid }: TemplateHubSectio
         onPublish={() => router.push("/templates/publish")}
       />
 
-      {/* Search bar */}
-      <SearchBar value={searchQuery} onChange={handleSearch} />
+      {/* Search bar & Filter */}
+      <div className="flex flex-col gap-3">
+        <SearchBar value={searchQuery} onChange={handleSearch} />
+        {isAuthenticated && (
+          <div className="flex rounded-xl bg-theme-subtle p-1">
+            <button
+              onClick={() => setFilter("all")}
+              className={`flex-1 rounded-lg py-1.5 text-xs font-medium transition-all ${
+                filter === "all"
+                  ? "bg-theme-card text-amber-500 shadow-sm"
+                  : "text-theme-secondary hover:text-theme-primary"
+              }`}
+            >
+              الكل
+            </button>
+            <button
+              onClick={() => setFilter("mine")}
+              className={`flex-1 rounded-lg py-1.5 text-xs font-medium transition-all ${
+                filter === "mine"
+                  ? "bg-theme-card text-amber-500 shadow-sm"
+                  : "text-theme-secondary hover:text-theme-primary"
+              }`}
+            >
+              قوالبي
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Error */}
       {error && (
@@ -81,6 +109,11 @@ export default function TemplateHubSection({ currentUserUid }: TemplateHubSectio
                   onMerge={mergeTemplate}
                   onReplace={replaceWithTemplate}
                   onDelete={removeTemplate}
+                  onEdit={(template) => {
+                    const encodedCat = encodeURIComponent(JSON.stringify(template.categories));
+                    const url = `/templates/publish?editId=${template._id}&name=${encodeURIComponent(template.name)}${template.description ? `&desc=${encodeURIComponent(template.description)}` : ''}&cats=${encodedCat}`;
+                    router.push(url);
+                  }}
                 />
               ))}
 

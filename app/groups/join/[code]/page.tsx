@@ -13,7 +13,7 @@ export default function JoinGroupPage({ params }: JoinPageProps) {
 
   useEffect(() => {
     if (code) {
-      router.replace(`/leaderboard?joinCode=${encodeURIComponent(code)}`);
+      router.replace(`/groups?joinCode=${encodeURIComponent(code)}`);
     }
   }, [code, router]);
 

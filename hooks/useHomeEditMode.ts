@@ -19,6 +19,8 @@ export function useHomeEditMode(customHabits: ReturnType<typeof useCustomHabits>
     addCategory,
     updateCategory,
     removeCategory,
+    reorderCategories,
+    reorderHabits,
     addHabit,
     updateHabit,
     removeHabit,
@@ -78,6 +80,8 @@ export function useHomeEditMode(customHabits: ReturnType<typeof useCustomHabits>
     isEditing,
     toggleEditing,
     categories,
+    reorderCategories,
+    reorderHabits,
     ...editor,
   };
 }

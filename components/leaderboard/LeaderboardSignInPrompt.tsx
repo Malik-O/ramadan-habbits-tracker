@@ -2,14 +2,25 @@
 
 import { Trophy } from "lucide-react";
 import SignInPrompt from "@/components/SignInPrompt";
+import React from "react";
+
+interface LeaderboardSignInPromptProps {
+  title?: string;
+  description?: string;
+  icon?: React.ReactNode;
+}
 
 /** Shown when the user is not signed in */
-export default function LeaderboardSignInPrompt() {
+export default function LeaderboardSignInPrompt({
+  title = "المجموعات والتنافس",
+  description = "سجّل دخولك لإنشاء مجموعات ومنافسة أصدقائك في إتمام العبادات اليومية",
+  icon = <Trophy className="h-12 w-12 text-amber-500" />
+}: LeaderboardSignInPromptProps) {
   return (
     <SignInPrompt
-      title="لوحة السابقين"
-      description="سجّل دخولك لمشاهدة ترتيبك ومنافسة الآخرين في إتمام العبادات اليومية"
-      icon={<Trophy className="h-12 w-12 text-amber-500" />}
+      title={title}
+      description={description}
+      icon={icon}
     />
   );
 }

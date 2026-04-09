@@ -12,6 +12,7 @@ import {
   Check,
   Users,
   Link2,
+  Pencil,
 } from "lucide-react";
 import type { GroupResponse, GroupLeaderboardEntry } from "@/services/api";
 import { useGroupLeaderboard } from "@/hooks/useGroupLeaderboard";
@@ -20,6 +21,7 @@ import ConfirmDialog from "@/components/ConfirmDialog";
 import GroupLeaderboardRow from "./GroupLeaderboardRow";
 import MemberProgressModal from "./MemberProgressModal";
 import GroupTopThreePodium from "./GroupTopThreePodium";
+import EditGroupInfoModal from "./EditGroupInfoModal";
 
 // ─── Types ───────────────────────────────────────────────────────
 
@@ -29,6 +31,7 @@ interface GroupDetailViewProps {
   onLeaveGroup: (groupId: string) => Promise<boolean>;
   onDeleteGroup: (groupId: string) => Promise<boolean>;
   onManageHabits: (group: GroupResponse) => void;
+  onUpdateGroupInfo?: (groupId: string, data: { name?: string; description?: string }) => Promise<unknown>;
 }
 
 // ─── Component ───────────────────────────────────────────────────
@@ -39,6 +42,7 @@ export default function GroupDetailView({
   onLeaveGroup,
   onDeleteGroup,
   onManageHabits,
+  onUpdateGroupInfo,
 }: GroupDetailViewProps) {
   const { entries, isLoading, error, getMemberProgress } =
     useGroupLeaderboard(group._id);
@@ -49,6 +53,7 @@ export default function GroupDetailView({
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [selectedMemberUid, setSelectedMemberUid] = useState<string | null>(null);
+  const [showEditInfo, setShowEditInfo] = useState(false);
 
   const handleCopyCode = useCallback(() => {
     navigator.clipboard.writeText(group.inviteCode);
@@ -57,7 +62,7 @@ export default function GroupDetailView({
   }, [group.inviteCode]);
 
   const handleCopyLink = useCallback(() => {
-    const link = `${window.location.origin}/leaderboard?joinCode=${group.inviteCode}`;
+    const link = `${window.location.origin}/groups/join/${group.inviteCode}`;
     navigator.clipboard.writeText(link);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
@@ -98,9 +103,20 @@ export default function GroupDetailView({
             <Users className="h-5 w-5 text-amber-500" />
           </div>
           <div className="flex flex-col">
-            <h2 className="text-base font-bold text-theme-primary">
-              {group.name}
-            </h2>
+            <div className="flex items-center gap-1.5">
+              <h2 className="text-base font-bold text-theme-primary">
+                {group.name}
+              </h2>
+              {group.isAdmin && onUpdateGroupInfo && (
+                <button
+                  onClick={() => setShowEditInfo(true)}
+                  className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-lg text-theme-secondary/60 transition-colors hover:bg-theme-subtle hover:text-amber-500"
+                  title="تعديل المجموعة"
+                >
+                  <Pencil className="h-3 w-3" />
+                </button>
+              )}
+            </div>
             <span className="flex items-center gap-1.5 text-sm text-theme-secondary">
               <Users className="h-3.5 w-3.5" />
               {group.memberCount} عضو
@@ -125,6 +141,13 @@ export default function GroupDetailView({
           </button>
         </div>
       </div>
+
+      {/* Description */}
+      {group.description && (
+        <p className="rounded-xl bg-theme-subtle/50 px-4 py-3 text-sm leading-relaxed text-theme-secondary" dir="rtl">
+          {group.description}
+        </p>
+      )}
 
       {/* Copy group link button */}
       <motion.button
@@ -255,6 +278,17 @@ export default function GroupDetailView({
           />
         )}
       </AnimatePresence>
+
+      {/* Edit group info modal (admin only) */}
+      {onUpdateGroupInfo && (
+        <EditGroupInfoModal
+          isOpen={showEditInfo}
+          initialName={group.name}
+          initialDescription={group.description || ""}
+          onClose={() => setShowEditInfo(false)}
+          onSave={(data) => onUpdateGroupInfo(group._id, data)}
+        />
+      )}
     </div>
   );
 }

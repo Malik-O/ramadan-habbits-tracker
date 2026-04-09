@@ -1,23 +1,30 @@
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, Reorder } from "framer-motion";
+import { Plus } from "lucide-react";
 import FolderCard from "@/components/manage/FolderCard";
 import type { HabitCategory } from "@/constants/habits";
 
 interface EditModeListProps {
   categories: HabitCategory[];
+  onAddCategory: () => void;
   onEditCategory: (category: HabitCategory) => void;
   onRemoveCategory: (categoryId: string) => void;
   onAddHabit: (categoryId: string) => void;
   onEditHabit: (categoryId: string, habit: import("@/constants/habits").HabitItem) => void;
   onRemoveHabit: (categoryId: string, habitId: string) => void;
+  onReorderCategories: (newOrder: HabitCategory[]) => void;
+  onReorderHabits: (categoryId: string, newItems: import("@/constants/habits").HabitItem[]) => void;
 }
 
 export default function EditModeList({
   categories,
+  onAddCategory,
   onEditCategory,
   onRemoveCategory,
   onAddHabit,
   onEditHabit,
   onRemoveHabit,
+  onReorderCategories,
+  onReorderHabits,
 }: EditModeListProps) {
   return (
     <motion.div
@@ -44,19 +51,37 @@ export default function EditModeList({
       </motion.div>
 
       <AnimatePresence mode="popLayout">
-        {categories.map((category, index) => (
-          <FolderCard
-            key={category.id}
-            category={category}
-            defaultOpen={index === 0}
-            onEditCategory={() => onEditCategory(category)}
-            onRemoveCategory={() => onRemoveCategory(category.id)}
-            onAddHabit={() => onAddHabit(category.id)}
-            onEditHabit={(habit) => onEditHabit(category.id, habit)}
-            onRemoveHabit={(habitId) => onRemoveHabit(category.id, habitId)}
-          />
-        ))}
+        <Reorder.Group
+          axis="y"
+          values={categories}
+          onReorder={onReorderCategories}
+          className="flex flex-col gap-3"
+        >
+          {categories.map((category, index) => (
+            <FolderCard
+              key={category.id}
+              category={category}
+              defaultOpen={index === 0}
+              onEditCategory={() => onEditCategory(category)}
+              onRemoveCategory={() => onRemoveCategory(category.id)}
+              onAddHabit={() => onAddHabit(category.id)}
+              onEditHabit={(habit) => onEditHabit(category.id, habit)}
+              onRemoveHabit={(habitId) => onRemoveHabit(category.id, habitId)}
+              onReorderHabits={(newItems) => onReorderHabits(category.id, newItems)}
+            />
+          ))}
+        </Reorder.Group>
       </AnimatePresence>
+
+      <motion.button
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        onClick={onAddCategory}
+        className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-theme-border py-4 text-theme-secondary transition-colors hover:border-amber-500/50 hover:bg-amber-500/5 hover:text-amber-500"
+      >
+        <Plus className="h-5 w-5" />
+        <span className="text-sm font-medium">إضافة قسم جديد</span>
+      </motion.button>
     </motion.div>
   );
 }
