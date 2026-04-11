@@ -72,7 +72,7 @@ export default function GroupHabitsManager({
   const [habitModalOpen, setHabitModalOpen] = useState(false);
   const [editingHabit, setEditingHabit] = useState<{
     categoryId: string;
-    habit?: { id: string; label: string; type: "boolean" | "number"; goal?: number };
+    habit?: HabitItem;
   } | null>(null);
   const [showTemplateImport, setShowTemplateImport] = useState(false);
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
@@ -137,13 +137,13 @@ export default function GroupHabitsManager({
   const handleEditHabit = useCallback((categoryId: string, habit: HabitItem) => {
     setEditingHabit({
       categoryId,
-      habit: { id: habit.id, label: habit.label, type: habit.type, goal: habit.goal },
+      habit,
     });
     setHabitModalOpen(true);
   }, []);
 
   const handleHabitSubmit = useCallback(
-    (label: string, type: "boolean" | "number", goal?: number) => {
+    (label: string, type: "boolean" | "number", schedule: any, goal?: number) => {
       if (!editingHabit) return;
 
       if (editingHabit.habit) {
@@ -155,7 +155,7 @@ export default function GroupHabitsManager({
                   ...cat,
                   items: cat.items.map((item) =>
                     item.id === editingHabit.habit!.id
-                      ? { ...item, label, type, goal }
+                      ? { ...item, label, type, goal, ...schedule }
                       : item
                   ),
                 }
@@ -164,7 +164,7 @@ export default function GroupHabitsManager({
         );
       } else {
         // Adding new
-        const newHabit: HabitItem = { id: generateId(), label, type, goal };
+        const newHabit: HabitItem = { id: generateId(), label, type, goal, ...schedule };
         setCategories((prev) =>
           prev.map((cat) =>
             cat.id === editingHabit.categoryId
