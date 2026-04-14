@@ -42,7 +42,6 @@ export default function FolderHabitRow({
       dragListener={false}
       dragControls={dragControls}
       className="group relative flex items-center gap-2.5 px-3 py-2.5 transition-colors hover:bg-white/[0.02]"
-      style={{ touchAction: "none" }}
     >
       {/* Drag handle */}
       <button

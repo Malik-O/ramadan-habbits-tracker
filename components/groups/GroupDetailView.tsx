@@ -13,6 +13,7 @@ import {
   Users,
   Link2,
   Pencil,
+  MoreVertical,
 } from "lucide-react";
 import type { GroupResponse, GroupLeaderboardEntry } from "@/services/api";
 import { useGroupLeaderboard } from "@/hooks/useGroupLeaderboard";
@@ -54,6 +55,7 @@ export default function GroupDetailView({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [selectedMemberUid, setSelectedMemberUid] = useState<string | null>(null);
   const [showEditInfo, setShowEditInfo] = useState(false);
+  const [showOptions, setShowOptions] = useState(false);
 
   const handleCopyCode = useCallback(() => {
     navigator.clipboard.writeText(group.inviteCode);
@@ -107,15 +109,6 @@ export default function GroupDetailView({
               <h2 className="text-base font-bold text-theme-primary">
                 {group.name}
               </h2>
-              {group.isAdmin && onUpdateGroupInfo && (
-                <button
-                  onClick={() => setShowEditInfo(true)}
-                  className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-lg text-theme-secondary/60 transition-colors hover:bg-theme-subtle hover:text-amber-500"
-                  title="تعديل المجموعة"
-                >
-                  <Pencil className="h-3 w-3" />
-                </button>
-              )}
             </div>
             <span className="flex items-center gap-1.5 text-sm text-theme-secondary">
               <Users className="h-3.5 w-3.5" />
@@ -124,21 +117,118 @@ export default function GroupDetailView({
           </div>
         </div>
 
-        {/* Actions */}
-        <div className="flex items-center gap-1.5">
-          {/* Copy invite code */}
+        {/* Actions Menu */}
+        <div className="relative">
           <button
-            onClick={handleCopyCode}
-            className="cursor-pointer flex items-center gap-1.5 rounded-xl bg-theme-subtle px-3 py-2.5 text-sm font-mono font-bold text-theme-secondary transition-colors hover:bg-theme-border"
-            title="نسخ رمز الدعوة"
+            onClick={() => setShowOptions(!showOptions)}
+            className="cursor-pointer flex h-9 w-9 items-center justify-center rounded-full bg-theme-subtle transition-colors hover:bg-theme-border"
           >
-            {copiedCode ? (
-              <Check className="h-4 w-4 text-emerald-400" />
-            ) : (
-              <Copy className="h-4 w-4" />
-            )}
-            {group.inviteCode}
+            <MoreVertical className="h-5 w-5 text-theme-secondary" />
           </button>
+
+          <AnimatePresence>
+            {showOptions && (
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setShowOptions(false)}
+                />
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                  className="absolute left-0 mt-2 w-56 z-50 rounded-2xl border border-theme-border bg-theme-card p-2 shadow-xl"
+                  dir="rtl"
+                >
+                  <button
+                    onClick={() => {
+                      handleCopyLink();
+                      setShowOptions(false);
+                    }}
+                    className="cursor-pointer flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-theme-primary transition-colors hover:bg-theme-subtle"
+                  >
+                    {copiedLink ? (
+                      <Check className="h-4 w-4 text-emerald-400" />
+                    ) : (
+                      <Link2 className="h-4 w-4" />
+                    )}
+                    {copiedLink ? "تم نسخ الرابط" : "نسخ رابط الدعوة"}
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      handleCopyCode();
+                      setShowOptions(false);
+                    }}
+                    className="cursor-pointer flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-theme-primary transition-colors hover:bg-theme-subtle"
+                  >
+                    {copiedCode ? (
+                      <Check className="h-4 w-4 text-emerald-400" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                    {copiedCode ? "تم نسخ الرمز" : "نسخ رمز المجموعة"}
+                  </button>
+
+                  {group.isAdmin && (
+                    <>
+                      <div className="my-1 border-t border-theme-border" />
+                      
+                      {onUpdateGroupInfo && (
+                        <button
+                          onClick={() => {
+                            setShowEditInfo(true);
+                            setShowOptions(false);
+                          }}
+                          className="cursor-pointer flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-theme-primary transition-colors hover:bg-theme-subtle"
+                        >
+                          <Pencil className="h-4 w-4" />
+                          تعديل معلومات المجموعة
+                        </button>
+                      )}
+
+                      <button
+                        onClick={() => {
+                          onManageHabits(group);
+                          setShowOptions(false);
+                        }}
+                        className="cursor-pointer flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-theme-primary transition-colors hover:bg-theme-subtle"
+                      >
+                        <Settings className="h-4 w-4" />
+                        إدارة عبادات المجموعة
+                      </button>
+                    </>
+                  )}
+
+                  <div className="my-1 border-t border-theme-border" />
+
+                  {group.isAdmin ? (
+                    <button
+                      onClick={() => {
+                        setShowDeleteConfirm(true);
+                        setShowOptions(false);
+                      }}
+                      className="cursor-pointer flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-red-500 transition-colors hover:bg-red-500/10"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      حذف المجموعة
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setShowLeaveConfirm(true);
+                        setShowOptions(false);
+                      }}
+                      className="cursor-pointer flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-red-500 transition-colors hover:bg-red-500/10"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      مغادرة المجموعة
+                    </button>
+                  )}
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
@@ -147,53 +237,6 @@ export default function GroupDetailView({
         <p className="rounded-xl bg-theme-subtle/50 px-4 py-3 text-sm leading-relaxed text-theme-secondary" dir="rtl">
           {group.description}
         </p>
-      )}
-
-      {/* Copy group link button */}
-      <motion.button
-        onClick={handleCopyLink}
-        className="cursor-pointer flex items-center justify-center gap-2 rounded-xl bg-blue-500/10 py-2.5 text-sm font-semibold text-blue-500 transition-colors hover:bg-blue-500/20"
-        whileTap={{ scale: 0.98 }}
-      >
-        {copiedLink ? (
-          <Check className="h-4 w-4" />
-        ) : (
-          <Link2 className="h-4 w-4" />
-        )}
-        {copiedLink ? "تم نسخ الرابط!" : "نسخ رابط المجموعة"}
-      </motion.button>
-
-      {/* Admin actions bar */}
-      {group.isAdmin && (
-        <div className="flex gap-2">
-          <motion.button
-            onClick={() => onManageHabits(group)}
-            className="cursor-pointer flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-amber-500/10 py-2.5 text-xs font-semibold text-amber-500 transition-colors hover:bg-amber-500/20"
-            whileTap={{ scale: 0.98 }}
-          >
-            <Settings className="h-3.5 w-3.5" />
-            إدارة العبادات
-          </motion.button>
-          <motion.button
-            onClick={() => setShowDeleteConfirm(true)}
-            className="cursor-pointer flex items-center justify-center gap-1.5 rounded-xl bg-red-500/10 px-4 py-2.5 text-xs font-semibold text-red-400 transition-colors hover:bg-red-500/20"
-            whileTap={{ scale: 0.98 }}
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </motion.button>
-        </div>
-      )}
-
-      {/* Non-admin leave button */}
-      {!group.isAdmin && (
-        <motion.button
-          onClick={() => setShowLeaveConfirm(true)}
-          className="cursor-pointer flex items-center justify-center gap-1.5 rounded-xl bg-red-500/10 py-2.5 text-xs font-semibold text-red-400 transition-colors hover:bg-red-500/20"
-          whileTap={{ scale: 0.98 }}
-        >
-          <LogOut className="h-3.5 w-3.5" />
-          مغادرة المجموعة
-        </motion.button>
       )}
 
       {/* Leaderboard section */}

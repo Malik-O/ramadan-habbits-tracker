@@ -53,7 +53,6 @@ export default function FolderCard({
         layout
         exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
         className="overflow-hidden rounded-2xl border border-theme-border bg-theme-card"
-        style={{ touchAction: "none" }}
       >
         {/* ── Folder Header ───────────────────────────────────── */}
         <FolderHeader

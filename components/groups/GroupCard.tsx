@@ -1,8 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Users, ChevronLeft, Crown, Copy, Check } from "lucide-react";
-import { useState, useCallback } from "react";
+import { Users, ChevronLeft, Crown } from "lucide-react";
 import type { GroupResponse } from "@/services/api";
 
 interface GroupCardProps {
@@ -11,17 +10,6 @@ interface GroupCardProps {
 }
 
 export default function GroupCard({ group, onSelect }: GroupCardProps) {
-  const [copied, setCopied] = useState(false);
-
-  const handleCopyCode = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
-      navigator.clipboard.writeText(group.inviteCode);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    },
-    [group.inviteCode]
-  );
 
   return (
     <motion.div
@@ -58,23 +46,6 @@ export default function GroupCard({ group, onSelect }: GroupCardProps) {
           <span className="flex items-center gap-1.5 text-sm text-theme-secondary">
             <Users className="h-3.5 w-3.5" />
             {group.memberCount} عضو
-          </span>
-
-          {/* Invite code chip */}
-          <span
-            role="button"
-            tabIndex={0}
-            onClick={handleCopyCode}
-            onKeyDown={(e) => { if (e.key === "Enter") handleCopyCode(e as unknown as React.MouseEvent); }}
-            className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-theme-subtle px-3 py-1.5 text-xs font-mono font-bold text-theme-secondary transition-colors hover:bg-theme-border"
-            title="نسخ رمز الدعوة"
-          >
-            {copied ? (
-              <Check className="h-4 w-4 text-emerald-400" />
-            ) : (
-              <Copy className="h-4 w-4" />
-            )}
-            {group.inviteCode}
           </span>
         </div>
       </div>
