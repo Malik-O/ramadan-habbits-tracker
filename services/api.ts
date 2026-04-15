@@ -329,6 +329,7 @@ export interface GroupResponse {
   name: string;
   description: string;
   adminUid: string;
+  adminUids?: string[];
   isAdmin: boolean;
   memberCount: number;
   inviteCode: string;
@@ -463,6 +464,18 @@ export function getMemberProgress(
   return apiFetch<MemberProgressResponse>(
     `/groups/${groupId}/members/${memberUid}/progress`
   );
+}
+
+/** Set member admin status (admin only) */
+export function setMemberAdminStatus(
+  groupId: string,
+  memberUid: string,
+  isAdmin: boolean
+): Promise<GroupResponse> {
+  return apiFetch<GroupResponse>(`/groups/${groupId}/members/${memberUid}/admin`, {
+    method: "PUT",
+    body: JSON.stringify({ isAdmin }),
+  });
 }
 
 // ─── Template Hub API Types ──────────────────────────────────────

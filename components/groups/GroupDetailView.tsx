@@ -33,6 +33,7 @@ interface GroupDetailViewProps {
   onDeleteGroup: (groupId: string) => Promise<boolean>;
   onManageHabits: (group: GroupResponse) => void;
   onUpdateGroupInfo?: (groupId: string, data: { name?: string; description?: string }) => Promise<unknown>;
+  onToggleMemberAdmin?: (groupId: string, memberUid: string, isAdmin: boolean) => Promise<boolean>;
 }
 
 // ─── Component ───────────────────────────────────────────────────
@@ -44,6 +45,7 @@ export default function GroupDetailView({
   onDeleteGroup,
   onManageHabits,
   onUpdateGroupInfo,
+  onToggleMemberAdmin,
 }: GroupDetailViewProps) {
   const { entries, isLoading, error, getMemberProgress } =
     useGroupLeaderboard(group._id);
@@ -239,6 +241,21 @@ export default function GroupDetailView({
         </p>
       )}
 
+      {/* No Habits Banner for Admin */}
+      {group.isAdmin && (!group.categories || group.categories.length === 0 || group.categories.every(c => !c.items || c.items.length === 0)) && (
+        <div className="flex flex-col items-center justify-center rounded-2xl bg-amber-500/10 border border-amber-500/20 p-4 text-center gap-3">
+          <p className="text-sm font-medium text-amber-500">
+            للحصول على أفضل استفادة من المجموعة، قم بإضافة عبادات ليقوم الأعضاء بتسجيلها والتنافس فيها!
+          </p>
+          <button
+            onClick={() => onManageHabits(group)}
+            className="cursor-pointer rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+          >
+            إضافة عبادات للمجموعة
+          </button>
+        </div>
+      )}
+
       {/* Leaderboard section */}
       <div className="rounded-2xl border border-theme-border bg-theme-card overflow-hidden">
         <div className="flex items-center gap-2 border-b border-theme-border px-4 py-3">
@@ -265,8 +282,8 @@ export default function GroupDetailView({
           </div>
         ) : (
           <div className="flex flex-col">
-            {/* Top-3 podium — only when group has more than 4 members */}
-            {entries.length > 4 && (
+            {/* Top-3 podium */}
+            {entries.length >= 2 && (
               <>
                 <GroupTopThreePodium
                   entries={entries}
@@ -275,14 +292,18 @@ export default function GroupDetailView({
                 <div className="mx-4 my-3 border-t border-theme-border" />
               </>
             )}
-            {entries.map((entry) => (
-              <GroupLeaderboardRow
-                key={entry.uid}
-                entry={entry}
-                isAdmin={group.isAdmin}
-                onClick={() => handleMemberClick(entry)}
-              />
-            ))}
+            {(entries.length >= 2 ? entries.slice(3) : entries).map((entry) => {
+              const isMemberAdmin = group.adminUid === entry.uid || (group.adminUids ?? []).includes(entry.uid);
+              return (
+                <GroupLeaderboardRow
+                  key={entry.uid}
+                  entry={entry}
+                  isAdmin={group.isAdmin}
+                  isMemberAdmin={isMemberAdmin}
+                  onClick={() => handleMemberClick(entry)}
+                />
+              );
+            })}
           </div>
         )}
       </div>
@@ -318,6 +339,12 @@ export default function GroupDetailView({
             memberUid={selectedMemberUid}
             getMemberProgress={getMemberProgress}
             onClose={() => setSelectedMemberUid(null)}
+            isMemberAdmin={group.adminUid === selectedMemberUid || (group.adminUids ?? []).includes(selectedMemberUid)}
+            isMainAdmin={group.adminUid === user?.uid}
+            isSelf={selectedMemberUid === user?.uid}
+            onToggleAdmin={onToggleMemberAdmin 
+              ? (isAdmin) => onToggleMemberAdmin(group._id, selectedMemberUid, isAdmin)
+              : undefined}
           />
         )}
       </AnimatePresence>

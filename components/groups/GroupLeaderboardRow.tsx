@@ -2,12 +2,13 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { ChevronLeft, Crown, Medal } from "lucide-react";
+import { ChevronLeft, Crown, Medal, ShieldAlert } from "lucide-react";
 import type { GroupLeaderboardEntry } from "@/services/api";
 
 interface GroupLeaderboardRowProps {
   entry: GroupLeaderboardEntry;
   isAdmin: boolean;
+  isMemberAdmin?: boolean;
   onClick: () => void;
 }
 
@@ -21,6 +22,7 @@ const RANK_CONFIG: Record<number, { icon: typeof Crown; bg: string; color: strin
 export default function GroupLeaderboardRow({
   entry,
   isAdmin,
+  isMemberAdmin,
   onClick,
 }: GroupLeaderboardRowProps) {
   const rankCfg = RANK_CONFIG[entry.rank];
@@ -66,9 +68,14 @@ export default function GroupLeaderboardRow({
 
       {/* Name */}
       <div className="flex flex-1 flex-col gap-0.5">
-        <span className="text-sm font-semibold text-theme-primary">
-          {entry.displayName}
-        </span>
+        <div className="flex items-center gap-1.5">
+          <span className="text-sm font-semibold text-theme-primary">
+            {entry.displayName}
+          </span>
+          {isMemberAdmin && (
+            <ShieldAlert className="h-3.5 w-3.5 text-amber-500" />
+          )}
+        </div>
 
         {/* Completion bar */}
         <div className="flex items-center gap-2">

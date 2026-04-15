@@ -9,8 +9,10 @@ import GroupsListPanel from "@/components/groups/GroupsListPanel";
 import GroupDetailView from "@/components/groups/GroupDetailView";
 import GroupHabitsManager from "@/components/groups/GroupHabitsManager";
 import CreateJoinGroupModal from "@/components/groups/CreateJoinGroupModal";
+import GroupCreatedSuccessModal from "@/components/groups/GroupCreatedSuccessModal";
 import JoinGroupFromLink from "@/components/groups/JoinGroupFromLink";
 import { usePendingJoinCode } from "@/hooks/usePendingJoinCode";
+import { setMemberAdminStatus } from "@/services/api";
 
 export default function GroupsManager() {
   const router = useRouter();
@@ -37,6 +39,7 @@ export default function GroupsManager() {
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(initialGroupId);
   const [showCreateJoinModal, setShowCreateJoinModal] = useState(false);
   const [managingGroup, setManagingGroup] = useState<GroupResponse | null>(null);
+  const [createdGroupInfo, setCreatedGroupInfo] = useState<{ id: string; name: string; inviteCode: string } | null>(null);
 
   // Determine the join code: URL param takes priority, then localStorage
   useEffect(() => {
@@ -80,8 +83,15 @@ export default function GroupsManager() {
 
   const handleCreateGroup = useCallback(async (name: string, description?: string) => {
     const group = await createGroup(name, description);
-    if (group) selectGroup(group._id);
-  }, [createGroup, selectGroup]);
+    if (group) setCreatedGroupInfo({ id: group._id, name, inviteCode: group.inviteCode });
+  }, [createGroup]);
+
+  const handleSuccessModalClose = useCallback(() => {
+    if (createdGroupInfo) {
+      selectGroup(createdGroupInfo.id);
+    }
+    setCreatedGroupInfo(null);
+  }, [createdGroupInfo, selectGroup]);
 
   const handleJoinGroup = useCallback(async (inviteCode: string) => {
     const group = await joinGroup(inviteCode);
@@ -115,6 +125,17 @@ export default function GroupsManager() {
     return result;
   }, [updateGroupInfo, refresh]);
 
+  const handleToggleMemberAdmin = useCallback(async (groupId: string, memberUid: string, isAdmin: boolean) => {
+    try {
+      const result = await setMemberAdminStatus(groupId, memberUid, isAdmin);
+      if (result) refresh();
+      return true;
+    } catch (error) {
+      console.error(error);
+      return false;
+    }
+  }, [refresh]);
+
   if (selectedGroup) {
     return (
       <div className="flex-1">
@@ -125,6 +146,7 @@ export default function GroupsManager() {
           onDeleteGroup={handleDeleteGroup}
           onManageHabits={setManagingGroup}
           onUpdateGroupInfo={handleUpdateGroupInfo}
+          onToggleMemberAdmin={handleToggleMemberAdmin}
         />
         <AnimatePresence>
           {managingGroup && (
@@ -152,6 +174,12 @@ export default function GroupsManager() {
         onClose={() => setShowCreateJoinModal(false)}
         onCreateGroup={handleCreateGroup}
         onJoinGroup={handleJoinGroup}
+      />
+      <GroupCreatedSuccessModal
+        isOpen={createdGroupInfo !== null}
+        groupName={createdGroupInfo?.name ?? ""}
+        inviteCode={createdGroupInfo?.inviteCode ?? ""}
+        onClose={handleSuccessModalClose}
       />
       {activeJoinCode && (
         <JoinGroupFromLink

@@ -16,6 +16,10 @@ interface MemberProgressModalProps {
   memberUid: string;
   getMemberProgress: (memberUid: string) => Promise<MemberProgressResponse | null>;
   onClose: () => void;
+  isMemberAdmin?: boolean;
+  isMainAdmin?: boolean;
+  isSelf?: boolean;
+  onToggleAdmin?: (isAdmin: boolean) => Promise<boolean>;
 }
 
 // ─── Date utils ──────────────────────────────────────────────────
@@ -37,9 +41,14 @@ export default function MemberProgressModal({
   memberUid,
   getMemberProgress,
   onClose,
+  isMemberAdmin,
+  isMainAdmin,
+  isSelf,
+  onToggleAdmin,
 }: MemberProgressModalProps) {
   const [data, setData] = useState<MemberProgressResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isTogglingAdmin, setIsTogglingAdmin] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -81,12 +90,34 @@ export default function MemberProgressModal({
           </button>
 
           {data?.member && (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-1 items-center gap-2 overflow-hidden">
               <MemberAvatar member={data.member} />
-              <span className="text-sm font-bold text-theme-primary">
-                {data.member.displayName}
-              </span>
+              <div className="flex flex-col overflow-hidden">
+                <span className="truncate text-sm font-bold text-theme-primary">
+                  {data.member.displayName}
+                </span>
+                {isMemberAdmin && <span className="text-[10px] text-amber-500 font-bold">مدير</span>}
+              </div>
             </div>
+          )}
+
+          {isMainAdmin && !isSelf && onToggleAdmin && (
+            <button
+               onClick={async () => {
+                  if (isTogglingAdmin) return;
+                  setIsTogglingAdmin(true);
+                  await onToggleAdmin(!isMemberAdmin);
+                  setIsTogglingAdmin(false);
+               }}
+               disabled={isTogglingAdmin}
+               className={`cursor-pointer whitespace-nowrap text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors disabled:opacity-50 ${
+                 isMemberAdmin
+                   ? "border-red-500/50 text-red-500 hover:bg-red-500/10"
+                   : "border-amber-500/50 text-amber-500 hover:bg-amber-500/10"
+               }`}
+            >
+              {isTogglingAdmin ? "..." : isMemberAdmin ? "إزالة الصلاحية" : "ترقية لمدير"}
+            </button>
           )}
         </div>
 
