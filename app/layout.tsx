@@ -72,10 +72,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f4f6fb" },
-    { media: "(prefers-color-scheme: dark)", color: "#0a0f1e" },
-  ],
+  themeColor: "#f4f6fb",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -103,10 +100,16 @@ export default function RootLayout({
               __html: `
                 try {
                   const theme = localStorage.getItem('hemma-theme');
-                  if (theme === '"dark"' || theme === 'dark') {
+                  const isDark = theme === '"dark"' || theme === 'dark';
+                  if (isDark) {
                     document.documentElement.classList.add('dark');
                   } else {
                     document.documentElement.classList.add('light');
+                  }
+                  
+                  const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+                  if (metaThemeColor) {
+                    metaThemeColor.setAttribute('content', isDark ? '#0a0f1e' : '#f4f6fb');
                   }
                 } catch (_) {}
               `,

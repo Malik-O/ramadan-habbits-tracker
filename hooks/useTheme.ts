@@ -40,12 +40,16 @@ export function useTheme() {
     if (!mounted) return;
 
     const root = document.documentElement;
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    
     if (theme === "dark") {
       root.classList.add("dark");
       root.classList.remove("light");
+      if (metaThemeColor) metaThemeColor.setAttribute('content', '#0a0f1e');
     } else {
       root.classList.add("light");
       root.classList.remove("dark");
+      if (metaThemeColor) metaThemeColor.setAttribute('content', '#f4f6fb');
     }
   }, [theme, mounted]);
 
